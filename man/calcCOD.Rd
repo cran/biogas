@@ -1,0 +1,47 @@
+\name{calcCOD}
+\alias{calcCOD}
+%- Also NEED an '\alias' for EACH other topic documented here.
+\title{
+  Calculate COD'
+}
+\description{
+  \code{calcCOD} is used to calculate the oxygen demand ('calculated oxygen demand', or COD' as described by Rittmann and McCarty (2001)) of a compound.
+}
+\usage{
+calcCOD(form)
+}
+\arguments{
+  \item{form}{
+    a chemical formula, as a character vector of length one, e.g., \code{"C6H12O6"} for glucose or \code{"CH3COOH"} for acetic acid.
+    Not case-sensitive for single letter elements (see 'Details').
+}
+}
+\details{
+  Based on Eqs. (2.2) and (2.3) in Rittmann and McCarty (2001) (p 128), but using molar mass calculated with \code{\link{molMass}}.
+  \code{calcCOD} is not case-sensitive as long as all elements have single letter abbreviations.
+}
+\value{
+  A numeric vector with COD' per g of compound.
+}
+\references{
+  Rittmann, B., McCarty, P. 2001 \emph{Environmental Biotechnology}. McGraw-Hill.
+}
+\author{
+  Sasha D. Hafner and Charlotte Rennuit
+}
+
+\seealso{
+  \code{\link{molMass}}, 
+  \code{\link{predBg}}
+}
+\examples{
+  calcCOD("C6H12O6")
+  calcCOD("CH3COOH")
+  calcCOD("CH3CH2OH")
+  calcCOD("CH4")
+  calcCOD("ch4")
+}
+% Add one or more standard keywords, see file 'KEYWORDS' in the
+% R documentation directory.
+\concept{chemical oxygen demand}
+\concept{biogas}

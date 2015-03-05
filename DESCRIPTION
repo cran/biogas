@@ -1,0 +1,13 @@
+Package: biogas
+Type: Package
+Title: Analyze Biogas Data and Predict Biogas Production
+Version: 1.0
+Date: 2015-03-05
+Author: Sasha D. Hafner, Charlotte Rennuit, Jin Mi Triolo, and Ali Heidarzadeh Vazifehkhoran.
+Maintainer: Sasha D. Hafner <saha@kbm.sdu.dk>
+Description: Functions for working with biogas data. Both low- and high-level functions are included for carrying out common tasks for analysis of biogas and related data. Molar mass and calculated oxygen demand (COD') can be determined from a chemical formula. Measured gas volume can be corrected for water vapor and to (possibly user-defined) standard temperature and pressure. Gas composition, cumulative production, or other variables can be interpolated to a specified time. Cumulative biogas and methane production (and rates) can be calculated from individual biogas volume (or reactor mass) and biogas composition measurements for any number of reactors. With cumulative methane production data and data on reactor contents, biochemical methane potential (BMP) can be calculated and summarized, including subtraction of the inoculum contribution and normalization by substrate mass. Cumulative production and production rates can be summarized in several different ways (e.g., omitting normalization) using the same function. Lastly, biogas and methane production can be predicted from substrate composition and additional, optional data.
+License: GPL-2
+Packaged: 2015-03-05 21:25:54 UTC; sasha
+NeedsCompilation: no
+Repository: CRAN
+Date/Publication: 2015-03-06 00:44:06
