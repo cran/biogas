@@ -7,7 +7,7 @@
 \description{
   Methane content (biogas composition) measurements from 15 batch reactors.
 }
-\usage{data("comp")}
+\usage{data("comp2")}
 \format{
   A data frame with 360 observations on the following 3 variables.
   \describe{

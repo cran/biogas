@@ -7,7 +7,7 @@
 \description{
   Biogas volume measurements from 15 batch reactors.
 }
-\usage{data("vol")}
+\usage{data("vol2")}
 \format{
   A data frame with 216 observations on the following 4 variables:
   \describe{

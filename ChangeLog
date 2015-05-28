@@ -1,0 +1,69 @@
+biogas package
+
+########################################
+## SUMMARY OF CHANGES AFFECTING USERS ##
+########################################
+2015 May 28 Sasha D. Hafner
+Version 1.0.1
+
+summBg 
+*Output data frame now includes value of 'when' argument that was
+specified in the call.
+
+*Will now work when only a single response ('vol.name') value is available,
+but only if 'when' exactly matches the time or if 'extrap' is set to TRUE.
+
+*The 'when' argument can now be a vector, i.e., a single call can return
+results for different times.
+
+*Separate contributions of substrate and inoculum are returned when 'show.obs'
+is set to TRUE.
+
+
+########################################
+## DETAILED LOG #######################
+########################################
+2015 May 28 Sasha D. Hafner
+Version 1.0.1
+*several Rd files Small corrections and addition of more details, addition
+of spaces in examples
+
+*biogas-package.Rd Extended examples and changed variable names in examples.
+Also corrected error in interpretation of BMP results for cellulose
+(difference of 15% not 7%).
+
+*biogas-internal.R Deleted
+
+2015 May 01 Sasha D. Hafner
+Version 1.0.1
+
+*summBg.R Added columns with separate response contribution of substrate and
+inoculum to the data frame returned when show.obs=TRUE. Also grouped message()
+statements together above the when loop to avoid duplicate messages.
+
+*stdVol.Rd Added details on how standardization is done.
+
+*stdVol.R Changed all occurrences of 'norm' to 'std'
+
+2015 April 28 Sasha D. Hafner
+Version 1.0.1
+
+*summBg.Rda Changed description of when argument, which can now accept
+multiple times or 'end'
+
+2015 April 23 Sasha D. Hafner
+Version 1.0.1
+
+*summBg.R Added loop and other changes so that when argument can now be a
+vector, and results will be returned for multiple times.
+
+*summBg.R Added code to allow for a vol dataset with a single value for a
+particular reactor. Value is returned if when matches time exactly, otherwise
+NA is returned.
+
+*summBg.R Added value of when argument as a column in the output data frame, 
+with column name equal to time.name argument.
+
+
+2015 March 06
+Version 1.0

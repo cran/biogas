@@ -48,12 +48,29 @@ stdVol(vol, temp = 0, pres = 1, rh = 1, temp.std = NULL, pres.std = NULL,
 }
 }
 \details{
-  Standard temperature and pressure can be defined by the user.
+  Standardization is done in a two-step process following Hafner et al. (In review).
+  First, the contribution of water vapor is removed and volume is corrected to the standard pressure:
+
+  vd = vm*(pm - pw)/ps    (1)
+
+  where vd = dry volume at standard pressure ps, vm = measured volume at pressure pm, and pw = vapor pressure of water (all pressures here in atm).
+  Water vapor pressure pw is calculated from the Antoine equation:
+
+  pw = rh*10^(6.203913 - 2354.731/(t + 280.709))    (2)
+
+  where rh = relative humidity (\code{rh} argument above) and t = measurement temperature (degrees C).
+  In the second step, the volume is adjusted for temperature.
+
+  vs = vd*(ts + 273.15)/(t + 273.15)  (3)
+
+  where vs = final standardized volume and ts = standardization temperature (degrees C).
+
+  Standard temperature and pressure and their units can be defined by the user using the \code{temp.std}, \code{pres.std}, \code{temp.unit}, and \code{pres.unit} arguments.
   Default values are 0 degrees C and 1.0 atm.
-  \code{stdVol} is vectorized.
+  \code{stdVol} is vectorized, and if one argument has a shorted length than the others, it will be recycled.
 }
 \value{
-  corrected gas volume in the same units as \code{vol}.
+  normalized gas volume in the same units as \code{vol}.
   A numeric vector.
 }
 \references{
@@ -85,7 +102,7 @@ stdVol(vol, temp = 0, pres = 1, rh = 1, temp.std = NULL, pres.std = NULL,
   # Vectorized
   data(vol)
   head(vol)
-  vol$nvol<-stdVol(vol$vol,temp=20,pres=1.02)
+  vol$vol.std <- stdVol(vol$vol,temp=20,pres=1.02)
   head(vol)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

@@ -57,8 +57,9 @@
     This is passed as the \code{extrap} argument to \code{\link{interp}}. Default is \code{FALSE}
 }
   \item{when}{
-    value of \code{time.name} in \code{vol} data frame at which the results should be evaluated.
-    Length one numeric vector.
+    value(s) of \code{time.name} in \code{vol} data frame at which the results should be evaluated.
+    Numeric vector.
+    Alternatively, set to \code{"end"} to return the latest values for each reactor.
 }
   \item{show.obs}{
     set to \code{TRUE} to return all observations, otherwise means and standard deviations are returned. Default is \code{FALSE}. 
@@ -101,7 +102,7 @@ data("vol")
 data("comp") 
 data("setup") 
 # First need to calculate cumulative methane production data
-cprod<-cumBg(vol,temp=20,comp=comp,time.name="days",extrap=TRUE)
+cprod <- cumBg(vol,temp=20,comp=comp,time.name="days",extrap=TRUE)
 head(cprod)
  
 # Cumulative methane production at 30 d
@@ -113,8 +114,17 @@ summBg(vol=cprod,setup=setup,when=30,time.name="days",vol.name="cvBg")
 # Cumulative CH4 only, subtract inoculum contribution
 summBg(vol=cprod,setup=setup,when=30,time.name="days",inoc.name="inoc")
 
-# And normalize by sub.vs column (mass of substrate VS here)
+# And normalize by sub.vs column (mass of substrate VS here) (so the result is BMP)
 summBg(vol=cprod,setup=setup,when=30,time.name="days",inoc.name="inoc",norm.name="msub")
+
+# Same example, but return results for three times
+summBg(vol=cprod,setup=setup,when=c(10,30,60),time.name="days",inoc.name="inoc",
+       norm.name="msub")
+
+# Back to earlier example, but return all individual observations (and total production
+# and individual contributions of substrate and inoculum 
+summBg(vol=cprod,setup=setup,when=30,time.name="days",inoc.name="inoc",norm.name="msub",
+       show.obs=TRUE)
 
 # Something different: interpolated biogas production rates
 summBg(vol=cprod,setup=setup,when=30,time.name="days",vol.name="rvBg",show.obs=TRUE)
@@ -125,8 +135,8 @@ data("comp2")
 data("setup2")
 
 # First need to calculate cumulative methane production data
-cprod<-cumBg(vol2,temp=20,comp=comp2,id.name="bottle",time.name="days",dat.name="meas.vol",
-             comp.name="CH4.conc",extrap=TRUE)
+cprod <- cumBg(vol2,temp=20,comp=comp2,id.name="bottle",time.name="days",dat.name="meas.vol",
+               comp.name="CH4.conc",extrap=TRUE)
 head(cprod)
  
 # Cumulative CH4 production at 30 d, subtract inoculum contribution and normalize by sub.vs column 

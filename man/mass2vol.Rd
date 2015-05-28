@@ -66,6 +66,7 @@ mass2vol(mass, xCH4, temp, pres = 1, unit.pres = "atm", unit.temp = "C", pres.st
   It is essential that the only change in reactor mass is due to biogas removal!
   Users are advised to read the original reference before applying the method.
   This function is vectorized.
+  Instead of using this function directly when working with multiple measurements on multiple reactors, use the \code{\link{cumBg}} function (which can call up \code{mass2vol}).
 }
 \value{
 volume of methane in mL as a numeric vector (if \code{value="CH4"}) or a matrix with columns for biogas, methane, and carbon dioxide volumes in mL.
@@ -82,7 +83,9 @@ volume of methane in mL as a numeric vector (if \code{value="CH4"}) or a matrix 
 }
 
 \seealso{
-  \code{\link{stdVol}}
+  \code{\link{vol2mass}},
+  \code{\link{stdVol}},
+  \code{\link{cumBg}}
 }
 \examples{
   # Volume of methane if measured mass loss was 3.1 g
@@ -92,8 +95,8 @@ volume of methane in mL as a numeric vector (if \code{value="CH4"}) or a matrix 
   
   # Vectorized
   data("massw")
-  massw$massloss<-massw$start - massw$end
-  massw$vCH4<-mass2vol(massw$massloss,xCH4=0.65,temp=37)
+  massw$massloss <- massw$start - massw$end
+  massw$vCH4 <- mass2vol(massw$massloss,xCH4=0.65,temp=37)
   massw
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

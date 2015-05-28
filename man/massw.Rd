@@ -5,7 +5,7 @@
   Mass Change of Batch Reactors
 }
 \description{
-  Mass measurements for 9 batch anaerobic reactors.
+  Mass measurements for 9 batch anaerobic reactors in a 'wide' format (separate columns for initial and final mass).
 }
 \usage{data("massw")}
 \format{

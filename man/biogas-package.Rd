@@ -46,7 +46,8 @@ Maintainer: Sasha D. Hafner <saha@kbm.sdu.dk>
 }
 \keyword{package}
 \examples{
-# Calculate BMP with data from a laboratory BMP test
+# Calculate BMP with data from a laboratory BMP test, and calculate and compare results for 
+# cellulose to the expected value
 data("vol2")
 data("comp2")
 data("setup2")
@@ -62,29 +63,38 @@ head(setup2)
 
 # Calculate cumulative biogas and methane production volumes at dry conditions and 
 # 0 degrees C and 1.0 atm
-cprod<-cumBg(vol2,temp=20,comp=comp2,id.name="bottle",time.name="days",dat.name="meas.vol",
-             comp.name="CH4.conc",extrap=TRUE)
+cprod <- cumBg(vol2,temp=20,comp=comp2,id.name="bottle",time.name="days",dat.name="meas.vol",
+               comp.name="CH4.conc",extrap=TRUE)
 head(cprod)
 
 # Now we can get methane production from a common time for all reactors (60 d here) 
 # (interpolation is used if needed), calculate and subtract out the inoculum contribution, 
 # and normalize by substrate VS mass
-BMPresults<-summBg(vol=cprod,setup=setup2,when=60,id.name="bottle",time.name="days",
-                  descrip.name="description",inoc.name="Inoculum",inoc.m.name="inoc.mass",
-		  norm.name="sub.vs")
-BMPresults
+bmps <- summBg(vol=cprod,setup=setup2,when=60,id.name="bottle",time.name="days",
+               descrip.name="description",inoc.name="Inoculum",inoc.m.name="inoc.mass",
+               norm.name="sub.vs")
+bmps
 
 # Or, to see all cumulative values at 60 d
-allBMPresults<-summBg(vol=cprod,setup=setup2,when=60,id.name="bottle",time.name="days",
-                      descrip.name="description",inoc.name="Inoculum",inoc.m.name="inoc.mass",
-		      norm.name="sub.vs",show.obs=TRUE)
-allBMPresults
+bmpobs <- summBg(vol=cprod,setup=setup2,when=60,id.name="bottle",time.name="days",
+                 descrip.name="description",inoc.name="Inoculum",inoc.m.name="inoc.mass",
+                 norm.name="sub.vs",show.obs=TRUE)
+bmpobs
+# When individual observations are shown like this, the separate contributions of substrate
+# and inoculum are also returned, along with total production (including inoculum
+# contribution).
 
-# allBMPresults are corrected for inoculum and normalized to 1 g substrate VS
+# It is possible to get results for more than one time
+bmps2 <- summBg(vol=cprod,setup=setup2,when=c(10,30,60),id.name="bottle",time.name="days",
+                descrip.name="description",inoc.name="Inoculum",inoc.m.name="inoc.mass",
+                norm.name="sub.vs")
+bmps2
+
+# bmps, bmps2, and bmpobs results are corrected for inoculum and normalized to 1 g substrate VS
 # To just get all cumulative methane values, don't provide values for inoc.name, inoc.m.name, 
 # and norm.name
-allresults<-summBg(vol=cprod,setup=setup2,when=60,id.name="bottle",time.name="days",
-                   descrip.name="description", show.obs=TRUE)
+allresults <- summBg(vol=cprod,setup=setup2,when=60,id.name="bottle",time.name="days",
+                     descrip.name="description", show.obs=TRUE)
 allresults
 
 # How much methane should we expect to get from pure cellulose?
@@ -95,9 +105,9 @@ predBg("C6H10O5",fs=0.05)
 predBg("C6H10O5",fs=0.05,value="all") 
 
 # Compare to measurement
-BMPresults
-BMPresults[BMPresults$description=="Cellulose","mean"]/predBg("C6H10O5",fs=0.05)
-# About 7% higher than expected
+bmps
+bmps[bmps$description=="Cellulose","mean"]/predBg("C6H10O5",fs=0.05)
+# About 15% higher than expected
 }
 \keyword{univar}
 \concept{biogas}

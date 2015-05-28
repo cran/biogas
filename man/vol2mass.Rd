@@ -13,7 +13,7 @@ vol2mass(volBg, xCH4, temp, pres = 1, unit.pres = "atm", unit.temp = "C")
 }
 \arguments{
   \item{volBg}{
-  measured (not normalized) biogas volume in mL.
+  measured (not standardized) biogas volume in mL.
   Numeric vector
 }
   \item{xCH4}{
@@ -40,7 +40,9 @@ vol2mass(volBg, xCH4, temp, pres = 1, unit.pres = "atm", unit.temp = "C")
 }
 }
 \details{
-  This function is vectorized. Argument elements will be recycled as needed.
+  This function is vectorized. 
+  Argument elements will be recycled as needed.
+  Note that this function is conceptually but not numerically the inverse of \code{mass2vol}, because the \code{volBg} argument here is not standardized, and is assumed to saturated with water vapor just prior to removal.
 }
 \value{
   biogas mass in g as a numeric vector.

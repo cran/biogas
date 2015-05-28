@@ -7,7 +7,7 @@
 \description{
   Information on reactor substrates and substrate and inoculum masses for 15 anaerobic reactors.
 }
-\usage{data("setup")}
+\usage{data("setup2")}
 \format{
   A data frame with 15 observations on the following 4 variables:
   \describe{
