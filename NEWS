@@ -1,0 +1,88 @@
+biogas 1.1.0
+2015 July 29
+---------------------------------------------------------------------
+MAILING LIST
+
+There is now a biogas package mailing list. To subscribe, send a message with
+the subject "biogas: SUBSCRIBE" to saha@kbm.sdu.dk. 
+
+NEW FEATURES
+
+*New vignette "Getting started with the biogas package"
+
+*Standard conditions and units
+Standard temperature and pressure and units can now be set globally using
+options().  This applies to stdVol(), cumBg(), vol2mass(), and mass2vol().
+This option is strongly recommended for users not using default values (1.0
+atm (101325 Pa) and 0 degrees C). Also, stdVol() (and functions that use it)
+now displays the standard temperature and pressure. 
+
+*Checking for input errors
+All functions now include checks for the class and in some cases, the value,
+of the arguments. Functions where a column name is specified (cumBg() and
+summBg()) now check that the specified columns exist in the input data frames. 
+
+*cumBg()
+It is now possible to use a single composition value for each reactor, if it
+is given in a data frame with no time column (just reactor ID and xCH4). If
+this is the case but there is more than one composition value per reactor, an
+error is thrown.
+
+For the gravimetric method, the initial headspace correction can now be
+applied (to the first interval only) using the headspace, vol.hs.name,
+headcomp, and temp.init arguments.
+
+*summBg()
+Time can be totally ignored if there is a single observation for each reactor
+and 'when' is set to NULL.
+
+REMOVED FUNCTIONALITY
+
+*Measurement pressure and temperature
+Pressure and temperature (pres and temp arguments) both must now be specified
+in order to determine standardized volumes for any function with a pres or
+temp argument, so stdVol(), cumBg(), vol2mass(), mass2vol(). Previous versions
+had a default pressure of 1.0 atm. Omitting pres or temp will now throw an
+error or return non-standardized results (with a message).
+
+*Column names in data frame arguments for cumBg() and summBg()
+Names of ID, time, volume, composition, and other columns in input data frame
+must now be specified using the ____.name arguments. The functions will no
+longer match based on position. This change is meant to avoid errors caused by
+incorrect positional matching when the user tried to use _____.name.
+
+BUG FIXES
+
+*predBg()
+Fixed incorrect calculation of mass when mol argument was used for input.
+
+OTHER CHANGES
+
+*molMass()
+The function now returns all digits--no rouding is done. 
+
+*cumBg()
+Calculation of methane volume in the volumetric method (default) now corrects
+for the (very small, < 0.4%) difference in molar volume between CH4 and biogas
+(this was already the case for the gravimetric method).
+
+
+biogas 1.0.1
+2015 May 28 
+---------------------------------------------------------------------
+
+summBg 
+*Output data frame now includes value of 'when' argument that was
+specified in the call.
+
+*Will now work when only a single response ('vol.name') value is available,
+but only if 'when' exactly matches the time or if 'extrap' is set to TRUE.
+
+*The 'when' argument can now be a vector, i.e., a single call can return
+results for different times.
+
+*Separate contributions of substrate and inoculum are returned when 'show.obs'
+is set to TRUE.
+
+
+

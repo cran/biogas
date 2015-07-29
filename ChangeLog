@@ -1,28 +1,389 @@
+
 biogas package
 
 ########################################
-## SUMMARY OF CHANGES AFFECTING USERS ##
+## DETAILED LOG ########################
 ########################################
-2015 May 28 Sasha D. Hafner
-Version 1.0.1
 
-summBg 
-*Output data frame now includes value of 'when' argument that was
-specified in the call.
+29 July 2015 Charlotte Rennuit
+Version 1.1.0
 
-*Will now work when only a single response ('vol.name') value is available,
-but only if 'when' exactly matches the time or if 'extrap' is set to TRUE.
+*setup.Rd
+Number of reactors to twelve
+Added factor levels from 2_7 to 2_9
+Added points at end of sentences
 
-*The 'when' argument can now be a vector, i.e., a single call can return
-results for different times.
+*setup2.Rd
+Added points at end of sentences
 
-*Separate contributions of substrate and inoculum are returned when 'show.obs'
-is set to TRUE.
+*vol2mass.Rd 
+Corrected typo error
+
+*vol.Rd
+Changed number fo observations to 288
+Number of reactors to twelve
+Added factor levels from 2_7 to 2_9
+
+*summBg
+Changed quotes for Examples to \sQuotes{Examples}
+
+*biogas_quick_start.Rnw
+Removed example in table 1 and corrected some spelling mistakes.
 
 
-########################################
-## DETAILED LOG #######################
-########################################
+29 July 2015 Sasha D. Hafner
+Version 1.1.0
+
+*predBg.Rd
+Added default of NULL to several arguments to match code
+
+*comp.rda 
+Replaced with new version from that has only measured values (previous version
+had interpolated xCH4)
+
+*All help files
+Switched to British spelling of normalize/standardize and related words
+Minor changes in wording
+
+28 July 2015 Charlotte Rennuit
+Version 1.1.0
+
+*cumBG.Rd
+Deleted sentences on column identification by order.
+
+*summBg.Rd
+Deleted sentences on column identification by order.
+Modified examples so extrap = FALSE when using comp. 
+Modified column name msub to mvs.sub in examples with normalisation using setup.
+
+*predBg.Rd, stdVol.Rd, summBg.Rd
+Adjusted length of examples in help files so it is not cut in the pdf manual. 
+
+28 July 2015 Sasha D. Hafner
+Version 1.1.0
+
+*cumBg.R
+Few changes to examples, including added pres = 1 
+
+*mass2vol.R
+Changed expected values in check of 'value' argument near top.
+
+*checkArgClassValue.R
+Added paste( ,collapse = ", ") to message returned for problem with expected values.
+
+*DESCRIPTION
+Updated version number in preparation for CRAN update
+
+*setup.Rd
+Added missing } at end of \usage
+
+*summBg.R
+Corrected spelling of length() line 89.
+
+*mass.Rd
+Added description of 'when' column.
+
+*checkArgClassValue.R
+Now remove NAs from object when checking range.
+
+*biogas-package.Rd
+Updated examples, now using vol, comp, and setup
+
+*cumBg.R
+Changed "normalized" to "standardized" in message returned when pres or temp
+is not given.
+
+*mass2vol.R
+Fixed error in call to stdVol() that used temp instead of temp.k.
+
+*cumBg.R
+This change was made earlier and not documented: changed default value for showt0 to
+TRUE
+
+27 July 2015 Charlotte Rennuit
+Version 1.0.4
+
+*stdVol.Rd
+New values of Antoine equation to be in accordance with the change of units in the calculations.
+Addition of the function options() in links, and of a sentence specifying its possible use.
+
+*test_HighLevelFunctions.R, test_LowLevelFunctions.R
+Files updated and finalised for the release of version 1.0.4
+
+*setup.Rd
+Modified description so it corresponds to setup data frame modified earlier.
+
+*testLowLevelFuntions.R
+Changed test of molMass.R: removed signif(, 5) from the expected values so it matches changes in molMass. 
+
+*molMass.R
+Removed signif(, 5) from output value.
+
+2015 July 26 Sasha D. Hafner
+Version 1.0.4
+
+*DESCRIPTION 
+Added these two lines:
+VignetteBuilder: knitr
+Suggests: knitr, ggplot2
+All for the vignette
+
+*cumBg.R
+Changed error message for missing norm.name column.
+
+2015 July 24 Sasha D. Hafner
+Version 1.0.4
+
+*parCO2.R 
+Changed pressure units to Pa (was atm before). This required addition of a
+constant for the calculation of Henry's law constant, and a change in default
+value for pres argument to 101325 (was 1 before).
+
+*predBg.R
+In call to partCO2, changed pres to 101325 (was 1 before).
+
+2015 July 24 Charlotte Rennuit
+Version 1.0.4
+
+*sumBg.R
+Change check for norm.name in two places: should be in names(setup) not in
+setup[, descrip.name] column.
+
+*predBg.R
+Change form default to NULL, and checkArgClassValue arguments for form to
+c('character', 'NULL') so there is no message error if only COD is called.
+Changed checkArgClassValue arguments for mcomp to 'numeric'.
+
+2015 July 23 Charlotte Rennuit
+Version 1.0.4
+
+*cumBg.R 
+Changed calculation of vCH4 in volumetric method so it includes the difference
+on molar volume of CH4 and CO2. It become consistent with mass2vol.R
+calculations.
+
+2015 July 22 Charlotte Rennuit
+Version 1.0.4
+
+*cumBg.R Add check for missing comp argument with gravimetric method
+
+*cumBg.R modify code : names(vol) changed for names(dat) line 72 : "any(missing.col <- !c(id.name, time.name, dat.name) %in% names(dat))"
+
+*create file testHighLevelFunctions.R: test for cumBg.R
+
+*create file testLowerLevelFunctions.R: test for calcCOD.R, molMass.R, stdVol.R, vol2mass.R, mass2vol.R, unitConvert.R, watVap.R, readFormula.R, interp.R 
+
+*Add test folder : run devtools::use_testthat(pkg = 'biogas')
+
+*calcCOD.R change hard value of molar mass of oxygen to molMass('O') value. 
+
+2015 July 22 Sasha D. Hafner
+Version 1.0.4
+
+*stdVol.R, cumBg.R, summBg.R, mass2vol.R, vol2mass.R, interp.R, molMass.R,
+calcCOD.R, predBg.R 
+Added checks for class (and values in some cases) of arguments at top using
+checkArgClassValue().
+
+*checkArgClassValue.R Changed name of file and function (was checkClass
+previously).
+
+*predBg.R Added default argument values of NULL to optional arguments (had no
+values previously).
+
+*stdVol.R, mass2vol.R, vol2mass.R
+Replaced temp and pres variables in function with temp.k and pres.pa
+where values are in K and Pa. This allowed removal of temp.orig and pres.orig
+in stdVol. In mass2vol, also added conversion of temp.std and pres.std to K
+and Pa near the top, and updated stdVol() call accordingly.
+
+2015 July 21 Charlotte Rennuit
+Version 1.0.4
+*stdVol.Rd Added example with options()
+
+2015 July 21 Sasha D. Hafner
+Version 1.0.4
+
+*checkClass.R New hidden function used to be used to check arguments to all
+other functions.
+
+*summBg.R and cumBg.R Removed all code for inferring column based on position in
+data frame. Instead, an error is thrown if any column cannot be found. Users
+now must use ___.name arguments.
+
+*cumBg.R 
+Added checks to make sure inoc.name and norm.name can be found in
+descrip column of setup data frame. Otherwise an error is thrown. 
+
+Added checks for all arguments based on class and for 'when' based on value.
+
+Added NULL option for 'when' argument. If NULL, only a single observation is
+expected for each reactor. Column with time.name is not returned in output.
+
+2015 July 21 Sasha D. Hafner and Charlotte Rennuit
+Vesion 1.0.4
+*molMass.Rd Changed description of capitalization requirements.
+
+2015 July 14 Sasha D. Hafner
+Vesion 1.0.4
+*mass2vol.Rd Removed rh argument. When was it added? Added pres argument to
+examples and set all temp to 35.
+
+*cumBg.R 
+Added check argument and check for biogas composition (between 0 and
+1).
+
+Added temp.init argument, and added this to mass2vol call for times 1 and 2
+when headspace argument is provided.
+
+*cumBg.Rd 
+Changes to match argument order and default arguments in code. Added
+pres argument to mass examples and changed temp to 35.
+
+*watVap.R 
+New (hidden) function for calculating vapor pressure of water.
+
+*stdVol.R, vol2mass.R, and mass2vol.R 
+Replaced code for calculation of water vapor pressure
+with call to watVap().
+
+*vol2mass.Rd 
+Fixed default arguments to match code.
+
+*cumBg.R, vol2mass.R, stdVol.R, mass2vol.R and Rd files 
+Switch order of arguments to ... unit.temp, unit.pres.
+
+*mass2vol.R 
+Added default value of NULL for temp.init, added error check is
+headcomp is given but temp.init is not, and added if() before unit conversion
+for temp.init. 
+
+Moved position of temp.init in argument list (was between
+unit.pres and value).
+
+*stdVol.Rd 
+Added pres argument to examples where it was missing. Cut second
+example with only change from first pres = 1.03 atm instead of 1.
+
+*vol2mass.R 
+Replaced pres argument with pres.hs and pres.vol. Fixed error in
+standard conditions for measured volume standardization. Now values are always
+0C and 101325 Pa, but converted to unit.temp and unit.pres before stdVol call.
+
+*vol2mass.Rd 
+Updated examples. Clarified issue about mass loss not always
+equaling biogas mass at time of measurement.
+
+*predBg.Rd 
+Removed degree sign, changed standarised to standardized.
+
+2015 July 10 Sasha D. Hafner
+Version 1.0.4
+*molMass.R Changed grepl call to use metacharacter ^ in first argument instead 
+of substr in second argument.
+
+2015 June 30 and earlier Sasha D. Hafner
+Version 1.0.4
+*readFormula.R Can now handle spaces in form argument (uses gsub() to remove
+them). Can now handle () within form, using coefficient at the end of ")". Can
+now handle real numbers for coefficients.
+
+2015 June 27
+Version 1.0.4
+*predBg.R Added condition to if statement before part.CO2 call so if there is
+no CO2 (if nCO2 is <= 1E-8 mol), it is not called. In this same statement,
+added [1] to missing() calls to avoid warnings.
+
+Fixed a bug in calculation of mass from mol argument (replaced / with *).
+
+*partCO2.R Added timer in while loop so an error is returned after 5 s.
+
+2015 June 25-26 Sasha D. Hafner and Charlotte Rennuit
+Version 1.0.4
+*cumBg.R Changed code around line 55+ where composition data is sorted out
+so that now a single value for each individual reactor is OK. Also added
+messages to this section so user knows whether interpolation has occured, or a
+single value has been used, etc.
+
+*mass2vol.R, vol2mass.R, predBg.R Replaced numeric values for molar masses
+with calls to molMass function. Corrected an error in the last stdVol call
+where unit.temp and unit.pres were hard-coded. Now they are set to unit.temp
+and unit.pres.
+
+2015 June 23-25 Sasha D. Hafner
+Version 1.0.3
+*cumBg.R Corrected code for adding headspace volume column to dat data frame
+and moved it up so it happens any time the headspace argument is provided. 
+
+For gravimetric method, added code to use headspace argument and a new headcomp
+argument to correct for initial headspace composition. If headspace argument
+is provided, the initial headspace correction will be applied to the first
+gravimetric result from each reactor only. 
+
+Added checks for temp and pres at top of gravimetric section. When time column
+is not recognized, now rate columns are not returned (previously they were
+returned as NA).
+
+Added cumulative mass loss column to the output for gravimetric data (name
+cmassloss). 
+
+*mass2vol.R Corrected section around line 42+ on N2 headspace correction.
+stdVol call had an error with units now. Added argument temp.init for use in
+this correction only.
+
+
+2015 June 15 Sasha D. Hafner and Charlotte Rennuit
+Version 1.0.3
+*setup.rda added mcod.tot to setup data. Help file modifed accordingly
+
+*cumBg.R added condition if rvCH4 for data screening: avoids an error if no
+comp is provided.
+
+Added default=NULL for temp and pres arguments (pres was previously 1 (atm)),
+so if not provided no standardization is done. Changed code around line 150
+where standardization occurs so it is skipped if either argument is NULL.
+
+*predBG.Rd, changed nomalized in Details into standardized.
+
+2015 June Sasha D. Hafner
+Version 1.0.3
+*stdVol.R, cumBg.R, mass2vol.R, vol2mass.R Changed units used in calculations
+to Pa and K (originally was atm and degrees C). This required a change in the
+Antoine equation parameters.
+
+*screenRates.R New file, new function.
+
+2015 June 9 Sasha D. Hafner
+Version 1.0.2
+*stdVol.R, cumBg.R, mass2vol.R Changed default values of temp.std, pres.std,
+unit.pres, unit.temp so getOption() is checked. Removed code that converted 0C
+and 1 atm to unit.temp and unit.pres if temp.std was the earlier default of
+NULL and pres.std was the earlier default of NULL. Added message for standard
+conditions and std.message argument. Removed default value of pres and temp.
+
+*stdVol.R Added warning if temp < 0 C or >100 C and a similar one for
+pressure.
+
+*cumBg.R Added unit.temp=unit.temp and unit.pres=unit.pres arguments to stdVol
+call. Probably was a bug to omit them earlier.
+
+*vol2mass.R Changed default values of unit.pres, unit.temp so getOption() is
+checked. Removed default value of pres (was 1).
+
+2015 June 4 Sasha D. Hafner
+Version 1.0.2
+*stdVol.R Added message to print standard pressure and temperature
+
+*vol2mass.R Added standardization of vol (was assumed to be at 0C and 1 atm
+before), replaced temp argument with temp.hs (for headspace), added
+temp.vol (for volume measurement), added rh.hs and rh.vol.
+
+*cumBg.R Added message to print standard temperature and pressure
+
+*summBg.R Changed messages about which columns are used by adding
+deparse(substitute()) so now printed data frame name matches name 
+used for actual argument
+
 2015 May 28 Sasha D. Hafner
 Version 1.0.1
 *several Rd files Small corrections and addition of more details, addition

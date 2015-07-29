@@ -13,12 +13,12 @@ molMass(form)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{form}{a chemical formula, as a character vector of length one, e.g., \code{"C6H12O6"} for glucose or \code{"CH3COOH"} for acetic acid. 
-    Not case-sensitive for single letter elements (see 'Details').
 }
 }
 \details{
-  Atomic weights are from CIAAW, and were rounded to four digits or more if possible. 
-  \code{molMass} can handle two letter elements (see 'Examples') but in this case \code{form} is case-sensitive.
+  Atomic weights are from CIAAW, and were rounded to four or more digits depending on the range of the reported interval for \dQuote{normal materials}.
+  In general \code{form} should follow capitalization rules for elements (i.e., first letter capitalized, second lower-case). 
+  However, if \code{form} contains single-letter elements only, it is possible to use lower-case letters for all elements (but for clarity not recommended).
 }
 \value{
   Length one numeric vector with molar mass (g/mol)

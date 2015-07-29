@@ -5,16 +5,17 @@
   Predict Biogas Production
 }
 \description{
-  \code{predBg} predicts biogas and methane production based on composition and other, optional details.
+  \code{predBg} predicts biogas and methane production based on composition and other, optional, details.
 }
 \usage{
-predBg(form, mass = 1, mol, fs = 0, fd = 1, mcomp, COD, conc.sub, pH, temp, 
+predBg(form = NULL, mass = 1, mol = NULL, fs = 0, fd = 1, mcomp = NULL, 
+       COD = NULL, conc.sub = NULL, pH = NULL, temp = NULL, 
        mu = 0.1, value = "CH4")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{form}{
-    a chemical formula for the substrate, as a character vector of length one, e.g., \code{"C6H12O6"} for glucose or \code{"CH3COOH"} for acetic acid.
+    (optional) a chemical formula for the substrate, as a character vector of length one, e.g., \code{"C6H12O6"} for glucose or \code{"CH3COOH"} for acetic acid.
 }
   \item{mass}{
     mass of substrate present, in g.
@@ -35,7 +36,7 @@ predBg(form, mass = 1, mol, fs = 0, fd = 1, mcomp, COD, conc.sub, pH, temp,
     A numeric vector.
 }
   \item{mcomp}{
-    (optional) 'macromolecule'-based composition of the substrate.
+    (optional) \dQuote{macromolecule}-based composition of the substrate.
     A named numeric vector with one or more of these elements: \code{vfa} (volatile fatty acids, VFAs), \code{protein}, \code{carbohydrate}, \code{lipid}, and \code{lignin}.
     An empirical \code{form} will be calculated based on assumed compositions of: C2H4O2 for VFAs, C5H7O2N for protein, C6H10O5 for carbohydrate, C57H104O6 for lipid, and C10H13O3 for lignin (Triolo et al., 2011).
 }
@@ -67,23 +68,25 @@ predBg(form, mass = 1, mol, fs = 0, fd = 1, mcomp, COD, conc.sub, pH, temp,
   \item{value}{
     what should be returned?
     Two options are currently available.
-    \code{"CH4"} (default) returns standardized methane volume only.
+    \code{"CH4"} (default) returns standardised methane volume only.
     \code{"all"} returns all available additional results.
     Length-one character vector.
 }
 }
 \details{
   \code{predBg} is a flexible function that returns different details depending on the data provided. 
-  In its simplest usage, it calculates theoretical biochemical methane potential (theoretical BMP).
-  Alternatively, it can calculate the methane equivalence of chemical oxygen demand (COD).
+  Calculations can be based on \code{form}, \code{COD}, or \code{mcomp} (at least one of these is required).
+  See \sQuote{Examples} for more information.
+
+  In its simplest usage, \code{predBg} calculates theoretical biochemical methane potential (theoretical BMP).
+  %Alternatively, it can calculate the methane equivalence of chemical oxygen demand (COD).
   With more parameters, it can also predict carbon dioxide partitioning, total biogas production and composition, as well as microbial biomass production and nitrogen requirement.
-  See 'Examples' for more information.
   Stoichiometry is based on Eq. 13.5 in Rittmann and McCarty (2001).
   Partitioning of carbon dioxide is based on an equilibrium speciation model using temperature-dependent parameters (Henry's law constant and dissociation constants) based on Hafner et al. (2012).
   \code{predBg} is vectorized for all arguments except \code{mcomp}, and will recycle argument elements as needed.
 }
 \value{
-  Normalised volume of methane produced in mL (for \code{value="CH4"}), or a data frame with some of these columns (depending on provided arguments):
+  Standardised volume (at 0 degrees C and 1 atmosphere) of methane produced in mL (for \code{value = "CH4"}), or a data frame with some of these columns (depending on provided arguments):
   \item{form}{empirical chemical formula of substrate, typically from the input argument}
   \item{mass}{substrate mass in g, typically from the input argument}
   \item{mol.mass}{substrate molar mass in g/mol}
@@ -98,7 +101,7 @@ predBg(form, mass = 1, mol, fs = 0, fd = 1, mcomp, COD, conc.sub, pH, temp,
   \item{hydro}{hydrolytic water consumption (g water)}
   \item{fCH4}{moles methane producted divided by the sum of methane and carbon dioxide moles. Equal to \code{xCH4} in biogas if carbon dioxide (and related aqueous species) in solution are negligible}
   \item{xCH4}{mole fraction of methane in dry biogas}
-  \item{vCH4}{standardized volume (dry, 0 degrees C, 1.0 atm) of methane produced in mL}
+  \item{vCH4}{standardised volume (dry, 0 degrees C, 1.0 atm) of methane produced in mL}
   \item{mCH4}{mass of methane produced in g}
   \item{mCO2}{mass of carbon dioxide produced in g (including both biogas and inorganic carbon in solution)}
   \item{mCO2Bg}{mass of carbon dioxide in biogas in g}
@@ -110,13 +113,13 @@ predBg(form, mass = 1, mol, fs = 0, fd = 1, mcomp, COD, conc.sub, pH, temp,
 \references{
   Hafner, S.D. 2007 \emph{Ammonia Speciation in Anaerobic Digesters}. PhD dissertation, Cornell University.
 
-  Hafner, S.D., Montes, F., Rotz, C.A. 2012 The role of carbon dioxide in emission of ammonia from manure. \emph{Atmospheric Environment} 66: 63-71.
+  Hafner, S.D., Montes, F., Rotz, C.A. 2012 The role of carbon dioxide in emission of ammonia from manure. \emph{Atmospheric Environment} \bold{66}, 63-71.
 
-  Moller, H.B., Sommer, S.G., Ahring, B.K. 2004 Methane productivity of manure, straw and solid fractions of manure. \emph{Biomass and Bioenergy} 26: 485-495.  
+  Moller, H.B., Sommer, S.G., Ahring, B.K. 2004 Methane productivity of manure, straw and solid fractions of manure. \emph{Biomass and Bioenergy} \bold{26}, 485-495.  
   
   Rittmann, B., McCarty, P. 2001 \emph{Environmental Biotechnology}. McGraw-Hill.
 
-  Triolo, J.M., Sommer, S.G., Moller, H.B., Weisbjerg, M.R., Jiang, X.Y. 2011 A new algorithm to characterize biodegradability of biomass during anaerobic digestion: Influence of lignin concentration on methane production potential. \emph{Bioresource Technology} 102: 9395-9402.
+  Triolo, J.M., Sommer, S.G., Moller, H.B., Weisbjerg, M.R., Jiang, X.Y. 2011 A new algorithm to characterize biodegradability of biomass during anaerobic digestion: Influence of lignin concentration on methane production potential. \emph{Bioresource Technology} \bold{102}, 9395-9402.
 }
 \author{
   Sasha D. Hafner and Charlotte Rennuit
@@ -133,31 +136,32 @@ predBg(form, mass = 1, mol, fs = 0, fd = 1, mcomp, COD, conc.sub, pH, temp,
 }
 \examples{
   # Given a substrate with a COD of 1.4 g
-  predBg(COD=1.4)
-  predBg(COD=1.4,fd=0.8,fs=0.1)
+  predBg(COD = 1.4)
+  predBg(COD = 1.4, fd = 0.8, fs = 0.1)
 
   # BMP of cellulose in mL CH4/g
   predBg("C6H10O5")
 
   # How much is produced in a real reactor? Assume 10% goes to biomass production
-  predBg("C6H10O5",fs=0.1)
+  predBg("C6H10O5", fs = 0.1)
 
   # And substrate is 80% degradable
-  predBg("C6H10O5",fs=0.1,fd=0.8)
+  predBg("C6H10O5", fs = 0.1, fd = 0.8)
 
   # More detailed results
-  predBg("C6H10O5",value="all")
+  predBg("C6H10O5", value = "all")
 
   # Can use macromolecule composition, e.g., for pig manure
-  predBg(mcomp=c(vfa=0.2,protein=0.25,carbohydrate=0.32,lipid=0.15,lignin=0.08),value="all")
+  predBg(mcomp = c(vfa = 0.2, protein = 0.25, carbohydrate = 0.32, lipid = 0.15, lignin = 0.08), 
+          value = "all")
 
   # For CO2 partitioning, cattle manure example from Hafner (2007)
-  predBg("C13H20O11N",conc.sub=85,fs=0.1,fd=0.56,pH=7.7,temp=35,value="all")
+  predBg("C13H20O11N", conc.sub = 85, fs = 0.1, fd = 0.56, pH = 7.7, temp = 35, value = "all")
   
   # Function is vectorized for everything except mcomp, e.g., 
-  predBg("C6H10O5",fs=c(0,0.05,0.1),value="all")
-  predBg(c("C6H10O5","C10H19O3N","CH3CH2OH"),value="all")
-  predBg("C13H20O11N",conc.sub=85,fs=0.1,fd=0.56,pH=7+0:10/10,temp=35,value="all")
+  predBg("C6H10O5", fs = c(0, 0.05, 0.1), value = "all")
+  predBg(c("C6H10O5", "C10H19O3N", "CH3CH2OH"), value = "all")
+  predBg("C13H20O11N", conc.sub = 85, fs = 0.1, fd = 0.56, pH = 7+0:10/10, temp = 35, value = "all")
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

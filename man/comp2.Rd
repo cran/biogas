@@ -19,7 +19,7 @@
 \details{
   These data are meant to be example data for multiple functions, e.g., \code{\link{interp}}, \code{\link{cumBg}}, or \code{\link{summBg}}.
   Reactors were 500 mL or 1000 mL glass serum bottles with butyl rubber septa and screw caps. 
-  Methane and carbon dioxide contents were determined by gas chromatography using a thermal conductivity detector and normalized so methane and carbon dioxide sum to 1.0.
+  Methane and carbon dioxide contents were determined by gas chromatography using a thermal conductivity detector and normalised so methane and carbon dioxide sum to 1.0.
   Data in \code{vol2}, \code{comp2}, and \code{setup2} are from the same reactors.
 }
 \source{

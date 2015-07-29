@@ -5,7 +5,7 @@
   Mass Change of Batch Reactors
 }
 \description{
-  Mass measurements for 9 batch anaerobic reactors in a 'wide' format (separate columns for initial and final mass).
+  Mass measurements for 9 batch anaerobic reactors in a \dQuote{wide} format (separate columns for initial and final mass).
 }
 \usage{data("massw")}
 \format{
@@ -20,7 +20,7 @@
   These data are meant to be example data for application of \code{\link{mass2vol}}, for gravimetric determination of biogas production.
   Reactors were 500 mL glass serum bottles with butyl rubber septa and screw caps. 
   Masses were measured with an electronic balance to 100 mg.
-  These are the same data as in \code{mass}, but simply in a 'wide' format.
+  These are the same data as in \code{mass}, but simply in a \dQuote{wide} format.
   Data in \code{vol}, \code{mass}, \code{massw}, \code{comp}, and \code{setup} are from the same reactors.
 }
 \source{

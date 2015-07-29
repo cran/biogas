@@ -15,10 +15,11 @@
     \item{\code{date.time}}{date and time of mass measurement, a POSIXct object.}
     \item{\code{days}}{elapsed time of mass measurements (from reactor setup) in days, a numeric vector.}
     \item{\code{mass}}{total reactor mass in g, a numeric vector.}
+    \item{\code{when}}{when was measurement taken? A character vector with two values.}
   }
 }
 \details{
-  These data are meant to be example data for application of \code{\link{mass2vol}}, for gravimetric determination of biogas production.
+  These data are meant to be example data for \code{\link{mass2vol}}, for gravimetric determination of biogas production.
   Reactors were 500 mL glass serum bottles with butyl rubber septa and screw caps. 
   Masses were measured with an electronic balance to 100 mg.
   Data in \code{vol}, \code{mass}, \code{massw}, \code{comp}, and \code{setup} are from the same reactors.

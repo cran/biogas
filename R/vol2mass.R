@@ -1,29 +1,55 @@
-vol2mass <-
-function(
-	volBg,
-	xCH4,
-	temp,pres=1,
-	unit.pres="atm",
-	unit.temp="C"
-	) {
+# Modified: 22 July 2015 SDH
 
-  # Hardwire rh for now
-  rh<-1
+vol2mass <- function(
+  volBg,
+  xCH4,
+  temp.hs,
+  temp.vol,
+  pres.hs,
+  pres.vol,
+  unit.temp = getOption('unit.temp', 'C'),
+  unit.pres = getOption('unit.pres', 'atm'),
+  rh.hs = 1,
+  rh.vol = 1
+) {
 
-  # Convert pressure to atm and temp to C
-  pres<-unitConvert(x=pres,unit=unit.pres,to='atm')
-  temp<-unitConvert(x=temp,unit=unit.temp,to='C')
-  
-  mmb<-xCH4*16.0425 + (1 - xCH4)*44.0095
-  mvb<-xCH4*22361 + (1 - xCH4)*22263
-  db<-mmb/mvb
+  # Check arguments
+  checkArgClassValue(volBg, c('numeric', 'integer'), expected.range = c(0, Inf))
+  checkArgClassValue(xCH4, c('numeric', 'integer'), expected.range = c(0, 1))
+  checkArgClassValue(temp.hs, c('numeric', 'integer'))
+  checkArgClassValue(temp.vol, c('numeric', 'integer'))
+  checkArgClassValue(pres.hs, c('numeric', 'integer'))
+  checkArgClassValue(pres.vol, c('numeric', 'integer'))
+  checkArgClassValue(unit.temp, c('character'))
+  checkArgClassValue(unit.pres, c('character'))
+  checkArgClassValue(rh.hs, c('numeric', 'integer'), expected.range = c(0, 1))
+  checkArgClassValue(rh.vol, c('numeric', 'integer'), expected.range = c(0, 1))
+
+  # Standardize volBg
+  # Must be standardized to 0C and 101325 Pa, because molar volumes are for these conditions
+  # First convert temperature and pressures to K and Pa
+  temp.hs.k <- unitConvert(x = temp.hs, unit = unit.temp, to = 'K')
+  pres.hs.pa <- unitConvert(x = pres.hs, unit = unit.pres, to = 'Pa')
+  temp.vol.k <- unitConvert(x = temp.vol, unit = unit.temp, to = 'K')
+  pres.vol.pa <- unitConvert(x = pres.vol, unit = unit.pres, to = 'Pa')
+
+  volBg <- stdVol(volBg, temp = temp.vol.k, pres = pres.vol.pa, rh = rh.vol, temp.std = 273.15, pres.std = 101325, unit.temp = 'K', unit.pres = 'Pa', std.message = TRUE)
+
+  # Calculate molar mass and molar volume
+  # Volumes defined at 101325 Pa (1 atm) and 273.15 K (0C)
+  mmb <- xCH4*molMass('CH4') + (1 - xCH4)*molMass('CO2')
+  mvb <- xCH4*22361 + (1 - xCH4)*22263
+  # Dry, standardized biogas density
+  db <- mmb/mvb
 
   # Calculate saturated water vapor pressure in atm (based on NIST)
-  pH2O<-rh*10^(6.203913 - 2354.731/(temp + 280.709))
+  pH2O <- rh.hs*watVap(temp.k = temp.hs.k) 
 
-  mH2O<-18.0152*pH2O/((pres - pH2O)*mvb)
+  # And mass of water in biogas
+  mH2O <- molMass('H2O')*pH2O/((pres.hs.pa - pH2O)*mvb)
 
-  mass<-volBg*(db + mH2O)
+  # Mass loss in g
+  mass <- volBg*(db + mH2O)
 
   return(mass)
 }

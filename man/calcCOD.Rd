@@ -2,10 +2,10 @@
 \alias{calcCOD}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-  Calculate COD'
+  Calculate Oxygen Demand
 }
 \description{
-  \code{calcCOD} is used to calculate the oxygen demand ('calculated oxygen demand', or COD' as described by Rittmann and McCarty (2001)) of a compound.
+  \code{calcCOD} is used to calculate the oxygen demand (\dQuote{calculated oxygen demand}, or COD' as described by Rittmann and McCarty (2001)) of a compound.
 }
 \usage{
 calcCOD(form)
@@ -13,7 +13,7 @@ calcCOD(form)
 \arguments{
   \item{form}{
     a chemical formula, as a character vector of length one, e.g., \code{"C6H12O6"} for glucose or \code{"CH3COOH"} for acetic acid.
-    Not case-sensitive for single letter elements (see 'Details').
+    Not case-sensitive for single letter elements (see \sQuote{Details}).
 }
 }
 \details{
@@ -21,7 +21,7 @@ calcCOD(form)
   \code{calcCOD} is not case-sensitive as long as all elements have single letter abbreviations.
 }
 \value{
-  A numeric vector with COD' per g of compound.
+  A numeric vector with COD' in g of oxygen per g of compound.
 }
 \references{
   Rittmann, B., McCarty, P. 2001 \emph{Environmental Biotechnology}. McGraw-Hill.

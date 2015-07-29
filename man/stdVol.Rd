@@ -5,11 +5,12 @@
   Correct Gas Volume to 'Standard' Conditions
 }
 \description{
-  \code{stdVol} corrects gas volumes to dry conditions at a specified temperature and pressure.
+  \code{stdVol} corrects gas volumes to dry conditions at a specified temperature and pressure. 
 }
 \usage{
-stdVol(vol, temp = 0, pres = 1, rh = 1, temp.std = NULL, pres.std = NULL, 
-       unit.pres = "atm", unit.temp = "C")
+stdVol(vol, temp, pres, rh = 1, temp.std = getOption('temp.std', 0.0), 
+       pres.std = getOption('pres.std', 1.0), unit.temp = getOption('unit.temp', 'C'), 
+       unit.pres = getOption('unit.pres', 'atm'), std.message = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -26,7 +27,7 @@ stdVol(vol, temp = 0, pres = 1, rh = 1, temp.std = NULL, pres.std = NULL,
     A numeric vector.
 }
   \item{rh}{
-    relative humidity of the gas (\code{0<=rh<=1}).
+    relative humidity of the gas (\code{0< = rh< = 1}).
     Typically should be 1.0 (the default).
     A numeric vector.
 }
@@ -44,39 +45,44 @@ stdVol(vol, temp = 0, pres = 1, rh = 1, temp.std = NULL, pres.std = NULL,
 }
   \item{unit.temp}{
     temperature units for \code{temp} and \code{temp.std} arguments.
-    Options are \code{"C"} (degrees Celcius), \code{"F"} (degrees Fahrenheit), and \code{"K"} (Kelvin). 
+    Options are \code{"C"} (degrees Celcius), \code{"F"} (degrees Fahrenheit), and \code{"K"} (Kelvin).
+}
+  
+  \item{std.message}{should a message with the standard conditions be displayed ? Default is TRUE.
 }
 }
 \details{
-  Standardization is done in a two-step process following Hafner et al. (In review).
+  Standardisation is done in a two-step process following Hafner et al. (in review).
   First, the contribution of water vapor is removed and volume is corrected to the standard pressure:
 
-  vd = vm*(pm - pw)/ps    (1)
+  vd = vm*(pm - pw)/ps
 
-  where vd = dry volume at standard pressure ps, vm = measured volume at pressure pm, and pw = vapor pressure of water (all pressures here in atm).
+  where vd = dry volume at standard pressure ps, vm = measured volume at pressure pm, and pw = vapor pressure of water (all pressures in Pa).
   Water vapor pressure pw is calculated from the Antoine equation:
 
-  pw = rh*10^(6.203913 - 2354.731/(t + 280.709))    (2)
+  pw = rh*10^(11.20963 - 2354.731/(T + 7.559)))
 
-  where rh = relative humidity (\code{rh} argument above) and t = measurement temperature (degrees C).
+  where rh = relative humidity (\code{rh} above) and T = measurement temperature (K, converted from \code{temp} argument).
   In the second step, the volume is adjusted for temperature.
 
-  vs = vd*(ts + 273.15)/(t + 273.15)  (3)
+  vs = vd*Ts/T  
 
-  where vs = final standardized volume and ts = standardization temperature (degrees C).
+  where vs = standardised volume and Ts = standardisation temperature (K, converted from \code{temp.std} argument).
 
-  Standard temperature and pressure and their units can be defined by the user using the \code{temp.std}, \code{pres.std}, \code{temp.unit}, and \code{pres.unit} arguments.
-  Default values are 0 degrees C and 1.0 atm.
-  \code{stdVol} is vectorized, and if one argument has a shorted length than the others, it will be recycled.
+  Standard temperature and pressure and their units can be defined by the user using the \code{temp.std}, \code{pres.std}, \code{temp.unit}, and \code{pres.unit} arguments.  
+  Alternatively,  standard values and units of temperature and pressure can be globally set using the function \code{\link{options}}.
+  Default values are 0 degrees C and 1.0 atm. 
+  \code{stdVol} is vectorized, and if one argument has a shorter length than the others, it will be recycled.
+
 }
 \value{
-  normalized gas volume in the same units as \code{vol}.
+  Standardised gas volume in the same units as \code{vol}.
   A numeric vector.
 }
 \references{
-  Hafner, S.D., Rennuit, C., Triolo, J.M., Richards, B.K. In review. A gravimetric method for measuring biogas production. \emph{Biomass and Bioenergy}.
+  Hafner, S.D., Rennuit, C., Triolo, J.M., Richards, B.K. In review. Validation of a simple gravimetric method for measuring biogas production in laboratory experiments. \emph{Biomass and Bioenergy}.
 
-  Richards, B.K., Cummings, R.J., White, T.E., Jewell, W.J. 1991. Methods for kinetic analysis of methane fermentation in high solids biomass digesters. \emph{Biomass and Bioenergy} 1: 65-73.
+  Richards, B.K., Cummings, R.J., White, T.E., Jewell, W.J. 1991. Methods for kinetic analysis of methane fermentation in high solids biomass digesters. \emph{Biomass and Bioenergy} \bold{1}, 65-73.
 }
 \author{
   Sasha D. Hafner and Charlotte Rennuit
@@ -84,26 +90,31 @@ stdVol(vol, temp = 0, pres = 1, rh = 1, temp.std = NULL, pres.std = NULL,
 
 \seealso{
   \code{\link{cumBg}},
-  \code{\link{summBg}}
+  \code{\link{summBg}},
+  \code{\link{stdVol}},
+  \code{\link{options}}
 }
 \examples{
   # 100 mL, measured at 35 C
-  stdVol(100,temp=35)
-
-  # And 1.02 atm
-  stdVol(100,temp=35,pres=1.02)
+  stdVol(100, temp = 35, pres = 1)
 
   # Or, with different pressure units
-  stdVol(100,temp=35,pres=103,unit.pres="kPa")
+  stdVol(100, temp = 35, pres = 103, unit.pres = "kPa")
 
   # With different units and standard conditions
-  stdVol(100,temp=100,pres=1,unit.pres="bar",pres.std=1,unit.temp="F",temp.std=68)
-
+  stdVol(100, temp = 100, pres = 1, unit.pres = "bar", pres.std = 1, unit.temp = "F", temp.std = 68)
+  
   # Vectorized
   data(vol)
   head(vol)
-  vol$vol.std <- stdVol(vol$vol,temp=20,pres=1.02)
+  vol$vol.std <- stdVol(vol$vol, temp = 20, pres = 1.02)
   head(vol)
+  
+  #using options()
+  oldoptions <- options(temp.std = 273.15, pres.std = 101325, unit.temp = 'K', unit.pres = 'Pa')
+  vol$vol.std <- stdVol(vol$vol, temp = 293, pres = 101325)
+  head(vol)
+  options(oldoptions)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
