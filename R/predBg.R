@@ -1,4 +1,4 @@
-# Modified: 22 JULY 2015 SDH
+# Modified: 5 Nov 2015 SDH
 
 predBg <- function(
   form = NULL,            # Character chemical formula of substrate
@@ -12,6 +12,7 @@ predBg <- function(
   pH = NULL,       # Solution pH (only needed for CO2 partitioning) 
   temp = NULL,     # Temperature in degrees C (only needed for CO2 partitioning) 
   mu = 0.1,        # Solution ionic strength (mol/kgw) (only needed for CO2 partitioning)
+  shortform = NULL,       # TRUE to simplify form
   value = 'CH4'    # Output format, default is CH4 volume (mL)
   ){
 
@@ -28,44 +29,87 @@ predBg <- function(
   checkArgClassValue(temp, c('numeric', 'integer', 'NULL'))
   checkArgClassValue(mu, c('numeric', 'integer', 'NULL'), expected.range = c(0, 0.8))
   checkArgClassValue(value, 'character')
-  checkArgClassValue(tolower(value), expected.values = c('ch4', 'all'))
-  
+  checkArgClassValue(tolower(value), expected.values = c('ch4', 'reaction', 'all'))
+
   # fe from Rittmann and McCarty (2001)
   fe <- 1 - fs
   
-  # If COD is given, just return CH4 volume in mL
-  if(!missing(COD)) {
-    vCH4 <- fd*fe*COD*22361*0.5/(molMass('O')*2)
+  # If COD is given and there is no form, just return CH4 volume in mL
+  if(!missing(COD) & missing(form)) {
+    #vCH4 <- fd*fe*COD*vol.mol['CH4']*0.5/(molMass('O')*2)
+    vCH4 <- fd*fe*COD*vol.mol['CH4']/(molMass('O2')*2)
+    vCH4 <- as.vector(vCH4)
     if(tolower(value)=='ch4') {
       return(vCH4)
     } else {
-      return(data.frame(COD = COD, fd = fd, fs = fs, fe = fe, vCH4))
+      return(data.frame(COD = COD, fd = fd, fs = fs, fe = fe, vCH4 = vCH4))
     }
   } 
 
+  # If COD and form are both given, calculate mass and mol
+  if(!missing(COD) & !missing(form)) {
+    mass <- COD/calcCOD(form)
+  }
+
   # Read chemical formula
   if(!missing(form)) {
+    if(missing(shortform)) shortform <- FALSE
+    if(!missing(mol) & shortform) warning('You specified quantity using the \'mol\' argument but also asked for chemical formula simplification using \'shortform\'.\nNote that the \'mol\' quantity is applied using the new (returned) formula.')
+  
     # Capitalize form
-    form <- toupper(form)
-    fc <- t(mapply(readFormula, form = form, MoreArgs = list(elements = c('C', 'H', 'N', 'O'), min.elements = c('C', 'H')), USE.NAMES = FALSE))
+    for(i in 1:length(form)) {
+      if(grepl('^[a-z]', form[i])) form[i] <- toupper(form[i])
+    }
+
   } else if(!missing(mcomp)) {
+    if(missing(shortform)) shortform <- TRUE
+    if(!missing(mol) & shortform) warning('You specified quantity using the \'mol\' argument but also asked for chemical formula simplification using \'shortform\'.\nNote that the \'mol\' quantity is applied using the new (returned) formula.')
+
     # Make sure it is a vector. Cannot provide multiple values for mcomp.
     if(!is.vector(mcomp)) stop('mcomp can only be a vector, and can only be used to specify a single composition.')
-    # Check names, add if missing
-    mm <- c(vfa = 0, protein = 0, carbohydrate = 0, lipid = 0, lignin = 0)
-    mm[names(mcomp)] <- mcomp
-    mcomp <- mm
+
     if(abs(sum(mcomp)-1)>1E-5) {
-      warning('Sum of mcomp != 1.0 so dividing all elements by the sum.')
+
+      # Calculate mass if not given (override default)
+      if(missing(mass)) {
+	mass <- sum(mcomp)
+	warning('mass taken as sum of mcomp: ', mass)
+      }
+
+      warning('Sum of mcomp != 1.0 so dividing all elements by the sum for calculation of formula.')
       mcomp <- mcomp/sum(mcomp)
     }
-    names(mcomp) <- tolower(names(mcomp))
-    fc <- mcomp['vfa']*c(C = 2, H = 4, O = 2, N = 0) + mcomp['protein']*c(C = 5, H = 7, O = 2, N = 1) + mcomp['carbohydrate']*c(C = 6, H = 10, O = 5, N = 0) + mcomp['lipid']*c(C = 57, H = 104, O = 6, N = 0) + mcomp['lignin']*c(C = 10, H = 13, O = 3, N = 0)
-    fc <- round(fc/min(fc[fc!=0]))
-    form <- paste0(names(fc)[fc!=0], fc[fc!=0], collapse = '') # So we have a text-only empirical formula for writing out
-    # Turn into a matrix, to be compatible with code below for vectorized formulas (mcomp is not vectorize)
-    fc <- t(as.matrix(fc))
+
+    # Trim std.forms to use it in indexing operation to replace names in mcomp
+    mforms <- std.forms[names(std.forms) %in% tolower(names(mcomp))]
+    
+    # Names must be formulas or else
+    # Replace mcomp names like 'carbohydrate' with formulas
+    mcnames <- names(mcomp)
+    names(mcnames) <- tolower(names(mcomp))
+    mcnames[names(mforms)] <- mforms
+    names(mcomp) <- mcnames
+
+    # Get molar masses and convert mass values in mcomp to moles
+    mcomp <- mcomp/molMass(names(mcomp))
+    mcomp <- signif(mcomp/min(mcomp), 6)
+
+    # Create form from mcomp
+    names(mcomp) <- paste0('(', names(mcomp), ')')
+    form <- paste0(names(mcomp), mcomp, collapse = '')
+    for(i in 1:length(form)) {
+      if(grepl('^[a-z]', form[i])) form[i] <- toupper(form[i])
+    }
+
   } else stop('Must provide one of these arguments: form, mcomp, or COD.')
+
+  # All options except COD only continue
+
+  # Simplify formula
+  if(shortform) form <- sapply(form, readFormula, USE.NAMES = FALSE, value = 'shortform')
+
+  # Get formula coefficients
+  fc <- t(mapply(readFormula, form = form, MoreArgs = list(elements = c('C', 'H', 'N', 'O'), min.elements = c('C', 'H')), USE.NAMES = FALSE))
 
   # Molar mass of substrate
   mmass <- mapply(molMass, form, USE.NAMES = FALSE)
@@ -88,10 +132,17 @@ predBg <- function(
   # Results
   # CH4 in mL at 0C and 1 atm
   nCH4 <- cCH4*fd*mol
-  vCH4 <- 22361*nCH4
+  vCH4 <- vol.mol['CH4']*nCH4
+  vCH4 <- as.vector(vCH4)
 
   if(toupper(value)=='CH4') {
     return(vCH4)
+  }
+
+  if(tolower(value)=='reaction') {
+    rxncoefs <- data.frame(sub = -1, H2O = -cH2O, CH4 = cCH4, CO2 = cCO2, C5H7O2N = cbio, `NH4+` = cNH4, `HCO3-` = cHCO3)
+    names(rxncoefs)[1] <- form
+    return(rxncoefs)
   }
 
   # Hydrolytic water consumption, g H2O
@@ -102,7 +153,7 @@ predBg <- function(
   mBio <- cbio*molMass('C5H7O2N')*fd*mol
   # CH4, CO2, and biogas in g
   mCH4 <- molMass('CH4')*nCH4
-  nCO2 <- cCO2*fd*mol
+  nCO2 <- (cHCO3 + cCO2)*fd*mol
   mCO2 <- molMass('CO2')*nCO2
   # Biogas composition (per production, but does not consider TIC in solution)
   fCH4 <- nCH4/(nCH4 + nCO2)
@@ -117,7 +168,7 @@ predBg <- function(
     xCH4 <- out[, 'xCH4']
 
     # Volume of CO2 left in biogas
-    vCO2 <- 22236*nCO2Bg
+    vCO2 <- vol.mol['CO2']*nCO2Bg
     # Dry biogas volume
     vBg <- vCH4 + vCO2
 
@@ -126,9 +177,9 @@ predBg <- function(
     mCO2.sol <- molMass('CO2')*nCO2.sol
 
     if(all(fs==0)) {
-      results <- data.frame(form = form, mass = mass, mol.mass = mmass, moles = mol, COD = COD, fd = fd, conc.sub = conc.sub, temp = temp, pH = pH, hydro = h, fCH4 = fCH4, xCH4 = xCH4, vCH4 = vCH4, vCO2 = vCO2, vBg = vBg, mCH4 = mCH4, mCO2 = mCO2, mCO2Bg = mCO2Bg, mCO2.sol = mCO2.sol, cTIC = cTIC)
+      results <- data.frame(form = form, mass = mass, mol.mass = as.vector(mmass), moles = as.vector(mol), COD = COD, fd = fd, conc.sub = conc.sub, temp = temp, pH = pH, hydro = h, fCH4 = fCH4, xCH4 = xCH4, vCH4 = vCH4, vCO2 = vCO2, vBg = vBg, mCH4 = mCH4, mCO2 = mCO2, mCO2Bg = mCO2Bg, mCO2.sol = mCO2.sol, cTIC = cTIC)
     } else {
-      results <- data.frame(form = form, mass = mass, mol.mass = mmass, moles = mol, COD = COD, fs = fs, fe = fe, fd = fd, conc.sub = conc.sub, temp = temp, pH = pH, hydro = h, fCH4 = fCH4, xCH4 = xCH4, vCH4 = vCH4, vCO2 = vCO2, vBg = vBg, mCH4 = mCH4, mCO2 = mCO2, mCO2Bg = mCO2Bg, mCO2.sol = mCO2.sol, cTIC = cTIC, m.bio = mBio, N.req = mNH4)
+      results <- data.frame(form = form, mass = mass, mol.mass = as.vector(mmass), moles = as.vector(mol), COD = COD, fs = fs, fe = fe, fd = fd, conc.sub = conc.sub, temp = temp, pH = pH, hydro = h, fCH4 = fCH4, xCH4 = xCH4, vCH4 = vCH4, vCO2 = vCO2, vBg = vBg, mCH4 = mCH4, mCO2 = mCO2, mCO2Bg = mCO2Bg, mCO2.sol = mCO2.sol, cTIC = cTIC, m.bio = mBio, N.req = mNH4)
     }
     rownames(results) <- 1:nrow(results)
     return(results)
@@ -136,9 +187,9 @@ predBg <- function(
 
   # Not enough info for CO2 partitioning
   if(all(fs==0)) {
-    results <- data.frame(form = form, mass = mass, mol.mass = mmass, moles = mol, COD = COD, hydro = h, fCH4 = fCH4, vCH4 = vCH4, mCH4 = mCH4, mCO2 = mCO2)
+    results <- data.frame(form = form, mass = mass, mol.mass = as.vector(mmass), moles = as.vector(mol), COD = COD, hydro = h, fCH4 = fCH4, vCH4 = vCH4, mCH4 = mCH4, mCO2 = mCO2)
   } else {
-    results <- data.frame(form = form, mass = mass, mol.mass = mmass, moles = mol, COD = COD, fs = fs, fe = fe, fd = fd, hydro = h, fCH4 = fCH4, vCH4 = vCH4, mCH4 = mCH4, mCO2 = mCO2, m.bio = mBio, N.req = mNH4)
+    results <- data.frame(form = form, mass = as.vector(mass), mol.mass = as.vector(mmass), moles = as.vector(mol), COD = as.vector(COD), fs = fs, fe = fe, fd = fd, hydro = h, fCH4 = fCH4, vCH4 = vCH4, mCH4 = mCH4, mCO2 = mCO2, m.bio = mBio, N.req = mNH4)
   }
   rownames(results) <- 1:nrow(results)
   return(results)

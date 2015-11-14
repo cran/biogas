@@ -4,29 +4,21 @@
 
 \documentclass{article}
 
-%To try to reduce margins
-\setlength{\oddsidemargin}{10pt}
-\setlength{\evensidemargin}{10pt}
-\setlength{\topmargin}{7pt}
-\setlength{\textwidth}{6in}
-\addtolength{\topmargin}{-.7in}
-\addtolength{\textheight}{1.4in}
+\usepackage[margin = 1.2in]{geometry}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt plus 1pt minus 1pt}
 
-%\usepackage{fullpage} % put to full page 
-\usepackage{listings} % to break lines in R chuncks os it does not go out of the box
-%\usepackage{natbib} % bibliography % NTS do not use, causes problems with citation format
-\usepackage{hyperref} 
-\usepackage[version = 3]{mhchem} %chemical formulas
-\usepackage{siunitx} % to write more efficiently units and numbers
-\usepackage{parskip} % Space instead of indent
-\usepackage{tabularx} % to adjust automatically column size 
-\usepackage{booktabs} % to use top and bottom in tables in bolds
-\usepackage{multirow} % for multiple rows
+%%%\usepackage{natbib}
+\usepackage{siunitx}
+\usepackage[version=3]{mhchem} %chemical formulas
+\usepackage[colorlinks = true, urlcolor = blue]{hyperref} % Must be loaded as the last package
 
-<<setoptions, include = FALSE, cache = FALSE>>=
-  library(knitr) # per http://stackoverflow.com/questions/16752765/knitr-r-package-check-error-object-opts-chunk-not-found 
-  opts_chunk$set(cache = FALSE, tidy = FALSE, highlight = FALSE, options(width = 67))
-  #library(biogas)
+<<include=FALSE, cache=FALSE>>=
+library(knitr)
+#opts_chunk$set(cache=FALSE,tidy=FALSE,highlight=FALSE)
+opts_chunk$set(cache = FALSE, tidy = FALSE, fig.align = "center")
+library(biogas)
+  options(width=75)
 @
 
 \title{Getting started with the biogas package}
@@ -228,30 +220,10 @@ We can do this with the \texttt{cumBg()} function, using \texttt{vol} and \textt
 The arguments for the function are:
 
 % Next line won't wrap correctly. Width doesn't affect args(). Done manually below by copying and editing output in .tex file.
-%<<cumBgargs>>=
-%  args(cumBg)
-%@
+<<cumBgargs>>=
+  args(cumBg)
+@
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{lstlisting}[basicstyle = \ttfamily, breaklines = true]
-args(cumBg)\end{lstlisting}
-\begin{lstlisting}[basicstyle = \ttfamily, breaklines = true]
-## function (dat, dat.type = "vol", comp = NULL, temp = NULL, 
-##     pres = NULL, id.name = "id", time.name = "time", 
-##     dat.name = dat.type, comp.name = "xCH4", headspace = NULL, 
-##     vol.hs.name = "vol.hs", headcomp = "N2", temp.init = NULL, 
-##     temp.std = getOption("temp.std", 0), 
-##     pres.std = getOption("pres.std", 1), 
-##     unit.temp = getOption("unit.temp", "C"), 
-##     unit.pres = getOption("unit.pres", "atm"), 
-##     cmethod = "removed", imethod = "linear", extrap = FALSE, 
-##     addt0 = TRUE, showt0 = TRUE, std.message = TRUE, 
-##     check = TRUE) 
-## NULL
-\end{lstlisting}
-\end{kframe}
-\end{knitrout}
 
 Most of the arguments have default values, but to calculate \ce{CH4} production we must provide values for at least \texttt{dat} (we will use \texttt{vol}), \texttt{comp} (we will use \texttt{comp}), \texttt{temp} (biogas temperature), and \texttt{pres} (biogas pressure)\footnote{
   By default, temperature is in $^\circ$C and pressure in atm, but these can be changed in the function call with the \texttt{temp.unit} and \texttt{pres.unit} arguments, or globally with \texttt{options}.
@@ -268,7 +240,8 @@ By default (\texttt{cmethod = "removed"}) the function calculates volumes follow
 %%Therefore, we need to set \texttt{extrap = TRUE}.
   
 <<>>=
-cum.prod <- cumBg(vol, comp = comp, time.name = "days", temp = 35, pres = 1, extrap = TRUE)
+cum.prod <- cumBg(vol, comp = comp, time.name = "days", temp = 35, pres = 1, 
+		  extrap = TRUE)
 @
 
 Note the message about standard temperature and pressure--it is important to make sure these values are correct, therefore users are reminded by a message\footnote{
@@ -299,32 +272,17 @@ qplot(x = days, y = cvCH4, data = cum.prod, xlab = "Time (d)",
 To calculate BMP we need to substract the contribution of the inoculum to \ce{CH4} production for each reactor, normalise by substrate volatile solids (VS), and calculate means and standard deviations.
 This is done by the \texttt{summBg()} function using the results from \texttt{cumBg()}, along with the \texttt{setup} data frame.
 The arguments for \texttt{summBg()} are:
-% Manually done, see next block
-%<<summBgargs>>=
-%  args(summBg)
-%@
 
-\begin{knitrout}
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
-\begin{lstlisting}[basicstyle = \ttfamily, breaklines = true]
-args(summBg)\end{lstlisting}
-\begin{lstlisting}[basicstyle = \ttfamily, breaklines = true]
-## function (vol, setup, id.name = "id", time.name = "time", 
-##     descrip.name = "descrip", inoc.name = NULL, norm.name = NULL, 
-##     inoc.m.name = "minoc", vol.name = "cvCH4", 
-##     imethod = "linear", extrap = FALSE, when = 30, 
-##     show.obs = FALSE) 
-## NULL
-\end{lstlisting}
-\end{kframe}
-\end{knitrout}
+<<summBgargs>>=
+  args(summBg)
+@
 
 This is a flexible function, and is useful for more than just calculating BMP.
 For example, to simply determine the mean cumulative \ce{CH4} production for each substrate at 30 d, we could use:
 
 <<cprod30>>=
-summBg(cum.prod, setup = setup, time.name = "days", 
-       descrip.name = "descrip", when = 30)
+summBg(cum.prod, setup = setup, time.name = "days", descrip.name = "descrip", 
+       when = 30)
 @
 
 Here, the response variable was \texttt{cvCH4} (cumulative \ce{CH4} production, the default--but \texttt{vol.name} could be used to specify any column).
@@ -342,9 +300,8 @@ Here, it is \texttt{"mvs.sub"}.
 We will evaluate \ce{CH4} production at 60 days (\texttt{when} argument).
 
 <<>>=
-BMP <- summBg(cum.prod, setup = setup, time.name = "days", 
-	      inoc.name = "inoc", inoc.m.name = "minoc", 
-	      norm.name = "mvs.sub", when = 60)
+BMP <- summBg(cum.prod, setup = setup, time.name = "days", inoc.name = "inoc", 
+	      inoc.m.name = "minoc", norm.name = "mvs.sub", when = 60)
 BMP
 @
 
@@ -419,19 +376,19 @@ And please send us a message if you find a bug or have a suggestion for improvin
 \begin{thebibliography}{1}
 
 \bibitem{hafner_validation_2015}
-Sasha~D. Hafner, Charlotte Rennuit, Jin~Mi Triolo, and Brian~K. Richards.
+S.D. Hafner, C.~Rennuit, J.M.~Triolo, and B.K.~Richards.
 \newblock Validation of a simple gravimetric method for measuring biogas
   production in laboratory experiments.
-\newblock {\em Biomass and Bioenergy}, In review.
+\newblock {\em Biomass and Bioenergy}, 83:297--301, 2015.
 
 \bibitem{richards_methods_1991}
-BK~Richards, RJ~Cummings, TE~White, and WJ~Jewell.
+B.K.~Richards, R.J.~Cummings, T.E.~White, and W.J.~Jewell.
 \newblock Methods for kinetic-analysis of methane fermentation in high solids
   biomass digesters.
 \newblock {\em Biomass \& Bioenergy}, 1(2):65--73, 1991.
 
 \bibitem{rittmann_environmental_2001}
-Bruce~E. Rittmann and Perry~L. McCarty.
+B.~E. Rittmann and P.~L. McCarty.
 \newblock {\em Environmental Biotechnology: Principles and Applications}.
 \newblock {McGraw}-{Hill} series in water resources and environmental
   engineering. McGraw-Hill, Boston, 2001.

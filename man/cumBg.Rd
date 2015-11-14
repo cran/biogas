@@ -182,7 +182,7 @@ cumBg(dat, dat.type = 'vol', comp = NULL, temp = NULL, pres = NULL,
   \item{rvCH4}{Production rate of methane. Only if \code{comp} is provided.}
 }
 \references{
-  Hafner, S.D., Rennuit, C., Triolo, J.M., Richards, B.K. In review. Validation of a simple gravimetric method for measuring biogas production in laboratory experiments. \emph{Biomass and Bioenergy}.
+  Hafner, S.D., Rennuit, C., Triolo, J.M., Richards, B.K. 2015. Validation of a simple gravimetric method for measuring biogas production in laboratory experiments. \emph{Biomass and Bioenergy} \bold{83}, 297-301.
 
   Richards, B.K., Cummings, R.J., White, T.E., Jewell, W.J. 1991. Methods for kinetic analysis of methane fermentation in high solids biomass digesters. \emph{Biomass and Bioenergy} 1: 65-73.
 }

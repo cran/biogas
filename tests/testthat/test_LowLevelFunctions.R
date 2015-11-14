@@ -1,12 +1,15 @@
 # test values form the lower level functions
 # Charlotte
 # 22 July 2015
-# Modified 27 July 2015
+# Modified 11 Nov 2015 SDH
 
 # NTS No test yet for rbindf.R and partCO2.R
 
 context( "Tests low level and hidden functions")
 
+# volume molar values:
+vmch4 <- 22360.588
+vmco2 <- 22263.009
 
 # Functions test with no dependencies 
 #------------------------------------
@@ -89,7 +92,7 @@ test_that("standard volume calculation is stable", {
 test_that("vol2mass results are stables", {
   volBg <- stdVol(100, temp = 273.15 + 20, pres = 101325, rh = 1, temp.std = 273.15, pres.std = 101325, unit.temp = 'K', unit.pres = 'Pa', std.message = FALSE)
   mmb <- 0.65*molMass('CH4') + (1 - 0.65)*molMass('CO2')
-  mvb <- 0.65*22361 + (1 - 0.65)*22263
+  mvb <- 0.65*vmch4 + (1 - 0.65)*vmco2
   db <- mmb/mvb
   pH2O <- 1*watVap(temp.k = 273.15 + 35) 
   mH2O <- molMass('H2O')*pH2O/(((1.5 *101325) - pH2O)*mvb)
@@ -104,13 +107,13 @@ test_that("mass2vol non vectorised result is correct", {
   # source('R/watVap.R')
  # Volume of methane if measured mass loss was 3.1 g at 35 C, 1atm, 100% humidity and 65% of methane
   mmb <- 0.65*molMass('CH4') + (1 - 0.65)*molMass('CO2')
-  mvBg <- 0.65*22361 + (1 - 0.65)*22263
+  mvBg <- 0.65*vmch4 + (1 - 0.65)*vmco2
   db <- mmb/mvBg
   pH2O <- 1*watVap(temp.k = (273.15 + 35))
   mH2O <- molMass('H2O')*pH2O/((101325 - pH2O)*mvBg)
   # Biogas volume
   VBg <- 3.1/(db + mH2O)
-  stdVCH4 <- VBg*0.65*22361/mvBg
+  stdVCH4 <- VBg*0.65*vmch4/mvBg
   
   expect_equal(mass2vol(3.1, xCH4 = 0.65, temp = 35, pres = 1, unit.temp = 'C', unit.pres = 'atm'), stdVCH4 )
 })

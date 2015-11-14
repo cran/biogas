@@ -1,4 +1,4 @@
-# Modified: 22 July 2015 SDH
+# Modified: 11 Nov 2015 SDH
 
 vol2mass <- function(
   volBg,
@@ -38,7 +38,8 @@ vol2mass <- function(
   # Calculate molar mass and molar volume
   # Volumes defined at 101325 Pa (1 atm) and 273.15 K (0C)
   mmb <- xCH4*molMass('CH4') + (1 - xCH4)*molMass('CO2')
-  mvb <- xCH4*22361 + (1 - xCH4)*22263
+  mvb <- xCH4*vol.mol['CH4'] + (1 - xCH4)*vol.mol['CO2']
+  mvb <- as.vector(mvb)
   # Dry, standardized biogas density
   db <- mmb/mvb
 

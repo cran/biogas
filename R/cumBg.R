@@ -1,4 +1,4 @@
-# Modified: 28 JULY 2015 SDH
+# Modified: 13 Nov 2015 SDH
 
 cumBg <- function(
   dat,
@@ -183,14 +183,14 @@ cumBg <- function(
     # Standardize total gas volumes
     # Note that temperature and pressure units are not converted at all in cumBg (but are in stdVol of course)
     if(!is.null(temp) & !is.null(pres)) {
-      vol$vBg <- stdVol(vol[, vol.name], temp = temp, pres = pres, rh = rh, pres.std = pres.std, temp.std = temp.std, std.message = std.message)
+      vol$vBg <- stdVol(vol[, vol.name], temp = temp, pres = pres, rh = rh, pres.std = pres.std, temp.std = temp.std, unit.temp = unit.temp, unit.pres = unit.pres, std.message = std.message)
     } else {
       vol$vBg <- vol[, vol.name]
       message('No temperature or presure provided (temp and pres arguments) so volumes are NOT standardized.')
     }
 
     # Calculate interval gas production
-    vol$vCH4 <- vol$vBg*vol[, comp.name]*22361 / (vol[, comp.name]*22361 +(1 - vol[, comp.name])*22263)  # CH4 and CO2 molar volumes in ml/mol
+    vol$vCH4 <- vol$vBg*vol[, comp.name]*vol.mol['CH4'] / (vol[, comp.name]*vol.mol['CH4'] +(1 - vol[, comp.name])*vol.mol['CO2'])  # CH4 and CO2 molar volumes in ml/mol
     if(addt0) vol[vol[, time.name]==0, 'vCH4'] <- 0
 
     # Cumulative gas production
@@ -262,6 +262,11 @@ cumBg <- function(
     }
 
     # Calculate biogas production
+    if(any(mass[, 'massloss'] < 0)) {
+      mass[whichones <- which(mass$massloss < 0), 'massloss'] <- NA
+      stop('Mass *gain* calculated for one or more observations. See ', paste('id.name column:', mass[whichones, id.name], ' and time.name column:', mass[whichones - 1, time.name], 'to', mass[whichones, time.name], sep = ' ', collapse = ', '), ' in dat data frame. ')
+    }
+
     mass[, c('vBg', 'vCH4')] <- mass2vol(mass = mass[, 'massloss'], xCH4 = mass[, comp.name], temp = temp, pres = pres, temp.std = temp.std, pres.std = pres.std, unit.temp = unit.temp, unit.pres = unit.pres, value = 'all', std.message = std.message)[, c('vBg', 'vCH4')]
     if(!is.null(headspace)) {
       # Apply initial headspace correction only for times 1 and 2 (i.e., one mass loss measurement per reactor)

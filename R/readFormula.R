@@ -1,10 +1,12 @@
-# Modified: 27 JUNE 2015 SDH
+# Modified: 4 Nov 2015 SDH
 
 readFormula <-
 function(
   form,
   elements = NULL,        # Set of elements returned, all others ignored, e.g., c('C', 'H', 'N', 'O')
-  min.elements = NULL     # Minimum set of elements, will return error if these at least are not included
+  min.elements = NULL,    # Minimum set of elements, will return error if these at least are not included
+  cdigits = 6,
+  value = 'numeric'       # Type of output, 'numeric' for named vector, 'shortform' for shortened formula
   ) {
   #fc <- as.list(rep(0, length(elements)))
 
@@ -29,7 +31,7 @@ function(
       nn <- as.numeric(gsub('.+\\)','',xx))
       ff <- gsub('\\).+', '', xx)
       cc <- nn*as.numeric(strsplit(ff, '[A-Za-z]+')[[1]][-1])
-      ee <- strsplit(ff, '[0-9]+')[[1]]
+      ee <- strsplit(ff, '[0-9.]+')[[1]]
       form <- paste0(form, paste0(ee, cc, collapse = ''))
     }
   }
@@ -49,9 +51,17 @@ function(
       if(names(cc)[j]==i) fc[i] <- fc[i] + cc[j]
     }
   }
+
+  # Simplify form based on fc (for output only)
+  form <- paste0(names(fc), signif(fc/min(fc), cdigits), collapse = '')
+  # And drop coefficients of 1
+  form <- gsub('([a-zA-Z])1([a-zA-Z])', '\\1\\2', form)
+  form <- gsub('([a-zA-Z])1$', '\\1\\2', form)
   
   # Check for minimum set of elements
   if(!is.null(min.elements)) if(any(!min.elements %in% names(fc)) | any(fc[min.elements] == 0)) stop('Minimum elements required are ', min.elements, ' (from min.elements argument), but form is ', form.orig, ', interpreted as ', form)
 
-  return(fc)
+  if(value == 'numeric') return(fc)
+  if(value == 'shortform') as.vector(form)
+
 }

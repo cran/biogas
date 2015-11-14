@@ -1,25 +1,25 @@
 # test values form the high level functions
 # Charlotte
 # 22 July 2015
-# modified 27 July 2015
+# modified 10 Nov 2015 SDH
 
 context("Tests high level functions")
 
 # predBg
 test_that('default methane prediction from COD is stable', {
-  expect_equal(round(predBg(COD = 1),4), 349.3906)
+  expect_equal(round(predBg(COD = 1),4), 349.3842)
 })
 
 test_that('default methane prediction from COD is stable with fs argument', {
-  expect_equal(signif(predBg(COD = 1, fs = 0.1), 6), signif(349.3906*0.9, 6))
+  expect_equal(signif(predBg(COD = 1, fs = 0.1), 6), signif(349.3842*0.9, 6))
 })
 
 test_that('default methane prediction from COD is stable with fd argument', {
-  expect_equal(signif(predBg(COD = 1, fd = 0.9), 6), signif(349.3906*0.9, 6))
+  expect_equal(signif(predBg(COD = 1, fd = 0.9), 6), signif(349.3842*0.9, 6))
 })
 
 test_that('default methane prediction from COD is stable', {
-  expect_equal(round(predBg(COD = 1),4), 349.3906)
+  expect_equal(round(predBg(COD = 1),4), 349.3842)
 })
 
 test_that('default methane prediction from predBg using a formula is stable', {
@@ -32,8 +32,8 @@ test_that('default methane prediction from predBg using a formula is stable', {
 # NTS: might also be good to store the test data framse somewhere
 
 # volume molar values:
-vmch4 <- 22361
-vmco2 <- 22263
+vmch4 <- 22360.588
+vmco2 <- 22263.009
 
 # cumulative sum and rates
 # volumetric
@@ -99,6 +99,14 @@ test_that("missing arguments in gravimetric throw an error", {
   expect_that(cumBg(dat = test.mass, dat.type = "mass", temp = 35, pres =1), throws_error())
 })
 
+test_that("cumBg gives a message error if cumulative mass is negative", {
+  test.mass <- read.csv('test.mass.csv')
+  expect_that(cumBg(dat = test.mass, dat.type = "mass", comp = "comp", temp = 35, pres = 1, time.name = 'days'), throws_error())
+  
+}
+)
+
+
 # summBg
 # uses same res as volumetric testing n°2
 test_that("summBg means correctly results", {
@@ -131,13 +139,17 @@ test_that("summBg means correctly results", {
   test.sum <- rbind(test.sum, test.sum2)
   test.sum <- rbind(test.sum, test.sum3)
 
-  setup <- data.frame( id = test.sum[, 1], descrip = c(rep('inoc', 12), rep('A', 12)) )
+  setup <- data.frame( id = c('R_1', 'R_2', 'R_3', 'R_4'), descrip = c('inoc', 'inoc', 'A', 'A')) 
   
-  res.test.sum <- data.frame (descrip = c('inoc', 'A'), 
-                              time = c(5,5), 
-                              mean = round(
-                                       c(mean(test.sum[test.sum$time == 5 & test.sum$id %in% c('R_1', 'R_2'), 'cvCH4']), 
-                                       mean(test.sum[test.sum$time == 5 & test.sum$id %in% c('R_3', 'R_4'), 'cvCH4']))
-                                       , 3))
+  res.test.sum <- 
+    data.frame (descrip = c('inoc', 'A'), 
+                time = c(5,5), 
+                mean = 
+                  c(mean(test.sum[test.sum$time == 5 & test.sum$id %in% c('R_1', 'R_2'), 'cvCH4']), 
+                    mean(test.sum[test.sum$time == 5 & test.sum$id %in% c('R_3', 'R_4'), 'cvCH4']))
+                )
   expect_equal(summBg(test.sum, setup, when = 5)[, 1:3], res.test.sum)
+
 }) 
+
+

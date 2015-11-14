@@ -1,4 +1,4 @@
-# Modified: 28 JULY 2015 SDH
+# Modified: 11 Nov 2015 SDH
 
 summBg <- function(
   vol,
@@ -63,6 +63,10 @@ summBg <- function(
   setup <- setup[setup[, id.name] %in% ids, ]
   if(!is.null(inoc.name) && !inoc.name %in% setup[, descrip.name]) stop('inoc.name ', deparse(substitute(inoc.name)), ' no longer in setup after trimming--are reactors present in setup missing in vol?')
   if(!is.null(norm.name) && !norm.name %in% names(setup)) stop('norm.name ', deparse(substitute(norm.name)), 'no longer in setup after trimming--are reactors present in setup missing in vol?')
+
+  # Check for duplicates in setup and vol
+  if(any(duplicated(setup[, id.name]))) stop('Duplicated reactor IDs (', id.name, ' column) in setup dataframe! This must be an error. Stopping.')
+  if(any(duplicated(vol[, c(id.name, time.name)]))) stop('Duplicated ID (', id.name, ' column) x time (', time.name, ' column) in vole dataframe! This must be an error. Stopping.')
 
   # Interpolate cvCH4 to common time for each reactor
   # Next line only for time-independent option with one observation per reactor
@@ -180,9 +184,9 @@ summBg <- function(
       names(s2) <- c(descrip.name, time.name)
       for(i in unique(s1[, descrip.name])){
         dd <- s1[s1[, descrip.name]==i, ]
-        s2[s2[, descrip.name]==i, 'mean'] <- signif(mean(na.omit(dd[, vol.name])), 5)
+        s2[s2[, descrip.name]==i, 'mean'] <- mean(na.omit(dd[, vol.name]))
         #s2[s2[, descrip.name]==i, 'sd'] <- signif(sd(na.omit(dd[, vol.name])), 5) # Original code with no contribution of inoc to sd
-        s2[s2[, descrip.name]==i, 'sd'] <- signif(sqrt(sd(na.omit(dd[, vol.name]))^2 + mean(dd[, 'sd.inoc'])^2), 5) # NTS: Probably there is a better way to do this
+        s2[s2[, descrip.name]==i, 'sd'] <- sqrt(sd(na.omit(dd[, vol.name]))^2 + mean(dd[, 'sd.inoc'])^2) # NTS: Probably there is a better way to do this
         s2[s2[, descrip.name]==i, 'n'] <- sum(!is.na(dd[, vol.name]))  
       }
     } else { # If show.obs = TRUE, just return individual observations

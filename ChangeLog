@@ -4,6 +4,128 @@ biogas package
 ########################################
 ## DETAILED LOG ########################
 ########################################
+13 November 2015 Sasha D. Hafner
+Version 1.2.0
+Updated DESCRIPTION to prepare for submision to CRAN
+
+11 November 2015 Sasha D. Hafner
+Version 1.1.1
+*cumBg.R
+Removed use of signif() in calculation of means and sd. Added checks for
+duplicated rows in setup and vol.
+
+*test_HighLevelFunctions.R test_LowLevelFunctions.R
+Few updates and corrections + addition of test if mass gain is calculated in cumBg
+
+*cumBg.R
+Added detailed error message for when mass gain is observed.
+
+09 November 2015 Sasha D. Hafner
+Version 1.1.1
+*Rd files
+More details for stdVol.Rd, new file vol2mol.Rd, and updating reference here
+and in others.
+
+05 November 2015 Sasha D. Hafner
+Version 1.1.1
+*constants.R 
+New file defining constants stored in three vectors: std.forms, atom.weights,
+and vol.mol.
+
+*cumBg.R, mass2vol.R, molMass.R, predBg.R, vol2mass.R
+Updated code dealing with constants. In some cases, constants had been
+hard-coded (molar volumes). Now they use values set in constants.R.
+
+03 November 2015 Sasha D. Hafner
+Version 1.1.1
+*molMass.R
+Removed name from output
+
+*readFormula.R
+Corrected bug that resulted in NA in formulas with decimal coefficients within
+parentheses. Problem was missing . in '[0-9.]+' on line 34.
+
+*predBg.R
+Added HCO3- production to CO2 production for returning as total CO2
+production. Previous version only used cCO2 and ignored cHCO3.
+
+03 November 2015 Sasha D. Hafner
+Version 1.1.1
+*predBg.R
+Changed how mass and mcomp are handled when sum(mcomp) != 1. Previously mcomp was
+divided by its sum with a warning only. Now mass is set to the sum(mcomp)
+first if it was not already specified.
+
+01 November 2015 Sasha D. Hafner
+Version 1.1.1
+*predBg.R
+Previously form argument was always capitalized before calculating molar mass,
+etc. Now it is only capitalized if first letter of is lowercase. Applied
+separately to each element.
+
+29 October 2015 Sasha D. Hafner
+Version 1.1.1
+
+*readFormula.R
+Added value and cdigits arguments for returning simplified character formulas
+only (when value = "shortform").
+
+*predBg.R
+Added shortform argument. Set to TRUE to simplify formula (if possible).
+
+21 October 2015 Sasha D. Hafner
+Version 1.1.1
+
+*molMass.R
+Made vectorized using a loop. Added names to output vector.
+
+*predBg.R
+Changed reaction coefficients for reaction output (value = 'reaction') so
+reactants are negative, products positive. 
+
+*predBg.R
+Rewrote all code for handling mcomp. Now mcomp is converted to a formula
+(form) and this is carried through. Now possible to use chemical formulas in
+names for mcomp argument. Also if mass is not specified it will be set to
+mcomp sum.
+
+*predBg.R
+If both COD and form arguments are given, mass is calculated and function
+behaves as if mass was given.
+
+21 October 2015 Sasha D. Hafner
+Version 1.1.1
+
+*cumBg.R
+Added unit.temp and unit.pres to stdVol() call.
+
+*vol2mol.R
+New function for converting volume of pure gas to molar quantity.
+
+
+18 October 2015 Sasha D. Hafner
+Version 1.1.1
+
+*molMass.R Fixed typo in error message.
+
+*predBg.R
+Changed calculation of chemical formula from mcomp argument. Values in
+argument were interpreted as mole fraction originally, now are mass fraction.
+Also added digits to rounded formula.
+
+
+12 September 2015 Sasha D. Hafner
+Version 1.1.1
+
+*checkArgClassValue.R
+Fixed message for multi-value classes with paste(..., collapse = )
+
+19 August 2015 Sasha D. Hafner
+Version 1.1.1
+
+*predBg.R
+Added new option for value argument = 'reaction' for returning the overall
+chemical reaction only.
 
 29 July 2015 Charlotte Rennuit
 Version 1.1.0

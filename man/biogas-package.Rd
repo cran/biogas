@@ -38,7 +38,7 @@ Sasha D. Hafner, Charlotte Rennuit, Jin Mi Triolo, and Ali Heidarzadeh Vazifehkh
 Maintainer: Sasha D. Hafner <saha@kbm.sdu.dk>
 }
 \references{
-  Hafner, S.D., Rennuit, C., Triolo, J.M., Richards, B.K. In review. Validation of a simple gravimetric method for measuring biogas production in laboratory experiments. \emph{Biomass and Bioenergy}.
+  Hafner, S.D., Rennuit, C., Triolo, J.M., Richards, B.K. 2015. Validation of a simple gravimetric method for measuring biogas production in laboratory experiments. \emph{Biomass and Bioenergy} \bold{83}, 297-301.
 
   Richards, B.K., Cummings, R.J., White, T.E., Jewell, W.J. 1991. Methods for kinetic analysis of methane fermentation in high solids biomass digesters. \emph{Biomass and Bioenergy} \bold{1}, 65-73.
 

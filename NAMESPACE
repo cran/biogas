@@ -9,7 +9,8 @@ molMass,
 stdVol,
 predBg,
 summBg,
-vol2mass
+vol2mass,
+vol2mol
 )
 
 

@@ -84,13 +84,13 @@ mass2vol(mass, xCH4, temp, pres,
 }
 }
 \details{
-  This function uses the method described in Hafner et al. (in review) to calculate biogas production from reactor mass loss.
+  This function uses the method described in Hafner et al. (2015) to calculate biogas production from reactor mass loss.
   It is essential that the only change in reactor mass is due to biogas removal!
   Users are advised to read the original reference before applying the method.
   This function is vectorized.
   Instead of using this function directly when working with multiple measurements on multiple reactors, use the \code{\link{cumBg}} function (which can call up \code{mass2vol}). 
   
-   Standard values and units of temperature and pressure can be globally set using the function \code{\link{options}}.
+  Standard values and units of temperature and pressure can be globally set using the function \code{\link{options}}.
 }
 \value{
 volume of methane in mL as a numeric vector (if \code{value = "CH4"}) or a matrix with columns for biogas, methane, and carbon dioxide volumes in mL.
@@ -100,7 +100,7 @@ volume of methane in mL as a numeric vector (if \code{value = "CH4"}) or a matri
   All volumes are standardised using \code{pres.std} and \code{temp.std} arguments (see \code{\link{stdVol}}).
 }
 \references{
-  Hafner, S.D., Rennuit, C., Triolo, J.M., Richards, B.K. In review. Validation of a simple gravimetric method for measuring biogas production in laboratory experiments. \emph{Biomass and Bioenergy}.
+  Hafner, S.D., Rennuit, C., Triolo, J.M., Richards, B.K. 2015. Validation of a simple gravimetric method for measuring biogas production in laboratory experiments. \emph{Biomass and Bioenergy} \bold{83}, 297-301.
 }
 \author{
   Sasha D. Hafner and Charlotte Rennuit

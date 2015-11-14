@@ -1,4 +1,4 @@
-# Modified: 28 JULY 2015 SDH
+# Modified: 11 Nov 2015 SDH
 
 mass2vol <- function(
   mass,
@@ -45,7 +45,8 @@ mass2vol <- function(
   pres.std.pa <- unitConvert(x = pres.std, unit = unit.pres, to = 'Pa')
 
   mmb <- xCH4*molMass('CH4') + (1 - xCH4)*molMass('CO2')
-  mvBg <- xCH4*22361 + (1 - xCH4)*22263
+  mvBg <- xCH4*vol.mol['CH4'] + (1 - xCH4)*vol.mol['CO2']
+  mvBg <- as.vector(mvBg)
   db <- mmb/mvBg
 
   # Calculate water vapor pressure in Pa (based on NIST)
@@ -74,8 +75,10 @@ mass2vol <- function(
   # Standardize (based on molar volumes used above, so in the default case stdVol does nothing.)
   #vBg <- stdVol(vBg, temp = unitConvert(x = 273.15, unit = 'K', to = unit.temp), pres = unitConvert(x = 101325, unit = 'Pa', to = unit.pres), rh = 0, temp.std = temp.std, pres.std = pres.std, unit.pres = unit.pres, unit.temp = unit.temp, std.message = std.message)
   vBg <- stdVol(vBg, temp = 273.15, pres = 101325, rh = 0, temp.std = temp.std.k, pres.std = pres.std.pa, unit.pres = 'Pa', unit.temp = 'K', std.message = std.message)
-  vCH4 <- xCH4*vBg*22361/mvBg
-  vCO2 <- (1 - xCH4)*vBg*22263/mvBg
+  vCH4 <- xCH4*vBg*vol.mol['CH4']/mvBg
+  vCH4 <- as.vector(vCH4)
+  vCO2 <- (1 - xCH4)*vBg*vol.mol['CO2']/mvBg
+  vCO2 <- as.vector(vCO2)
 
   if(tolower(value) == "ch4") {
     return(vCH4) 

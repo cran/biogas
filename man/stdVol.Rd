@@ -27,7 +27,7 @@ stdVol(vol, temp, pres, rh = 1, temp.std = getOption('temp.std', 0.0),
     A numeric vector.
 }
   \item{rh}{
-    relative humidity of the gas (\code{0< = rh< = 1}).
+    relative humidity of the gas (\code{0<= rh <= 1}).
     Typically should be 1.0 (the default).
     A numeric vector.
 }
@@ -48,11 +48,11 @@ stdVol(vol, temp, pres, rh = 1, temp.std = getOption('temp.std', 0.0),
     Options are \code{"C"} (degrees Celcius), \code{"F"} (degrees Fahrenheit), and \code{"K"} (Kelvin).
 }
   
-  \item{std.message}{should a message with the standard conditions be displayed ? Default is TRUE.
+  \item{std.message}{should a message with the standard conditions be displayed? Default is TRUE.
 }
 }
 \details{
-  Standardisation is done in a two-step process following Hafner et al. (in review).
+  Standardisation is done in a two-step process following Hafner et al. (2015).
   First, the contribution of water vapor is removed and volume is corrected to the standard pressure:
 
   vd = vm*(pm - pw)/ps
@@ -68,6 +68,8 @@ stdVol(vol, temp, pres, rh = 1, temp.std = getOption('temp.std', 0.0),
   vs = vd*Ts/T  
 
   where vs = standardised volume and Ts = standardisation temperature (K, converted from \code{temp.std} argument).
+  This approach is based on Charles's and Boyle's laws.
+  Comparison with calculations using the Peng-Robinson equation of state suggests that error in \code{stdVol} is around 0.1\% for typical biogas with volume measured at 25 degrees C, and higher at higher temperatures (up to 0.3\% at 55 degrees C).
 
   Standard temperature and pressure and their units can be defined by the user using the \code{temp.std}, \code{pres.std}, \code{temp.unit}, and \code{pres.unit} arguments.  
   Alternatively,  standard values and units of temperature and pressure can be globally set using the function \code{\link{options}}.
@@ -80,7 +82,7 @@ stdVol(vol, temp, pres, rh = 1, temp.std = getOption('temp.std', 0.0),
   A numeric vector.
 }
 \references{
-  Hafner, S.D., Rennuit, C., Triolo, J.M., Richards, B.K. In review. Validation of a simple gravimetric method for measuring biogas production in laboratory experiments. \emph{Biomass and Bioenergy}.
+  Hafner, S.D., Rennuit, C., Triolo, J.M., Richards, B.K. 2015. Validation of a simple gravimetric method for measuring biogas production in laboratory experiments. \emph{Biomass and Bioenergy} \bold{83}, 297-301.
 
   Richards, B.K., Cummings, R.J., White, T.E., Jewell, W.J. 1991. Methods for kinetic analysis of methane fermentation in high solids biomass digesters. \emph{Biomass and Bioenergy} \bold{1}, 65-73.
 }
