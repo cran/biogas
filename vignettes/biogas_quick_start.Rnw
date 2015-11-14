@@ -1,6 +1,6 @@
 %% Next 2 lines needed for non-Sweave vignettes
 %\VignetteEngine{knitr::knitr} 
-%\VignetteIndexEntry{Using biogas}
+%\VignetteIndexEntry{Getting started with the biogas package}
 
 \documentclass{article}
 
@@ -50,7 +50,7 @@ This document describes the use of the high-level functions.
 
 \begin{table}[h!]
   \begin{center}
-  \caption{Operations done with the low-level functions in the biogas package. All functions except \texttt{calcCOD()} and \texttt{molMass()} are vectorized. See help files for more details.}
+  \caption{Operations done with the low-level functions in the biogas package. All functions are vectorized. See help files for more details.}
   \label{tab:lowfunctionsummary}
   \vspace{3pt}
   
@@ -70,7 +70,7 @@ This document describes the use of the high-level functions.
 \end{table}
 
 \begin{table}[h!]
-  \caption{Operations done with the high-level functions in the biogas package. The \texttt{cumBg()} and \texttt{summBg()} functions can handle data frames. \texttt{predBg()} is vectorized.}
+  \caption{Operations done with the high-level functions in the biogas package. The \texttt{cumBg()} and \texttt{summBg()} functions can handle data from any number of reactors. \texttt{predBg()} is vectorized.}
   \label{tab:highfunctionsummary}
   \vspace{3pt}
   \begin{tabular}{ll}
@@ -174,7 +174,7 @@ Note that there is no time column in this data frame--these values are independe
 \newpage
 
 In this example, we will use the example data sets included with the package: \texttt{vol} for biogas volumes, \texttt{comp} for composition, and \texttt{setup} for grouping and substrate and inoculum masses.
-These data are from a BMP test that was carried out on two different susbtrates A and B, and cellulose (included as a ``control'').
+These data are from a BMP test that was carried out on two different substrates A and B, and cellulose (included as a ``control'').
 The experiment included 12 batch reactors:
 \begin{itemize}
   \item 3 reactors with substrate A and inoculum
@@ -353,7 +353,7 @@ predBg(COD = c(A = 1.439, B = 1.561, cellu = 1.184))
 @
 
 Measured BMP was substantially lower for substrates A and B, indicating very low degradability.
-In fact, we could use \texttt{predBg()} to estimate degradability.
+In fact, we could use \texttt{predBg()} to estimate effective degradability (ignoring synthesis of microbial biomass).
 
 <<>>=
   BMP$mean/predBg(COD = c(A = 1.439, B = 1.561, cellu = 1.184))
@@ -366,7 +366,7 @@ We can conclude that are measured results are reasonable.
 \section{Continuing with the biogas package}
 The three functions demonstrated in this document can be used in other ways not described here.
 For example, \texttt{cumBg()} can be used with measurements of reactor mass over time to determine biogas production\cite{hafner_validation_2015}, \texttt{summBg()} can return results for multiple times, and \texttt{predBg()} function can predict microbial nitrogen requirements and biogas composition.
-More details can be found in the help files for these functions.
+More details can be found in the help files for these functions, or, for \texttt{predBg}, in the \texttt{predBg} vignette.
 The low-level functions are straight-forward to use, and details can also be found in the help files.
 
 To receive updates on the biogas package, you can subscribe to a mailing list by sending an e-mail to either of us.

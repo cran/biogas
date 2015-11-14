@@ -4,9 +4,28 @@ biogas package
 ########################################
 ## DETAILED LOG ########################
 ########################################
+
+14 November 2015 Sasha D. Hafner
+Version 1.2.1
+*biogas_quick_start.Rnw, predBg_function.Rnw
+Corrected some mistakes, including identical %\VignetteIndexEntry values
+
+*Many Rd files
+Wrapped examples and usage to 69 characters
+
+*DESCRIPTION
+Updated
+
+*calcCOD.R
+Check for lowercase elements changed so it is applied to each element of form
+separately
+
+*calcCOD.Rd, molMass.Rd
+Updated to reflect vectorized quality of functions
+
 13 November 2015 Sasha D. Hafner
 Version 1.2.0
-Updated DESCRIPTION to prepare for submision to CRAN
+*Updated DESCRIPTION to prepare for submision to CRAN
 
 11 November 2015 Sasha D. Hafner
 Version 1.1.1

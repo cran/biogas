@@ -9,10 +9,13 @@
 }
 \usage{
 cumBg(dat, dat.type = 'vol', comp = NULL, temp = NULL, pres = NULL,
-  id.name = 'id', time.name = 'time', dat.name = dat.type, comp.name = 'xCH4', 
-  headspace = NULL, vol.hs.name = 'vol.hs', headcomp = 'N2', temp.init = NULL,
-  temp.std = getOption('temp.std', 0.0), pres.std = getOption('pres.std', 1.0),
-  unit.temp = getOption('unit.temp', 'C'), unit.pres = getOption('unit.pres', 'atm'),
+  id.name = 'id', time.name = 'time', dat.name = dat.type, 
+  comp.name = 'xCH4', headspace = NULL, vol.hs.name = 'vol.hs', 
+  headcomp = 'N2', temp.init = NULL, 
+  temp.std = getOption('temp.std', 0.0), 
+  pres.std = getOption('pres.std', 1.0),
+  unit.temp = getOption('unit.temp', 'C'), 
+  unit.pres = getOption('unit.pres', 'atm'),
   cmethod = 'removed', imethod = 'linear', extrap = FALSE,
   addt0 = TRUE, showt0 = TRUE, std.message = TRUE, check = TRUE) 
 }
@@ -267,7 +270,8 @@ data("comp2")
 head(vol2)
 head(comp2)
 
-cum.prod <- cumBg(vol2, comp = comp2, temp = 20, pres = 1, id.name = "bottle", time.name = "days", 
+cum.prod <- cumBg(vol2, comp = comp2, temp = 20, pres = 1, 
+                  id.name = "bottle", time.name = "days", 
 		  dat.name = "meas.vol", comp.name = "CH4.conc")
 head(cum.prod)
 tail(cum.prod)
@@ -276,32 +280,37 @@ tail(cum.prod)
 warnings()
 
 # Set extrap = TRUE to avoid
-cum.prod <- cumBg(vol2, comp = comp2, temp = 20, pres = 1, id.name = "bottle", time.name = "days", 
-		  dat.name = "meas.vol", comp.name = "CH4.conc", extrap = TRUE)
+cum.prod <- cumBg(vol2, comp = comp2, temp = 20, pres = 1, 
+                  id.name = "bottle", time.name = "days", 
+		  dat.name = "meas.vol", comp.name = "CH4.conc", 
+                  extrap = TRUE)
 head(cum.prod)
 
 qplot(x = days, y = cvCH4, data = cum.prod, xlab = "Time (d)", 
-      ylab = "Cumulative methane production (mL)", color = bottle, geom = "line")
+      ylab = "Cumulative methane production (mL)", 
+      color = bottle, geom = "line")
 
 # Mass example
 data("mass")
 
 mass
 
-# Need to specify data type with dat.type argument (using default values for id.name, dat.name, 
-# and comp.name)
-cum.prod <- cumBg(mass, dat.type = "mass", comp = comp, temp = 35, pres = 1, time.name = "days")
+# Need to specify data type with dat.type argument (using default 
+# values for id.name, dat.name, and comp.name)
+cum.prod <- cumBg(mass, dat.type = "mass", comp = comp, temp = 35, 
+                  pres = 1, time.name = "days")
 cum.prod
 
 # Drop time 0 rows
-cum.prod <- cumBg(mass, dat.type = "mass", comp = comp, temp = 35, pres = 1, time.name = "days", 
-		  showt0 = FALSE)
+cum.prod <- cumBg(mass, dat.type = "mass", comp = comp, temp = 35, 
+                  pres = 1, time.name = "days", showt0 = FALSE)
 cum.prod
 
-# Add initial headspace correction (alternatively, headspace could be a data frame with a different 
-# volume for each reactor)
-cum.prod <- cumBg(mass, dat.type = "mass", comp = comp, temp = 35, pres = 1, time.name = "days", 
-		  headspace = 300, headcomp = "N2", temp.init = 20, showt0 = FALSE)
+# Add initial headspace correction (alternatively, headspace could 
+# be a data frame with a different volume for each reactor)
+cum.prod <- cumBg(mass, dat.type = "mass", comp = comp, temp = 35, 
+                  pres = 1, time.name = "days", headspace = 300, 
+                  headcomp = "N2", temp.init = 20, showt0 = FALSE)
 cum.prod
 
 }

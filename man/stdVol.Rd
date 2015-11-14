@@ -8,9 +8,12 @@
   \code{stdVol} corrects gas volumes to dry conditions at a specified temperature and pressure. 
 }
 \usage{
-stdVol(vol, temp, pres, rh = 1, temp.std = getOption('temp.std', 0.0), 
-       pres.std = getOption('pres.std', 1.0), unit.temp = getOption('unit.temp', 'C'), 
-       unit.pres = getOption('unit.pres', 'atm'), std.message = TRUE)
+stdVol(vol, temp, pres, rh = 1, 
+       temp.std = getOption('temp.std', 0.0), 
+       pres.std = getOption('pres.std', 1.0), 
+       unit.temp = getOption('unit.temp', 'C'), 
+       unit.pres = getOption('unit.pres', 'atm'), 
+       std.message = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -104,7 +107,8 @@ stdVol(vol, temp, pres, rh = 1, temp.std = getOption('temp.std', 0.0),
   stdVol(100, temp = 35, pres = 103, unit.pres = "kPa")
 
   # With different units and standard conditions
-  stdVol(100, temp = 100, pres = 1, unit.pres = "bar", pres.std = 1, unit.temp = "F", temp.std = 68)
+  stdVol(100, temp = 100, pres = 1, unit.pres = "bar", pres.std = 1, 
+         unit.temp = "F", temp.std = 68)
   
   # Vectorized
   data(vol)
@@ -112,9 +116,10 @@ stdVol(vol, temp, pres, rh = 1, temp.std = getOption('temp.std', 0.0),
   vol$vol.std <- stdVol(vol$vol, temp = 20, pres = 1.02)
   head(vol)
   
-  #using options()
-  oldoptions <- options(temp.std = 273.15, pres.std = 101325, unit.temp = 'K', unit.pres = 'Pa')
-  vol$vol.std <- stdVol(vol$vol, temp = 293, pres = 101325)
+  #using options() (recommended!)
+  oldoptions <- options(temp.std = 273.15, pres.std = 101325, 
+                        unit.temp = 'K', unit.pres = 'Pa')
+  vol$vol.std <- stdVol(vol$vol, temp = 293.15, pres = 101325)
   head(vol)
   options(oldoptions)
 }

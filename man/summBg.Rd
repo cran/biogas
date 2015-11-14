@@ -6,12 +6,15 @@
 }
 \description{
     From cumulative gas production, use \code{summBg} to standardise, interpolate, subtract innoculum contribution, normalise by substrate mass, and summarise the output calculating mean and standard devations for each type of sample (groups of replicates). 
-    The function is flexible so all or only one operation can be done when called. 
-    Typically \code{summBg} is  handy to get the biochemical methane potential (BMP) from cumulative methane production.
+    The function is flexible: some, all, or none of these operations can be carried out in a call.
+    Typically \code{summBg} is used to calculate biochemical methane potential (BMP) from cumulative methane production.
   }
-\usage{summBg(vol, setup, id.name = "id", time.name = "time", descrip.name = "descrip", 
-       inoc.name = NULL, norm.name = NULL, inoc.m.name = "minoc", vol.name = "cvCH4", 
-       imethod = "linear", extrap = FALSE, when = 30, show.obs = FALSE)
+\usage{
+summBg(vol, setup, id.name = "id", time.name = "time", 
+       descrip.name = "descrip", inoc.name = NULL, 
+       norm.name = NULL, inoc.m.name = "minoc", vol.name = "cvCH4", 
+       imethod = "linear", extrap = FALSE, when = 30, 
+       show.obs = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -103,7 +106,8 @@ data("comp")
 data("setup") 
 
 # First need to calculate cumulative methane production data
-cum.prod <- cumBg(vol, comp = comp, temp = 20, pres = 1, time.name = "days", extrap = TRUE)
+cum.prod <- cumBg(vol, comp = comp, temp = 20, pres = 1, 
+                  time.name = "days", extrap = TRUE)
 
 head(cum.prod)
 
@@ -111,27 +115,32 @@ head(cum.prod)
 summBg(vol = cum.prod, setup = setup, time.name = "days", when = 30)
 
 # Or total cumulative biogas
-summBg(vol = cum.prod, setup = setup, time.name = "days", vol.name = "cvBg", when = 30)
+summBg(vol = cum.prod, setup = setup, time.name = "days", 
+       vol.name = "cvBg", when = 30)
 
 # Cumulative CH4 only, subtract inoculum contribution
-summBg(vol = cum.prod, setup = setup, time.name = "days", inoc.name = "inoc", when = 30)
+summBg(vol = cum.prod, setup = setup, time.name = "days", 
+       inoc.name = "inoc", when = 30)
 
 # And normalise by mvs.sub column (mass of substrate VS here) (so the result is BMP)
-summBg(vol = cum.prod, setup = setup, time.name = "days", inoc.name = "inoc", when = 30, 
-       norm.name = "mvs.sub")
+summBg(vol = cum.prod, setup = setup, time.name = "days", 
+       inoc.name = "inoc", when = 30, norm.name = "mvs.sub")
 
 # Same example, but return results for three times
-summBg(vol = cum.prod, setup = setup, time.name = "days", inoc.name = "inoc", when = c(10, 30, 60), 
+summBg(vol = cum.prod, setup = setup, time.name = "days", 
+       inoc.name = "inoc", when = c(10, 30, 60), 
        norm.name = "mvs.sub")
 
 # Back to earlier example, but return all individual observations 
-# (and total production and individual contributions of substrate and inoculum) 
-summBg(vol = cum.prod, setup = setup, time.name = "days", inoc.name = "inoc", when = 30, 
+# (and total production and individual contributions of substrate 
+# and inoculum) 
+summBg(vol = cum.prod, setup = setup, time.name = "days", 
+       inoc.name = "inoc", when = 30, 
        norm.name = "mvs.sub", show.obs = TRUE)
 
 # Something different: interpolated biogas production rates
-summBg(vol = cum.prod, setup = setup, time.name = "days", vol.name = "rvBg", when = 30, 
-       show.obs = TRUE)
+summBg(vol = cum.prod, setup = setup, time.name = "days", 
+       vol.name = "rvBg", when = 30, show.obs = TRUE)
 
 # Example with dataset with different column names
 data("vol2")
@@ -139,15 +148,18 @@ data("comp2")
 data("setup2")
 
 # First need to calculate cumulative methane production data
-cum.prod <- cumBg(vol2, comp = comp2, temp = 20, pres = 1, id.name = "bottle", time.name = "days", 
-		  dat.name = "meas.vol", comp.name = "CH4.conc", extrap = TRUE)
+cum.prod <- cumBg(vol2, comp = comp2, temp = 20, pres = 1, 
+                  id.name = "bottle", time.name = "days", 
+		  dat.name = "meas.vol", comp.name = "CH4.conc", 
+                  extrap = TRUE)
 
 head(cum.prod)
 
-# Cumulative CH4 production at 30 d, subtract inoculum contribution and normalise by sub.vs column 
-# (mass of substrate VS here) (look at setup2).
-summBg(vol = cum.prod, setup = setup2, id.name = "bottle", time.name = "days", 
-       descrip.name = "description", inoc.name = "Inoculum", inoc.m.name = "inoc.mass", 
+# Cumulative CH4 production at 30 d, subtract inoculum contribution 
+# and normalise by sub.vs column (mass of substrate VS here) (look at setup2).
+summBg(vol = cum.prod, setup = setup2, id.name = "bottle", 
+       time.name = "days", descrip.name = "description", 
+       inoc.name = "Inoculum", inoc.m.name = "inoc.mass", 
        norm.name = "sub.vs", when = 30)
 
 }

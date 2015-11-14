@@ -9,9 +9,12 @@
 }
 \usage{
 mass2vol(mass, xCH4, temp, pres, 
-  temp.std = getOption('temp.std', 0.0), pres.std = getOption('pres.std', 1.0), 
-  unit.temp = getOption('unit.temp', 'C'), unit.pres = getOption('unit.pres', 'atm'), 
-  value = "CH4", headspace = NULL, headcomp = 'N2', temp.init = NULL, std.message = TRUE)
+  temp.std = getOption('temp.std', 0.0), 
+  pres.std = getOption('pres.std', 1.0), 
+  unit.temp = getOption('unit.temp', 'C'), 
+  unit.pres = getOption('unit.pres', 'atm'), 
+  value = "CH4", headspace = NULL, headcomp = 'N2', 
+  temp.init = NULL, std.message = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -122,7 +125,8 @@ volume of methane in mL as a numeric vector (if \code{value = "CH4"}) or a matri
   # Vectorized
   data("massw")
   massw$massloss <- massw$start - massw$end
-  massw$vCH4 <- mass2vol(massw$massloss, xCH4 = 0.65, temp = 35, pres = 1)
+  massw$vCH4 <- mass2vol(massw$massloss, xCH4 = 0.65, temp = 35, 
+                         pres = 1)
   massw
   
 }

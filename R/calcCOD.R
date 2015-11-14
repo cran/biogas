@@ -1,4 +1,4 @@
-# Modified: 22 JULY 2015
+# Modified: 14 NOV 2015
 
 calcCOD <-
 function(form) {
@@ -7,7 +7,9 @@ function(form) {
   checkArgClassValue(form, 'character')
 
   # If and only if first letter of form is lowercase, entire string is capitalized
-  if(grepl('[a-z]', substr(form, 1,1))) form <- toupper(form)
+  for(i in 1:length(form)) {
+    if(grepl('^[a-z]', form[i])) form[i] <- toupper(form[i])
+  }
 
   # Read chemical formula
   fc <- readFormula(form, elements = c('C', 'H', 'O', 'N'))

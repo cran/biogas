@@ -8,9 +8,9 @@
   \code{predBg} predicts biogas and methane production based on composition and other, optional, details.
 }
 \usage{
-predBg(form = NULL, mass = 1, mol = NULL, fs = 0, fd = 1, mcomp = NULL, 
-       COD = NULL, conc.sub = NULL, pH = NULL, temp = NULL, 
-       mu = 0.1, shortform = NULL, value = "CH4")
+predBg(form = NULL, mass = 1, mol = NULL, fs = 0, fd = 1, 
+       mcomp = NULL, COD = NULL, conc.sub = NULL, pH = NULL, 
+       temp = NULL, mu = 0.1, shortform = NULL, value = "CH4")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -131,7 +131,8 @@ predBg(form = NULL, mass = 1, mol = NULL, fs = 0, fd = 1, mcomp = NULL,
 }
 \note{
   Predictions will only be as good as the parameter values provided, and maybe not even that good.
-  \code{fs} should be interpreted as fs', or the effective value after decomposition of microbial biomass.
+  \code{fs} should be interpreted as $f_s$ in Ritttmann and McCarty (2001), i.e., the effective value after decay of microbial biomass, and not $f_s^0$.
+  The original reference (Section 2.3 and Eq. (3.33) in Rittmann and McCarty (2001)) and the \code{predBg} vignette provide more details.
   Partitioning of carbon dioxide is based on equilibrium between all biogas produced and the solution, and represents a continuous reactor running at steady-state.
 }
 

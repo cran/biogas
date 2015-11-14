@@ -3,17 +3,17 @@
 \alias{biogas}
 \docType{package}
 \title{
-Analyze Biogas Data and Predict Biogas Production
+Process Biogas Data and Predict Biogas Production
 }
 \description{
-Functions for working with biogas data. Both low- and high-level functions are included for carrying out common tasks for analysis of biogas and related data. Molar mass and calculated oxygen demand (COD') can be determined from a chemical formula. Measured gas volume can be corrected for water vapor and to (possibly user-defined) standard temperature and pressure. Gas composition, cumulative production, or other variables can be interpolated to a specified time. Cumulative biogas and methane production (and rates) can be calculated from individual biogas volume (or reactor mass) and biogas composition measurements for any number of reactors. With cumulative methane production data and data on reactor contents, biochemical methane potential (BMP) can be calculated and summarised, including subtraction of the inoculum contribution and normalisation by substrate mass. Cumulative production and production rates can be summarised in several different ways (e.g., omitting normalisation) using the same function. Lastly, biogas and methane production can be predicted from substrate composition and additional, optional data.
+Functions for working with biogas data. Both low- and high-level functions are included for carrying out common tasks for processing and analysis of biogas and related data. Molar mass and calculated oxygen demand (COD') can be determined from a chemical formula. Measured gas volume can be corrected for water vapor and to (possibly user-defined) standard temperature and pressure. Gas composition, cumulative production, or other variables can be interpolated to a specified time. Cumulative biogas and methane production (and rates) can be calculated from individual biogas volume (or reactor mass) and biogas composition measurements for any number of reactors. With cumulative methane production data and data on reactor contents, biochemical methane potential (BMP) can be calculated and summarised, including subtraction of the inoculum contribution and normalisation by substrate mass. Cumulative production and production rates can be summarised in several different ways (e.g., omitting normalisation) using the same function. Lastly, biogas and methane production can be predicted from substrate composition and additional, optional data.
 }
 \details{
 \tabular{ll}{
 Package: \tab biogas\cr
 Type: \tab Package\cr
-Version: \tab 1.1.0\cr
-Date: \tab 2015-07-29\cr
+Version: \tab 1.2.1\cr
+Date: \tab 2015-11-14\cr
 License: \tab GPL-2\cr
 }
     The \code{biogas} package provides several low-level functions for working with biogas measurements and related data.
@@ -22,7 +22,7 @@ License: \tab GPL-2\cr
     The function \code{\link{molMass}} and \code{\link{calcCOD}} can be used to calculate molar mass and chemical oxygen demand based on a chemical formula.
     And for gravimetric measurement of biogas production, there is \code{\link{mass2vol}} and \code{\link{vol2mass}}.
 
-    Additionally, there are two high-level functions in the \code{biogas} package that simplify analysis of biogas measurements. 
+    Additionally, there are two high-level functions in the \code{biogas} package that simplify processing of biogas measurements. 
     \code{\link{cumBg}} calculates cumulative biogas and methane production from separate, indvidual observations of biogas volume (or reactor mass) and biogas composition for any number of batch reactors.
     Interpolation is automatically applied as needed. 
     And \code{\link{summBg}} summarises cumulative methane production by providing cumulative values for a specified time.
@@ -65,7 +65,8 @@ head(setup)
 
 # Calculate cumulative biogas and methane production volumes at dry conditions and 
 # 0 degrees C and 1.0 atm
-cum.vol <- cumBg(vol, comp = comp, time.name = "days", temp = 35, pres = 1, extrap = TRUE)
+cum.vol <- cumBg(vol, comp = comp, time.name = "days", temp = 35, 
+                 pres = 1, extrap = TRUE)
 
 head(cum.vol)
 
@@ -74,17 +75,22 @@ dim(cum.vol)
 cum.vol
 
 # Now calculate BMP (60 days) with summBg()
-# Interpolation is used if needed, inoculum contribution is calculated
-# and subtracted out, and results are normalised by substrate VS mass
-BMP <- summBg(cum.vol, setup = setup, time.name = "days", inoc.name = "inoc", 
-              inoc.m.name = "minoc", norm.name = "mvs.sub", when = 60)
+# Interpolation is used if needed, inoculum contribution 
+# is calculated and subtracted out, and results are 
+# normalised by substrate VS mass
+BMP <- summBg(cum.vol, setup = setup, time.name = "days", 
+              inoc.name = "inoc", inoc.m.name = "minoc", 
+              norm.name = "mvs.sub", when = 60)
 BMP
 
 # More details with show.obs = TRUE
-summBg(cum.vol, setup = setup, time.name = "days", inoc.name = "inoc", 
-       inoc.m.name = "minoc", norm.name = "mvs.sub", when = 60, show.obs = TRUE)
+summBg(cum.vol, setup = setup, time.name = "days", 
+       inoc.name = "inoc", inoc.m.name = "minoc", 
+       norm.name = "mvs.sub", when = 60, 
+       show.obs = TRUE)
 
-# How do results compare to theoretical methane potential for cellulose?
+# How do results compare to theoretical methane potential for 
+# cellulose?
 predBg("C6H10O5")
 
 # Set aside 10% of cellulose for microbial biomass production
