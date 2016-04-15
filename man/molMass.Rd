@@ -16,9 +16,9 @@ molMass(form)
 }
 }
 \details{
-  Atomic weights are from CIAAW, and were rounded to four or more digits depending on the range of the reported interval for \dQuote{normal materials}.
+  Standard atomic weights are from CIAAW, and were rounded to three or more digits (with the exception of Li) depending on the range of the reported interval for \dQuote{normal materials}.
   In general \code{form} should follow capitalization rules for elements (i.e., first letter capitalized, second lower-case). 
-  However, if \code{form} contains single-letter elements only, it is possible to use lower-case letters for all elements (but for clarity not recommended).
+  However, if \code{form} contains single-letter elements only, it is possible to use lower-case letters for all elements (but for clarity this is not recommended).
   The function is vectorized.
 }
 \value{
@@ -49,6 +49,18 @@ molMass(form)
 
   # Case-sentitive for two letter elements
   molMass("NaHCO3")
+
+  # Complex formulas OK
+  molMass("H3C(CH2)5COOH")
+
+  molMass("(C6H12O6)0.24999 (H3COOH)0.75001")
+
+  # Database is quite complete 
+  molMass('CdSiO3')
+
+  # Use care for, e.g., hydrates
+  molMass('FeSO4(H2O)7')
+
 }
 % Add one or more standard keywords, see file "KEYWORDS" in the
 % R documentation directory.

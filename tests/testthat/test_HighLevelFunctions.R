@@ -1,7 +1,7 @@
 # test values form the high level functions
 # Charlotte
 # 22 July 2015
-# modified 10 Nov 2015 SDH
+# modified 14 April 2016 SDH
 
 context("Tests high level functions")
 
@@ -109,7 +109,7 @@ test_that("cumBg gives a message error if cumulative mass is negative", {
 
 # summBg
 # uses same res as volumetric testing n°2
-test_that("summBg means correctly results", {
+test_that("summBg correctly calculates means", {
   # same result data frame as cumBg
   res <- data.frame(id = rep('R_1', 6), time = c(0:5), vol = c(0, rep(20, 5)), xCH4 = c(NA, rep(0.6, 5)))
   res$vBg <- stdVol(c(0, rep(20,5)), temp = 35, pres = 1)
@@ -148,7 +148,7 @@ test_that("summBg means correctly results", {
                   c(mean(test.sum[test.sum$time == 5 & test.sum$id %in% c('R_1', 'R_2'), 'cvCH4']), 
                     mean(test.sum[test.sum$time == 5 & test.sum$id %in% c('R_3', 'R_4'), 'cvCH4']))
                 )
-  expect_equal(summBg(test.sum, setup, when = 5)[, 1:3], res.test.sum)
+  expect_equal(summBg(test.sum, setup, when = 5, sort = FALSE)[, 1:3], res.test.sum)
 
 }) 
 

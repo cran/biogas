@@ -323,7 +323,7 @@ Using its chemical formula (\ce{C6H10O5}), we can calculate theoretical methane 
 predBg("C6H10O5")
 @
 
-So we see that theoretical methane potential of cellulose is \Sexpr{round(predBg("C6H10O5"), 0)} \si{mL.g^{-1}}. 
+So we see that theoretical methane potential of cellulose is 414 \si{mL.g^{-1}}. 
 Comparing expected cellulose BMP to measurements is an important way to check BMP experiments.
 How does this compare to our measurements?
 <<cellbmpcomp>>=

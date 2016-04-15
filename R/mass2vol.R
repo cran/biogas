@@ -1,4 +1,4 @@
-# Modified: 11 Nov 2015 SDH
+# Modified: 20 Feb 2016 SDH
 
 mass2vol <- function(
   mass,
@@ -19,7 +19,7 @@ mass2vol <- function(
   # Hardwire rh, maybe will add as argument again later
   rh <- 1
 
-  # Check arguments
+  # Check arguments~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   checkArgClassValue(mass, c('integer', 'numeric'), expected.range = c(0, Inf))
   checkArgClassValue(xCH4, c('integer', 'numeric'), expected.range = c(0, 1))
   checkArgClassValue(temp, c('integer', 'numeric'))
@@ -35,6 +35,7 @@ mass2vol <- function(
   checkArgClassValue(temp.init, c('integer', 'numeric', 'NULL'))
   checkArgClassValue(std.message, 'logical')
 
+  # Unit conversions~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Convert pressure to atm and temp to C
   pres.pa <- unitConvert(x = pres, unit = unit.pres, to = 'Pa')
   temp.k <- unitConvert(x = temp, unit = unit.temp, to = 'K')
@@ -44,6 +45,7 @@ mass2vol <- function(
   temp.std.k <- unitConvert(x = temp.std, unit = unit.temp, to = 'K')
   pres.std.pa <- unitConvert(x = pres.std, unit = unit.pres, to = 'Pa')
 
+  # Density calcuation~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   mmb <- xCH4*molMass('CH4') + (1 - xCH4)*molMass('CO2')
   mvBg <- xCH4*vol.mol['CH4'] + (1 - xCH4)*vol.mol['CO2']
   mvBg <- as.vector(mvBg)
@@ -57,6 +59,7 @@ mass2vol <- function(
   # Biogas volume
   vBg <- mass/(db + mH2O)
 
+  # Initial headspace correction~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # If headspace data provided
   if(!is.null(headspace)) {
     if(headcomp == 'N2') {
@@ -80,6 +83,7 @@ mass2vol <- function(
   vCO2 <- (1 - xCH4)*vBg*vol.mol['CO2']/mvBg
   vCO2 <- as.vector(vCO2)
 
+  # Return output
   if(tolower(value) == "ch4") {
     return(vCH4) 
   } else if(tolower(value) == "bg") {

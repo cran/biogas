@@ -72,9 +72,11 @@ predBg(form = NULL, mass = 1, mol = NULL, fs = 0, fd = 1,
 }
   \item{value}{
     what should be returned?
-    Two options are currently available.
+    Four options are currently available.
     \code{"CH4"} (default) returns standardised methane volume only.
     \code{"all"} returns all available additional results.
+    \code{"reactionn"} returns a numeric reaction (names are chemical species).
+    \code{"reactionc"} returns a text reaction.
     Length-one character vector.
 }
 }
@@ -172,9 +174,13 @@ predBg(form = NULL, mass = 1, mol = NULL, fs = 0, fd = 1,
                    lipid = 15, lignin = 8), 
          value = "all")
 
+  # Specify mass if this is not the case
   predBg(mcomp = c(vfa = 20, protein = 25, carbohydrate = 32, 
                    lipid = 15, lignin = 8), 
          mass = 1, value = "all")
+
+  # Can mix formulas and macromolecular groups in mcomp
+  predBg(mcomp = c(C6H12O6 = 0.5, protein = 0.5))
 
   # For CO2 partitioning, must provide conc.sub, pH, and temp 
   # cattle manure example from Hafner (2007)
@@ -183,6 +189,12 @@ predBg(form = NULL, mass = 1, mol = NULL, fs = 0, fd = 1,
 
   # Or, mix of waste paper and waste vegetable oil from vignette
   predBg(mcomp = c(C6H10O5 = 5/6, C54H100O7 = 1/6), mass = 1, 
+	 fd = 0.8, fs = 0.1, conc.sub = 50, pH = 7.5, temp = 35, 
+	 value = "all")
+
+  # Note that form can also be used for mixtures, but here it is 
+  # molar ratios that are specified
+  predBg('(C6H10O5)5(C54H100O7)1)', mass = 1, 
 	 fd = 0.8, fs = 0.1, conc.sub = 50, pH = 7.5, temp = 35, 
 	 value = "all")
   

@@ -1,4 +1,4 @@
-# Modified: 22 July 2015 SDH
+# Modified: 2 April 2016 SDH
 
 stdVol <- function(
   vol,
@@ -13,7 +13,7 @@ stdVol <- function(
 ) {
 
   # Check arguments
-  checkArgClassValue(vol, c('numeric', 'integer'), expected.range = c(0, Inf))
+  checkArgClassValue(vol, c('numeric', 'integer'))
   checkArgClassValue(temp, c('numeric', 'integer'), expected.range = c(0, Inf))
   checkArgClassValue(pres, c('numeric', 'integer'), expected.range = c(0, Inf))
   checkArgClassValue(rh, c('numeric', 'integer'), expected.range = c(0, 1))

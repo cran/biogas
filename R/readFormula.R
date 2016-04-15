@@ -1,4 +1,4 @@
-# Modified: 4 Nov 2015 SDH
+# Modified: 4 April 2016 SDH
 
 readFormula <-
 function(
@@ -9,6 +9,10 @@ function(
   value = 'numeric'       # Type of output, 'numeric' for named vector, 'shortform' for shortened formula
   ) {
   #fc <- as.list(rep(0, length(elements)))
+
+  # For the rare case with something like C0.00001, to avoid C1e-5 which will result in an error
+  oldscipen <- options(scipen = 999)
+  on.exit(options(scipen = oldscipen))
 
   form.orig <- form
   #form <- toupper(form)
@@ -23,19 +27,31 @@ function(
 
   # Find parentheses and remove them, multipying coefficients inside by coefficient at end
   # So (CH2)2 ---> C2H4
+  # First add ( after N), e.g., (CH2)2CH3 ---> (CH2)2(CH3 for separation below
+  form <- gsub('(\\)[0-9\\.]+)', '\\1(', form)
+  # Drop extra (
+  form <- gsub('^\\(', '', form)
+  form <- gsub('\\($', '', form)
+  form <- gsub('\\(\\(', '(', form)
   s1  <- strsplit(form, '\\(')[[1]]
-  if(length(s1) > 1) {
-    form <- s1[1]
-    for(i in 2:length(s1)) {
-      xx <- s1[i]
+
+  # Build up elementwise formula piecewise
+  formpw <- NULL
+  for(i in 1:length(s1)) {
+    xx <- s1[i]
+    if(grepl('\\)', xx)) {
       nn <- as.numeric(gsub('.+\\)','',xx))
       ff <- gsub('\\).+', '', xx)
       cc <- nn*as.numeric(strsplit(ff, '[A-Za-z]+')[[1]][-1])
       ee <- strsplit(ff, '[0-9.]+')[[1]]
-      form <- paste0(form, paste0(ee, cc, collapse = ''))
+      formpw <- paste0(formpw, paste0(ee, cc, collapse = ''))
+    } else {
+      formpw <- paste0(formpw, xx)
     }
   }
-  
+
+  form <- formpw
+
   # Extract integer coefficients 
   cc <- as.numeric(strsplit(form, '[A-Za-z]+')[[1]][-1])
   names(cc) <- strsplit(form, '[0-9.]+')[[1]]

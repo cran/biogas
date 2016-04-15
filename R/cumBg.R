@@ -1,4 +1,4 @@
-# Modified: 13 Nov 2015 SDH
+# Modified: 10 April 2016 SDH
 
 cumBg <- function(
   dat,
@@ -35,7 +35,7 @@ cumBg <- function(
   checkArgClassValue(id.name, 'character')
   checkArgClassValue(time.name, 'character')
   checkArgClassValue(dat.name, 'character')
-  checkArgClassValue(comp.name, 'character')
+  checkArgClassValue(comp.name, c('character', 'NULL'))
   checkArgClassValue(headspace, c('data.frame', 'integer', 'numeric', 'NULL'))
   checkArgClassValue(vol.hs.name, 'character')
   checkArgClassValue(headcomp, 'character')

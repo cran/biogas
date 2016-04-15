@@ -1,7 +1,7 @@
 # test values form the lower level functions
 # Charlotte
 # 22 July 2015
-# Modified 11 Nov 2015 SDH
+# Modified 10 April 2016 SDH
 
 # NTS No test yet for rbindf.R and partCO2.R
 
@@ -50,18 +50,22 @@ test_that("results from watVAp is stable", {
 # molMass.R -- depends on readFormula
 test_that("molMass results with one letter element are correct", {
   mmcellu <- 12.01*6 + 1.008*12 + 16.00*6
-  expect_equal(molMass('C6H12O6'), mmcellu)
+  expect_equal(molMass('C6H12O6'), mmcellu, tolerance = 0.01)
 })
 test_that("molMass results are not influencend by case sensitivity", {
   expect_equal(molMass('c6h12o6'), molMass('C6H12O6'))
 })
 test_that("molMass results is correct for non organic formula - two letter elements", {
   mmNaCl <- 22.990 + 35.45
-  expect_equal(molMass('NaCl'), mmNaCl)
+  expect_equal(molMass('NaCl'), mmNaCl, tolerance = 0.01)
 })
 test_that("molMass results is correct for formula mixing one and two letter elements", {
   mm <-  12.01 + 1.008 + 16.00 + 14.007 + 32.06 + 30.974 + 22.990 + 39.098 + 35.45
-  expect_equal(molMass('CHONNaClSPK'), mm)
+  expect_equal(molMass('CHONNaClSPK'), mm, tolerance = 0.01)
+})
+test_that("molMass results is correct for formula with parentheses", {
+  mm <-  
+  expect_equal(molMass('FeSO4(H2O)7'), 278.0146, tolerance = 0.01)
 })
 
 # calcCOD.R -- depends on molMass , readFormula 

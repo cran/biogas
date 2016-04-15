@@ -32,7 +32,7 @@ cumBg(dat, dat.type = 'vol', comp = NULL, temp = NULL, pres = NULL,
   Default is \code{"vol"}.
 }
   \item{comp}{
-    (optional) a data frame with the columns reactor identification code; time of measurement, (as \code{numeric}, or \code{POSIX}); and methane concentration within dry biogas as a mole fraction, considering only methane and carbon dioxide (unless \code{cmethod = "total"}).
+    (optional) a data frame with the columns reactor identification code; time of measurement, (as \code{numeric}, or \code{POSIX}); and methane concentration within dry biogas as a mole fraction, considering only methane and carbon dioxide (unless \code{cmethod = "total"}) or a single numeric value.
     If omitted, cumulative biogas volume will still be calculated and returned (but no methane data will be returned).
     The names of these columns are specified with \code{id.name}, \code{time.name}, and \code{comp.name}.
     Default is \code{NULL}.

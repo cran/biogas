@@ -1,3 +1,30 @@
+biogas 1.3.0 
+2016 April 14
+---------------------------------------------------------------------
+NEW FEATURES
+
+*molMass()
+New elements added to database. All elements with at least one stable isotope are now included. 
+Examples:
+molMass('CdSiO3')
+molMass('FeSO4(H2O)7')
+
+*molMass() and predBg()
+Additional flexibility in chemical formula specification. Both of the following are acceptable.
+molMass("H3C(CH2)5COOH")
+molMass("(C6H12O6)0.25 (H3COOH)0.75")
+
+*summBg()
+New option for 'when' argument: set to "meas" to return a row for each measurement 
+time (these may differ among reactors).
+
+New 'sort' argument to sort results by reactor ID and time (default) or to match original order 
+of reactor ID in setup data frame.
+
+*predBg()
+New options for 'value' argument to just return chemical reactions: use "reactionn" 
+for a numeric reaction and "reactionc" for a character version.
+
 biogas 1.2.0 
 2015 November 13
 ---------------------------------------------------------------------

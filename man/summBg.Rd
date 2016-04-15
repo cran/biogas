@@ -14,7 +14,7 @@ summBg(vol, setup, id.name = "id", time.name = "time",
        descrip.name = "descrip", inoc.name = NULL, 
        norm.name = NULL, inoc.m.name = "minoc", vol.name = "cvCH4", 
        imethod = "linear", extrap = FALSE, when = 30, 
-       show.obs = FALSE)
+       show.obs = FALSE, sort = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -61,11 +61,14 @@ summBg(vol, setup, id.name = "id", time.name = "time",
 }
   \item{when}{
     value(s) of \code{time.name} in \code{vol} data frame at which the results should be evaluated.
-    Numeric vector.
-    Alternatively, set to \code{"end"} to return the latest values for each reactor.
+    Alternatively, set to \code{"end"} (to return the latest values for each reactor) or \code{"meas"} (to return a value for each measured time for each reactor).
+    Numeric or character vector.
 }
   \item{show.obs}{
     set to \code{TRUE} to return all observations, otherwise means and standard deviations are returned. Default is \code{FALSE}. 
+}
+  \item{sort}{
+    controls sorting of results, which is by \code{descrip.name} and then \code{time.name} by default. Set to \code{FALSE} to use order of \code{descrip.name} from the \code{setup} data frame. Default is \code{TRUE}.
 }
 }
 \details{
@@ -141,6 +144,11 @@ summBg(vol = cum.prod, setup = setup, time.name = "days",
 # Something different: interpolated biogas production rates
 summBg(vol = cum.prod, setup = setup, time.name = "days", 
        vol.name = "rvBg", when = 30, show.obs = TRUE)
+
+# The when argument could also be 'meas' or 'end' for any of these examples 
+summBg(vol = cum.prod, setup = setup, time.name = "days", 
+       inoc.name = "inoc", when = "end", 
+       norm.name = "mvs.sub", show.obs = TRUE)
 
 # Example with dataset with different column names
 data("vol2")

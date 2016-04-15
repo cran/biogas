@@ -1,4 +1,4 @@
-# Modified: 5 Nov 2015 SDH
+# Modified: 2 April 2016 SDH
 
 predBg <- function(
   form = NULL,            # Character chemical formula of substrate
@@ -22,14 +22,14 @@ predBg <- function(
   checkArgClassValue(mol, c('numeric', 'integer', 'NULL'), expected.range = c(0, Inf))
   checkArgClassValue(fs, c('numeric', 'integer'), expected.range = c(0, 1))
   checkArgClassValue(fd, c('numeric', 'integer'), expected.range = c(0, 1))
-  checkArgClassValue(mcomp, c('numeric', 'NULL'))
+  checkArgClassValue(mcomp, c('numeric', 'integer', 'NULL'))
   checkArgClassValue(COD, c('numeric', 'integer', 'NULL'), expected.range = c(0, Inf))
   checkArgClassValue(conc.sub, c('numeric', 'integer', 'NULL'), expected.range = c(0, Inf))
   checkArgClassValue(pH, c('numeric', 'integer', 'NULL'), expected.range = c(4, 10))
   checkArgClassValue(temp, c('numeric', 'integer', 'NULL'))
   checkArgClassValue(mu, c('numeric', 'integer', 'NULL'), expected.range = c(0, 0.8))
   checkArgClassValue(value, 'character')
-  checkArgClassValue(tolower(value), expected.values = c('ch4', 'reaction', 'all'))
+  checkArgClassValue(tolower(value), expected.values = c('ch4', 'reactionn', 'reactionc', 'all'))
 
   # fe from Rittmann and McCarty (2001)
   fe <- 1 - fs
@@ -79,6 +79,11 @@ predBg <- function(
       warning('Sum of mcomp != 1.0 so dividing all elements by the sum for calculation of formula.')
       mcomp <- mcomp/sum(mcomp)
     }
+
+    # Code below for inert elements in mcomp has never been implemented. Would required using masscor below
+    # Not sure if it will work when mol is set
+    ### If there is any inert element, a mass correction factor is calculated
+    ##masscor <- 1 - sum(mcomp[!tolower(names(mcomp)) %in% c('inert', 'ash', 'nondegradable', 'non-degradable')])/sum(mcomp)
 
     # Trim std.forms to use it in indexing operation to replace names in mcomp
     mforms <- std.forms[names(std.forms) %in% tolower(names(mcomp))]
@@ -139,10 +144,51 @@ predBg <- function(
     return(vCH4)
   }
 
-  if(tolower(value)=='reaction') {
-    rxncoefs <- data.frame(sub = -1, H2O = -cH2O, CH4 = cCH4, CO2 = cCO2, C5H7O2N = cbio, `NH4+` = cNH4, `HCO3-` = cHCO3)
-    names(rxncoefs)[1] <- form
-    return(rxncoefs)
+  if(tolower(value) %in% c('reactionn', 'reactionc')) {
+    rxncoefs <- data.frame(substrate = -1, H2O = -cH2O, CH4 = cCH4, CO2 = cCO2, C5H7O2N = cbio, `NH4+` = cNH4, `HCO3-` = cHCO3)
+
+    # If there is only one form value
+    if(nrow(rxncoefs) == 1) names(rxncoefs)[1] <- form
+    # Otherwise there is not a good way to organize output if there are different form values
+
+    if(tolower(value) == 'reactionn') {
+      return(rxncoefs)
+    }
+
+    reaction <- NULL
+
+    # Otherwise make a text reaction (should move this to a separate function)
+    for(i in 1:nrow(rxncoefs)) {
+    
+      # Change name from substrate (should switch to extraction of vector at top of loop instead)
+      names(rxncoefs)[1] <- form[i]
+
+      reactants <- - rxncoefs[i, rxncoefs[i,] < 0]
+      reactants <- signif(reactants, 4)
+      reactants[reactants == 1] <- ''
+      reactants <- as.vector(reactants)
+      reactants <- paste0(reactants, names(reactants))
+      reactants <- paste(reactants, collapse = ' + ')
+    
+      products <- rxncoefs[i, rxncoefs[i,] > 0, drop = FALSE]
+      products <- signif(products, 4)
+      products[products == 1] <- ''
+      products <- as.vector(products)
+      products <- paste0(products, names(products))
+      products <- paste(products, collapse = ' + ')
+    
+      rxntxt <- paste0(reactants, ' --> ', products)
+      rxntxt <- gsub('NH4.', 'NH4+', rxntxt)
+      rxntxt <- gsub('HCO3.', 'HCO3-', rxntxt)
+
+      reaction <- c(reaction, rxntxt)
+    
+    }
+
+    #names(reaction) <- form
+
+    return(reaction)
+
   }
 
   # Hydrolytic water consumption, g H2O
