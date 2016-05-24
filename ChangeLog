@@ -4,6 +4,97 @@ biogas package
 ########################################
 ## DETAILED LOG ########################
 ########################################
+24 May 2016 Sasha D. Hafner
+Version 1.4.0
+
+DESCRIPTION
+Changed version number for submission to CRAN. Slightly changed description to
+include manometric method. 
+
+strawPresure.rda, strawMass.rda, strawSetup.rda, strawComp.rda
+New example data files
+
+strawPresure.Rd, strawMass.Rd, strawSetup.Rd, strawComp.Rd
+New help files
+
+22-24 May 2016 Sasha D. Hafner
+Version 1.3.2
+
+*test_HighLevelFunctions.R
+Around lines 44 and 69, changed check of "cumulative sum and rates are corrrectly
+calculated with default values" and  "cumulative sum, rates and methane volume
+are corrrectly calculated using one value for comp". Replaced "0" for first
+observation (added t0 obs) of vol in output with "NA". cumBg() now returns NA
+(and should, I think, since there was no measurement). Added simple test of
+cumBg() with pressure data (manometric approach).
+
+*summBg.R 
+Fixed problem with new check of 'when' argument.
+
+*cumBg.R
+Fixed error in addition of temp.prev to dat data frame for pres approach (was
+repeating temp.init, fixed with rep() call). Changed merge() with headspace
+data frame so it only bring two necessary columns. 
+
+18-20 May 2016 Sasha D. Hafner
+Version 1.3.1
+
+*cumBg.R
+Removed pres.resid.name argument. Now pres.resid is either length-one numeric
+or a column name. pres.resid is from the dat data frame. Fixed error where
+previous residual headspace pressure and previous relative humidity were added
+to dat. Added temp.init to dat and then stdVol() calls for dat.type = 'pres'.
+These calls now correctly use initial headspace temperature (and so temp.init)
+is required for dat.type = 'pres'. Made checks for required arguments for
+dat.type = 'pres'. Made changes (corrections) for cmethod = 'total', which can
+be applied for dat.type = 'vol' or 'pres' (standardized headspace volume!).
+Moved position of cmethod correction (addition of headspace CH4--this is all
+cmethod = 'total' does). Headspace CH4 is now added to cvCH4 (was vCH4) for
+cmethod = 'total, and vCH4 is calculated from cvCH4 in this case, and also
+when interval = FALSE.
+
+17 May 2016 Sasha D. Hafner
+Version 1.3.1
+
+*cumBg.R
+Switch gauge argument to absolute (and changed code to reflect it). pres.resid
+and pres.init are used now (pres.resid replaces pres.atm).
+
+*summBg.R
+Added check: error thrown when 'when' argument > all times in vol data frame.
+Previously function returned NA for means and sd.
+
+14 May 2016 Sasha D. Hafner
+Version 1.3.1
+
+*stdVol.R
+Added warn argument so warnings can be avoided.
+
+*cumBg.R
+Significant rewrite related to dat.type = 'pres'. pres2vol() is not needed and 
+no longer called. Instead stdVol() is used to go from pressure to volume (and
+standardize in one call). Eliminated *.orig objects added for 'pres' option.
+Atmospheric pressure is required for 'pres' (otherwise residual headspace
+volume cannot be calculated). Few days before, added gauge argument. Function
+works with absolute pressures internally, and will calculate if gauge = TRUE.
+
+12 May 2016 Sasha D. Hafner
+Version 1.3.1
+
+*checkArgClassValue.R
+Fixed formatting of messages on length > 1 classes using paste(..., collapse).
+
+*interp.R
+Added 'difftime' as class option for times argument.
+
+25 April 2016 Sasha D. Hafner
+Version 1.3.1
+
+*cumBg.R
+Added dat.type = "pres" option. Required changes in location of merge with headspace
+data (moved up), conversion of pressures to volume (new function pres2vol()), and 
+different code for stdVol() (because RH != 1). 
+
 14 April 2016 Sasha D. Hafner
 Version 1.3.0
 

@@ -1,34 +1,45 @@
-# Modified: 10 April 2016 SDH
+# Modified: 23 May 2016 SDH
 
 cumBg <- function(
+  # Main arguments
   dat,
   dat.type = 'vol',
   comp = NULL,
   temp = NULL,
   pres = NULL,
+  interval = TRUE,
+  # Column names for volumetric method
   id.name = 'id',
   time.name = 'time',
   dat.name = dat.type,
   comp.name = 'xCH4', 
+  # Additional arguments for manometric and gravimetric methods
+  pres.resid = NULL,
+  temp.init = NULL,
+  pres.init = NULL,
+  rh.resid.init = 1,
   headspace = NULL,
   vol.hs.name = 'vol.hs',
   headcomp = 'N2',
-  temp.init = NULL,
-  temp.std = getOption('temp.std', 0.0),
-  pres.std = getOption('pres.std', 1.0),
-  unit.temp = getOption('unit.temp', 'C'),
-  unit.pres = getOption('unit.pres', 'atm'),
+  absolute = TRUE,
+  # Calculation method and other settings
   cmethod = 'removed',
   imethod = 'linear',
   extrap = FALSE,
   addt0 = TRUE,
   showt0 = TRUE,
+  # Warnings and messages
   std.message = TRUE,
-  check = TRUE
+  check = TRUE,
+  # Units and standard conditions
+  temp.std = getOption('temp.std', 0.0), 
+  pres.std = getOption('pres.std', 1.0),
+  unit.temp = getOption('unit.temp', 'C'),
+  unit.pres = getOption('unit.pres', 'atm')
 ){
   # Check arguments
   checkArgClassValue(dat, 'data.frame')
-  checkArgClassValue(dat.type, 'character', expected.values = c('vol', 'mass'))
+  checkArgClassValue(dat.type, 'character', expected.values = c('vol', 'mass', 'pres', 'volume', 'pressure'))
   checkArgClassValue(comp, c('data.frame', 'integer', 'numeric', 'NULL'))
   checkArgClassValue(temp, c('integer', 'numeric', 'NULL'))
   checkArgClassValue(pres, c('integer', 'numeric', 'NULL'))
@@ -42,6 +53,9 @@ cumBg <- function(
   checkArgClassValue(temp.init, c('integer', 'numeric', 'NULL'))
   checkArgClassValue(temp.std, c('integer', 'numeric'))
   checkArgClassValue(pres.std, c('integer', 'numeric'))
+  checkArgClassValue(pres.resid, c('integer', 'numeric', 'character', 'NULL'))
+  checkArgClassValue(pres.init, c('integer', 'numeric', 'NULL'))
+  checkArgClassValue(rh.resid.init, c('integer', 'numeric', 'NULL'), expected.range = c(0, 1))
   checkArgClassValue(unit.temp, 'character')
   checkArgClassValue(unit.pres, 'character')
   checkArgClassValue(cmethod, 'character', expected.values = c('removed', 'total'))
@@ -51,13 +65,11 @@ cumBg <- function(
   checkArgClassValue(showt0, 'logical')
   checkArgClassValue(std.message, 'logical')
   checkArgClassValue(check, 'logical')
-
-  if(!dat.type %in% c('vol', 'mass')) stop('Argument \"dat.type\" must be either \"vol\" or \"mass\" but you gave ', dat.type, '.')
+  checkArgClassValue(absolute, 'logical')
+  checkArgClassValue(interval, 'logical')
 
   # Hard-wire rh for now at least
   rh <- 1
-  ## Check for RH problem
-  #if(rh>1 | rh<0) stop('rh argument must be between 0 and 1, but is ', rh, '.')
 
   # Check column names in argument data frames
   # comp needs id (time) xCH4, time optional
@@ -67,13 +79,21 @@ cumBg <- function(
     }
   }
 
-    # dat (volume or mass)
+  # dat (volume or mass)
   if(any(missing.col <- !c(id.name, time.name, dat.name) %in% names(dat))){
     stop('Specified columns in dat data frame (', deparse(substitute(dat)), ') not found: ', c(id.name, time.name, dat.name)[missing.col], '.')
   } 
 
   # Check for headspace argument if it is needed
   if(is.null(headspace) & cmethod=='total') stop('cmethod is set to \"total\" but headspace argument is not provided.')
+
+  # Check for necessary arguments
+  if(dat.type %in% c('pres', 'pressure')) {
+    if(is.null(headspace)) stop('dat.type is set to \"pres\" but \"headspace\" is not provided.')
+    if(is.null(temp.init)) stop('dat.type is set to \"pres\" but \"temp.init\" is not provided.')
+    if(is.null(pres.resid)) stop('dat.type is set to \"pres\" but \"pres.resid\" is not provided.')
+    if(is.null(pres.init)) stop('dat.type is set to \"pres\" but \"pres.init\" is not provided.')
+  }
 
   # Check for input errors
   # NTS: Add other checks here
@@ -90,6 +110,9 @@ cumBg <- function(
     }
   }
 
+  # Convert date.type to lowercase so it is more flexible for users
+  dat.type <- tolower(dat.type)
+
   # Sort out composition data
   mssg.no.time <- mssg.interp <- FALSE
   # First sort so can find first observation for mass data to ignore it
@@ -98,15 +121,19 @@ cumBg <- function(
   if(!is.null(comp) && class(comp)=='data.frame'){
     # Interpolate gas composition to times of volume measurements
     for(i in unique(dat[, id.name])) {
-      if(dat.type=='mass' & nrow(dat[dat[, id.name]==i, ])<2) stop('There are < 2 observations for reactor ', i,' but dat.type = \"mass\". You need at least 2 observations to apply the gravimetric method.')
+      if(dat.type=='mass' & nrow(dat[dat[, id.name]==i, ])<2) stop('There are < 2 observations for reactor ', i,' but dat.type = \"mass\". 
+                                                                   You need at least 2 observations to apply the gravimetric method.')
       dc <- comp[comp[, id.name]==i, ]
       if(nrow(dc)==0) stop('No biogas composition data for reactor ', i,' so can\'t interpolate!') 
       if(nrow(dc)>1) {
 	# If there is no time column
-	if(!time.name %in% names(comp)) stop('Problem with comp  (', deparse(substitute(comp)), '): a time column was not found but there is > 1 observation at least for reactor ',i, '.')
-	if(dat.type=='vol') {
+	if(!time.name %in% names(comp)) stop('Problem with comp  (', deparse(substitute(comp)), 
+                                             '): a time column was not found but there is > 1 observation at least for reactor ',i, '.')
+	if(dat.type %in% c('vol', 'volume', 'pres', 'pressure')) {
 	  mssg.interp <- TRUE
           dat[dat[, id.name]==i, comp.name] <- interp(dc[, time.name], dc[, comp.name], time.out = dat[dat[, id.name]==i, time.name], method = imethod, extrap = extrap)
+          # Set first value to zero if there is no biogas production (fixes problem with cmethod = total when there is a t0 observation included)
+          dat[dat[, id.name]==i & dat[, dat.name]==0, comp.name][1] <- 0
 	} else if (dat.type=='mass') {
 	  # Then ignore first point, since it isn't used anyway--this is just to avoid warning with interp if extrap = FALSE
 	  mssg.interp <- TRUE
@@ -157,84 +184,197 @@ cumBg <- function(
       if(any(missing.col <- !c(id.name, vol.hs.name) %in% names(headspace))){
         stop('Columns with names matching id.name or vol.hs.name are not present in headspace data frame: ', c(id.name, vol.hs.name)[missing.col], '.')
       }
-      dat <- merge(dat, headspace, by = id.name, suffixes = c('', '.hs'))
+      dat <- merge(dat, headspace[ , c(id.name, vol.hs.name)], by = id.name, suffixes = c('', '.hs'))
     } else stop('headspace actual argument not recognized. What is it?')
   }
 
   # Volumetric
   # Function will work with vol and add columns
-  if(dat.type=='vol') {
-    message('Working with volume data, applying volumetric method.')
-    # Column names
-    # vol needs id time vol
-    vol <- dat
-    vol.name <- dat.name
-
-    # Add t0 row if requested
-    # Not added if there are already zeroes present!
-    if(addt0 & !class(vol[, time.name])[1] %in% c('numeric', 'integer')) addt0 <- FALSE
-    if(addt0 & !any(vol[, time.name]==0)) {
-      t0 <- data.frame(id = unique(vol[, id.name]), time = 0)
-      names(t0) <- c(id.name, time.name)
-      t0[, vol.name] <- 0
-      vol <- rbindf(vol, t0)
-    }
+  if(dat.type %in% c('vol', 'volume', 'pres', 'pressure')) {
+    # vol dat needs id time vol
 
     # Standardize total gas volumes
     # Note that temperature and pressure units are not converted at all in cumBg (but are in stdVol of course)
-    if(!is.null(temp) & !is.null(pres)) {
-      vol$vBg <- stdVol(vol[, vol.name], temp = temp, pres = pres, rh = rh, pres.std = pres.std, temp.std = temp.std, unit.temp = unit.temp, unit.pres = unit.pres, std.message = std.message)
-    } else {
-      vol$vBg <- vol[, vol.name]
-      message('No temperature or presure provided (temp and pres arguments) so volumes are NOT standardized.')
+    if(dat.type %in% c('vol', 'volume')) {
+      message('Working with volume data, applying volumetric method.')
+      if(!is.null(temp) & !is.null(pres)) {
+        dat$vBg <- stdVol(dat[, dat.name], temp = temp, pres = pres, rh = rh, pres.std = pres.std, 
+                          temp.std = temp.std, unit.temp = unit.temp, unit.pres = unit.pres, 
+                          std.message = std.message)
+      } else {
+        dat$vBg <- dat[, dat.name]
+        message('Either temperature or presure is missing (temp and pres arguments) so volumes are NOT standardized.')
+      }
+    } 
+
+    if(dat.type %in% c('pres', 'pressure')) {
+       message('Working with pressure data, pressure measurements are', if (absolute) ' ABSOLUTE' else ' GAUGE', 
+              ' If this is incorrect, change \'absolute\' argument to ', !absolute, '.')
+
+      # Add pres.resid to dat if it isn't already present
+      if(is.numeric(pres.resid) | is.integer(pres.resid)) {
+        dat$pres.resid <- pres.resid
+        pres.resid <- 'pres.resid'
+      }
+
+      # If absolute != TRUE, calculate absolute pressure and add to dat
+      if(!absolute) {
+        dat[, aa <- paste0(dat.name, '.abs')] <- dat[, dat.name] + dat[, pres.resid]
+        dat.name <- aa
+      }
+
+      # Add residual rh (after pressure measurement and venting)
+      dat$rh.resid <- dat[, pres.resid]/dat[, dat.name]
+
+      # Sort to add *previous* residual pressure, rh, and temperature columns
+      dat <- dat[order(dat[, id.name], dat[, time.name]), ]
+
+      # Add previous residual pressure, residual rh, and previous temperature columns
+      for(i in unique(dat[, id.name])) {
+        pr <- dat[dat[, id.name]==i, pres.resid]
+        rhr <- dat[dat[, id.name]==i, 'rh.resid']
+        dat[dat[, id.name]==i, 'pres.resid.prev'] <- c(pres.init, pr[-length(pr)])
+        dat[dat[, id.name]==i, 'rh.resid.prev'] <- c(rh.resid.init, rhr[-length(rhr)])
+        dat[dat[, id.name]==i, 'temp.prev'] <- c(temp.init, rep(temp, length(pr) - 1))
+      }
+
+      # Finally, calculate volume of gas in bottle headspace
+      if(interval) {
+        # Second call (subtracted bit) is standardized volume in bottle headspace at end of previous measurement (after venting)
+        # Result then may not be exactly volume vented in current measurement, but total new gas volume since last measurement (only differ if pres.resid differs)
+        dat$vBg <- stdVol(dat[, vol.hs.name], temp = temp, pres = dat[, dat.name], rh = rh, 
+                          pres.std = pres.std, temp.std = temp.std, unit.temp = unit.temp, 
+                          unit.pres = unit.pres, std.message = FALSE, warn = FALSE) - 
+                   stdVol(dat[, vol.hs.name], temp = dat$temp.prev, pres = dat$pres.resid.prev, rh = dat$rh.resid.prev,  
+                          pres.std = pres.std, temp.std = temp.std, unit.temp = unit.temp, 
+                          unit.pres = unit.pres, std.message = std.message)
+      } else {
+        # Second call (subtracted bit) is original bottle headspace (standardized), assumed to start at first pres.resid (NTS: may have been sealed at RT--could be changed)
+        dat$vBg <- stdVol(dat[, vol.hs.name], temp = temp, pres = dat[, dat.name], rh = rh, 
+                          pres.std = pres.std, temp.std = temp.std, unit.temp = unit.temp, 
+                          unit.pres = unit.pres, std.message = FALSE, warn = FALSE) - 
+                   stdVol(dat[, vol.hs.name], temp = temp, pres = pres.init, rh = rh.resid.init,  
+                          pres.std = pres.std, temp.std = temp.std, unit.temp = unit.temp, 
+                          unit.pres = unit.pres, std.message = std.message, warn = FALSE)
+      }
     }
 
-    # Calculate interval gas production
-    vol$vCH4 <- vol$vBg*vol[, comp.name]*vol.mol['CH4'] / (vol[, comp.name]*vol.mol['CH4'] +(1 - vol[, comp.name])*vol.mol['CO2'])  # CH4 and CO2 molar volumes in ml/mol
-    if(addt0) vol[vol[, time.name]==0, 'vCH4'] <- 0
+    # Calculate interval (or cum if interval = FALSE) gas production
+    dat$vCH4 <- dat$vBg*dat[, comp.name]*vol.mol['CH4'] / (dat[, comp.name]*vol.mol['CH4'] +(1 - dat[, comp.name])*vol.mol['CO2'])  # CH4 and CO2 molar volumes in ml/mol
+    ##if(addt0) dat[dat[, time.name]==0, 'vCH4'] <- 0 # Not clear why this was ever needed
 
-    # Cumulative gas production
-    vol <- vol[order(vol[, id.name], vol[, time.name]), ]
+    # For cmethod = 'total', add headspace CH4 to vCH4
+    if(cmethod=='total') {
+      if(dat.type %in% c('vol', 'volume')) {
+        warning('For cmethod = \"total\", headspace temperature is taken as temp (', temp, unit.temp, '), pressure as \"pres\" (', pres, unit.pres, '), and relative humidity as 1.0 (100%).')
+
+        # Small problem with rh assumption here. Will actually be < 1 after gas removal
+        # Also assume vol meas pressure pres = residual headspace pressure
+        dat$vhsCH4 <- dat[, comp.name]*
+                      stdVol(dat[, vol.hs.name], temp = temp, pres = pres, rh = 1, pres.std = pres.std, 
+                            temp.std = temp.std, unit.temp = unit.temp, unit.pres = unit.pres, 
+                            std.message = std.message)
+      }
+
+      if(dat.type %in% c('pres', 'pressure')) {
+        dat$vhsCH4 <- dat[, comp.name]*
+                      stdVol(dat[, vol.hs.name], temp = temp, pres = dat[ , pres.resid], rh = dat$rh.resid,  
+                             pres.std = pres.std, temp.std = temp.std, unit.temp = unit.temp, 
+                             unit.pres = unit.pres, std.message = std.message)
+      }
+
+      # vhsCH4 is added to cvCH4 below
+      # Calculations are up here to avoid t0 issues
+    } 
+
+    # Add t0 row if requested
+    # Not added if there are already zeroes present!
+    if(addt0 & !class(dat[, time.name])[1] %in% c('numeric', 'integer')) addt0 <- FALSE
+    if(addt0 & !any(dat[, time.name]==0)) {
+      t0 <- data.frame(id = unique(dat[, id.name]), time = 0)
+      names(t0) <- c(id.name, time.name)
+      t0[, 'vBg'] <- t0[, 'vCH4'] <- 0
+
+      # This messy, but needed for calculating vCH4 by diff when this method is used and interval = FALSE
+      if(cmethod == 'total') {
+        t0[, 'vhsCH4'] <- 0
+      }
+      dat <- rbindf(dat, t0)
+    }
+
     # Calculate delta t for rates
-    if(class(vol[, time.name])[1] %in% c('numeric', 'integer')) {
-      dt <- c(NA, diff(vol[, time.name]))
-    } else if(class(vol[, time.name])[1] %in% c('POSIXct', 'POSIXlt')) {
-      dt <- c(NA, as.numeric(diff(vol[, time.name]), units = 'days'))
+    dat <- dat[order(dat[, id.name], dat[, time.name]), ]
+    if(class(dat[, time.name])[1] %in% c('numeric', 'integer')) {
+      dt <- c(NA, diff(dat[, time.name]))
+    } else if(class(dat[, time.name])[1] %in% c('POSIXct', 'POSIXlt')) {
+      dt <- c(NA, as.numeric(diff(dat[, time.name]), units = 'days'))
     } else {
       dt <- NA
-      warning('time column in vol data frame not recognized, so rates will not be calculated.')
+      warning('time column in dat data frame not recognized, so rates will not be calculated.')
     }
     # Set dt to NA for first observations for each reactor
-    dt[c(TRUE, vol[, id.name][-1] != vol[, id.name][-nrow(vol)])] <- NA 
+    dt[c(TRUE, dat[, id.name][-1] != dat[, id.name][-nrow(dat)])] <- NA 
+
+    # May already have cumulative production, if so move it to cvCH4, and calculate vCH4 down below
+    if(!interval) {
+      dat$cvBg <- dat$vBg
+      dat$cvCH4 <- dat$vCH4
+    }
     
-    for(i in unique(vol[, id.name])) {
-      vol[vol[, id.name]==i, 'cvBg'] <-cumsum(vol[vol[, id.name]==i, 'vBg' ])
-      vol[vol[, id.name]==i, 'cvCH4'] <- cumsum(vol[vol[, id.name]==i, 'vCH4'])
-      vol[vol[, id.name]==i, 'rvBg'] <- vol[vol[, id.name]==i, 'vBg' ]/dt[vol[, id.name]==i]
-      vol[vol[, id.name]==i, 'rvCH4']<- vol[vol[, id.name]==i, 'vCH4']/dt[vol[, id.name]==i]
+    # Calculate cumulative production or interval production (depending on interval argument)
+    # And calculate rates
+    if(interval) {
+      for(i in unique(dat[, id.name])) {
+        dat[dat[, id.name]==i, 'cvBg'] <- cumsum(dat[dat[, id.name]==i, 'vBg' ])
+        dat[dat[, id.name]==i, 'cvCH4'] <- cumsum(dat[dat[, id.name]==i, 'vCH4'])
+      } 
+    }
+
+    # For cmethod = 'total', add headspace CH4 to cvCH4
+    if(cmethod == 'total') {
+      dat$cvCH4 <- dat$cvCH4 + dat$vhsCH4
+    }
+
+    # For cumulative results, calculate interval production from cvCH4 (down here because it may have headspace CH4 added if cmethod = total) so cannot be combined with cvCH4 calcs above
+    # vBg could be moved up, but that means more code
+    if(!interval) {
+      for(i in unique(dat[, id.name])) {
+        dat[dat[, id.name]==i, 'vBg'] <- diff(c(0, dat[dat[, id.name]==i, 'cvBg' ]))
+        dat[dat[, id.name]==i, 'vCH4'] <- diff(c(0, dat[dat[, id.name]==i, 'cvCH4']))
+      }
+    }
+
+    # When cmethod = 'total', cvCH4 must be (re)calculated from cvCH4, because vhsCH4 is added to cvCH4 (correctly)
+    # vBg is not affected by cmethod = 'total'
+    if(cmethod == 'total') {
+      for(i in unique(dat[, id.name])) {
+        dat[dat[, id.name]==i, 'vCH4'] <- diff(c(0, dat[dat[, id.name]==i, 'cvCH4']))
+      }
+    }
+
+
+    # Calculate rates for all cases 
+    for(i in unique(dat[, id.name])) {
+      dat[dat[, id.name]==i, 'rvBg'] <- dat[dat[, id.name]==i, 'vBg' ]/dt[dat[, id.name]==i]
+      dat[dat[, id.name]==i, 'rvCH4']<- dat[dat[, id.name]==i, 'vCH4' ]/dt[dat[, id.name]==i]
     }
 
     # Drop t0 if not requested (whether originally present or added)
     if(!showt0) {
-      vol <- vol[vol[, time.name] != 0, ]
+      dat <- dat[dat[, time.name] != 0, ]
     }
-
-    if(cmethod=='total') {
-      vol$vhsCH4 <- vol[, comp.name]*vol[, vol.hs.name]
-      vol$vtCH4 <- vol$vCH4 + vol$vhsCH4
-    } 
 
     # Sort and return results
-    vol <- vol[order(vol[, id.name], vol[, time.name]), ]
+    dat <- dat[order(dat[, id.name], dat[, time.name]), ]
     if(is.null(comp)) {
-      vol <- vol[, ! names(vol) %in% c(comp.name, 'vCH4', 'cvCH4', 'rvCH4')]
+      dat <- dat[, ! names(dat) %in% c(comp.name, 'vCH4', 'cvCH4', 'rvCH4')]
     }
     if(all(is.na(dt))) {
-      vol <- vol[, ! names(vol) %in% c('rvBg','rvCH4')]
+      dat <- dat[, ! names(dat) %in% c('rvBg','rvCH4')]
     }
-    rownames(vol) <- 1:nrow(vol)
+    rownames(dat) <- 1:nrow(dat)
 
-    return(vol)
+    return(dat)
 
   } else if(dat.type=='mass') {
     # Gravimetric

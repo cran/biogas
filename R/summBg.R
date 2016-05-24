@@ -1,4 +1,4 @@
-# Modified: 14 April 2016 SDH
+# Modified: 23 May 2016 SDH
 
 summBg <- function(
   vol,
@@ -59,6 +59,12 @@ summBg <- function(
 
   if(!is.null(norm.name) && !norm.name %in% names(setup)) {
     stop('norm.name ', deparse(substitute(norm.name)), ' not found in the column names of ', deparse(substitute(setup)), '.')
+  }
+
+  # Check for case when 'when' argument > all times
+  if((is.numeric(when) | is.integer(when)) && all(when > vol[, time.name])) {
+    stop('when argument (', when, ') is > all times in data.')
+
   }
 
   # Add other checks here

@@ -1,16 +1,16 @@
 Package: biogas
 Type: Package
 Title: Process Biogas Data and Predict Biogas Production
-Version: 1.3.0
-Date: 2016-04-14
+Version: 1.4.0
+Date: 2016-05-24
 Authors@R: c(person("Sasha D.", "Hafner", role = c("aut", "cre"), email = "saha@kbm.sdu.dk"), person("Charlotte", "Rennuit", role = "aut", email = "cre@kbm.sdu.dk"), person("Jin Mi", "Triolo", role = "ctb"), person("Ali", "Heidarzadeh Vazifehkhoran", role = "ctb"))
 Author: Sasha D. Hafner [aut, cre], Charlotte Rennuit [aut], Jin Mi Triolo [ctb], Ali Heidarzadeh Vazifehkhoran [ctb]
 Maintainer: Sasha D. Hafner <saha@kbm.sdu.dk>
 VignetteBuilder: knitr
 Suggests: knitr, ggplot2, testthat
-Description: Functions for working with biogas data. Both low- and high-level functions are included for carrying out common tasks for analysis of biogas and related data. Molar mass and calculated oxygen demand (COD') can be determined from a chemical formula. Measured gas volume can be corrected for water vapor and to (possibly user-defined) standard temperature and pressure. Gas composition, cumulative production, or other variables can be interpolated to a specified time. Cumulative biogas and methane production (and rates) can be calculated from individual biogas volume (or reactor mass) and biogas composition measurements for any number of reactors. With cumulative methane production data and data on reactor contents, biochemical methane potential (BMP) can be calculated and summarized, including subtraction of the inoculum contribution and normalization by substrate mass. Cumulative production and production rates can be summarized in several different ways (e.g., omitting normalization) using the same function. Lastly, biogas and methane production can be predicted from substrate composition and additional, optional data.
+Description: Functions for working with biogas data. Both low- and high-level functions are included for carrying out common tasks for analysis of biogas and related data. Molar mass and calculated oxygen demand (COD') can be determined from a chemical formula. Measured gas volume can be corrected for water vapor and to (possibly user-defined) standard temperature and pressure. Gas composition, cumulative production, or other variables can be interpolated to a specified time. Cumulative biogas and methane production (and rates) can be calculated using volumetric, manometric, or gravimetric methods for any number of reactors. With cumulative methane production data and data on reactor contents, biochemical methane potential (BMP) can be calculated and summarized, including subtraction of the inoculum contribution and normalization by substrate mass. Cumulative production and production rates can be summarized in several different ways (e.g., omitting normalization) using the same function. Lastly, biogas and methane production can be predicted from substrate composition and additional, optional data.
 License: GPL-2
 NeedsCompilation: no
-Packaged: 2016-04-14 20:28:29 UTC; sasha
+Packaged: 2016-05-24 11:37:49 UTC; sasha
 Repository: CRAN
-Date/Publication: 2016-04-15 08:33:00
+Date/Publication: 2016-05-24 14:49:39

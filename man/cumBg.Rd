@@ -8,16 +8,29 @@
   \code{cumBg} (for \emph{cum}ulative \emph{b}io\emph{g}as) calculates cumulative biogas, methane production and production rates from individual volume (or mass) and composition measurements for any number of reactors.
 }
 \usage{
-cumBg(dat, dat.type = 'vol', comp = NULL, temp = NULL, pres = NULL,
-  id.name = 'id', time.name = 'time', dat.name = dat.type, 
-  comp.name = 'xCH4', headspace = NULL, vol.hs.name = 'vol.hs', 
-  headcomp = 'N2', temp.init = NULL, 
+cumBg(
+  # Main arguments
+  dat, dat.type = 'vol', comp = NULL, temp = NULL, 
+  pres = NULL, interval = TRUE,
+  # Column names for volumetric method
+  id.name = 'id', time.name = 'time', dat.name = dat.type,
+  comp.name = 'xCH4', 
+  # Additional arguments for manometric and gravimetric methods
+  pres.resid = NULL, temp.init = NULL, pres.init = NULL,
+  rh.resid.init = 1, headspace = NULL, 
+  vol.hs.name = 'vol.hs', headcomp = 'N2',
+  absolute = TRUE,
+  # Calculation method and other settings
+  cmethod = 'removed', imethod = 'linear', extrap = FALSE,
+  addt0 = TRUE, showt0 = TRUE, 
+  # Warnings and messages
+  std.message = TRUE, check = TRUE,
+  # Units and standard conditions
   temp.std = getOption('temp.std', 0.0), 
   pres.std = getOption('pres.std', 1.0),
-  unit.temp = getOption('unit.temp', 'C'), 
-  unit.pres = getOption('unit.pres', 'atm'),
-  cmethod = 'removed', imethod = 'linear', extrap = FALSE,
-  addt0 = TRUE, showt0 = TRUE, std.message = TRUE, check = TRUE) 
+  unit.temp = getOption('unit.temp', 'C'),
+  unit.pres = getOption('unit.pres', 'atm')
+  ) 
 }
 %- maybe also "usage" for other objects documented here.
 \arguments{
@@ -28,7 +41,7 @@ cumBg(dat, dat.type = 'vol', comp = NULL, temp = NULL, pres = NULL,
 }
   \item{dat.type}{
   the type of data contained in \code{dat}. 
-  Use \code{"vol"} for biogas volume (volumetric method will be used) or \code{"mass"} for reactor masses (gravimetric method will be used).
+  Use \code{"vol"} or \code{"volume"} for biogas volume (volumetric method will be used), \code{"mass"} for reactor masses (gravimetric method will be used) or \code{"pres"} (\code{"pressure"}) for headspace pressure (pressure of the headspace will be converted to gas volume).
   Default is \code{"vol"}.
 }
   \item{comp}{
@@ -48,9 +61,20 @@ cumBg(dat, dat.type = 'vol', comp = NULL, temp = NULL, pres = NULL,
     A length-one numeric vector.
     Atmosphere by default (see \code{unit.pres} argument). 
     Default is \code{NULL}, which suppresses correction for temperature and pressure. 
+    Not used for manometric method (when \code{dat.type = "pres"}).
 }
+
+  \item{interval}{
+    do biogas measurements (volume or pressure) represent production only from the time interval between observations (default)?
+    \code{interval = FALSE} means measured gas volume or pressure is cumulative.
+    Applies to volumetric (\code{dat.type = "vol"}) and manometric methods (\code{dat.type = "pres"}). 
+    The gravimetric method (\code{dat.type = "mass"}) is cumulative by nature.
+    Default is \code{TRUE}.
+  }
+
+
   \item{id.name}{
-    name of the reactor identification code column in \code{dat}. Should be the same in all data frames used in the function. Default is \code{"id"}.
+    name of the reactor identification code column in \code{dat}. Must be the same in all data frames used in the function. Default is \code{"id"}.
 }
   \item{time.name}{
     name of column containing time data in \code{dat} and \code{comp} data frames. Default is \code{"time"}.
@@ -61,27 +85,108 @@ cumBg(dat, dat.type = 'vol', comp = NULL, temp = NULL, pres = NULL,
   \item{comp.name}{
     name of column containing biogas mole fraction of methane in \code{comp} data frame. Default is \code{"xCH4"}. Must be normalised so xCH4 + xCO2 = 1.0 unless \code{cmethod = "total"}.
 }
+
+  \item{pres.resid}{
+    headspace pressure after venting. 
+    Either a single numeric value, assumed to be the same for all observations, or the name of a column in \code{dat} that contains these values for each observation.
+    Used in manometric method only (\code{dat.type = "pres"}).
+    Length one numeric or character vector.
+}
+
+  \item{temp.init}{
+    (optional) initial headspace temperature in \code{unit.temp} units.
+    Used to correct for effect of initial reactor headspace on mass loss for the gravimetric method (\code{dat.type = "mass"}), and to determine initial gas volume in the manometric method (\code{dat.type = "pres"}).
+}
+
+ \item{pres.init}{
+    headspace pressure at the begining of the experiment. 
+    Used in manometric method only (\code{dat.type = "pres"}).
+    Length one numeric vector.
+}
+
+ \item{rh.resid.init}{
+    relative humidity of the gas in the headspace at the begining of the experiment. 
+    Typically should be 1.0 (the default).
+    Length one numeric vector.
+    Used in manometric method only (\code{dat.type = "pres"}).
+}
+
   \item{headspace}{
-    (optional) a data frame or numeric vector with reactor headspace volumes.
+    (optional) a data frame or length-one numeric vector with reactor headspace volume(s).
     If a data frame is used, it should at least contain a \code{"id"} (reactor identification code) column (see \code{"id.name"}) and headspace volume column (see \code{vol.hs.name} argument).
-    Required if \code{method = "total"} for the volumetric method, and for initial headspace correction for the gravimetric method (see \code{headcomp} and \code{temp.init}).
+    Required if \code{method = "total"} for the volumetric method, for initial headspace correction for the gravimetric method (see \code{headcomp} and \code{temp.init}) and for the manometric method using pressure measurements (\code{dat.type = "pres"}).
     Default is \code{NULL}.
 }
+
   \item{vol.hs.name}{
-    name of column containing headspace volume data in optional \code{headspace} dataframe. 
+    name of column containing headspace volume data in optional \code{headspace} data frame. 
     Default is \code{"vol.hs"}.
 }
+
   \item{headcomp}{
-    Composition of headspace for correction of initial headspace mass for gravimetric method only.
+    (optional) Composition of headspace for correction of initial headspace mass for gravimetric method only.
     If provided, correction will be applied to first mass loss observation for each individual reactor.
     See argument of the same name in \code{\link{mass2vol}}.
     Currently, the only option is \code{"N2"} for dinitrogen gas.
     Use of any other value will be ignored with a warning.
 }
-  \item{temp.init}{
-    (optional) initial headspace temperature in \code{unit.temp} units.
-    Used to correct for effect of initial reactor headspace on mass loss.
+
+ \item{absolute}{
+    is the headspace pressure measured in the manometric method absolute or gauge pressure? 
+    Applies to manometric method only (\code{dat.type = "pres"}).
+    Default is \code{TRUE}. 
+  }
+ 
+ \item{cmethod}{
+    method for calculating cumulative methane production.
+    Use \code{"removed"} to base production on \code{xCH4} and gas volumes removed (default).
+    Use \code{"total"} to base it on the sum of methane removed and methane remaining in the reactor headspace.
+    For \code{"removed"}, \emph{\code{xCH4} should be calculated based on methane and CO2 only (xCH4 + xCO2 = 1.0).}
+    For \code{"total"}, \emph{\code{xCH4} should be calculated including all biogas components (CH4, CO2, N2, H2S, etc.) except water.}
+    Length one character vector. 
+    %Default is \code{"removed"}.
 }
+  \item{imethod}{
+    method used for interpolation of \code{xCH4}.
+    This is passed as the \code{method} argument to \code{\link{interp}}.
+    Length one character vector. 
+    Default is \code{"linear"} for linear interpolation.
+}
+  \item{extrap}{
+    should \code{comp.name} be extrapolated? 
+    Length one logical vector.
+    This is passed as the \code{extrap} argument to \code{\link{interp}}. 
+    Default is \code{FALSE}.
+}
+ \item{addt0}{
+    is the earliest time in \code{dat} data frame \dQuote{time zero} (start time)? 
+    If not, this argument adds a row with \code{time.name = 0} for each reactor in order to calculate production rates for the first observation.
+    This addition is only made when \code{dat.type = "vol"} or \code{dat.type = "pres"} and \code{time.name} is \code{numeric} (or \code{integer}).
+    Length-one logical vector.
+    Default is \code{TRUE}.
+    To return these additional rows in the output, see \code{showt0}.
+}
+  \item{showt0}{
+    should \dQuote{time zero} rows be returned in the output?
+    Can be convenient for plotting cumulative volumes.
+    Only applies if \code{time.name} is \code{numeric} (or \code{integer}).
+    These rows may have been present in the original data (\code{dat}) or added by the function (see \code{addt0}).
+    Default value depends on \code{dat} \code{time.name} column content. 
+    If \code{time.name} column is numeric and contains 0 then the default value is \code{TRUE} and otherwise \code{FALSE}. 
+}
+
+  \item{std.message}{
+    should a message with the standard conditions be displayed? 
+    Default is \code{TRUE}. 
+  }
+  
+  \item{check}{
+    should input data be checked for unreasonable values (with warnings)? 
+    Currently only composition values are checked.
+    Default is \code{TRUE}.
+  }
+ 
+ 
   \item{temp.std}{
     standard temperature for presentation of biogas and methane results.
     Length one numeric vector.
@@ -106,64 +211,20 @@ cumBg(dat, dat.type = 'vol', comp = NULL, temp = NULL, pres = NULL,
     Default is \code{"atm"}.
     Argument is passed to \code{\link{stdVol}}.
 }
-  \item{cmethod}{
-    method for calculating cumulative methane production.
-    Use \code{"removed"} to base production on \code{xCH4} and gas volumes removed (default).
-    Use \code{"total"} to base it on the sum of methane removed and methane remaining in the reactor headspace.
-    For \code{"removed"}, \emph{\code{xCH4} should be calculated based on methane and CO2 only (xCH4 + xCO2 = 1.0).}
-    For \code{"total"}, \emph{\code{xCH4} should be calculated including all biogas components (CH4, CO2, N2, etc.) except water.}
-    Length one character vector. 
-    %Default is \code{"removed"}.
-}
-  \item{imethod}{
-    method used for interpolation of \code{xCH4}.
-    This is passed as the \code{method} argument to \code{\link{interp}}.
-    Length one character vector. 
-    Default is \code{"linear"} for linear interpolation.
-}
-  \item{extrap}{
-    should \code{comp.name} be extrapolated? 
-    %Set to \code{TRUE} if extrapolation wanted. 
-    Length one logical vector.
-    This is passed as the \code{extrap} argument to \code{\link{interp}}. 
-    Default is \code{FALSE}.
-}
- \item{addt0}{
-    is the earliest time in \code{dat} data frame \dQuote{time zero} (start time)? 
-    If not, this argument adds a row with \code{time.name = 0} for each reactor in order to calculate production rates for the first observation.
-    This addition is only made when \code{dat.type = "vol"} and \code{time.name} is \code{numeric} (or \code{integer}).
-    Length-one logical vector.
-    Default is \code{TRUE}.
-    To return these additional rows in the output, see \code{showt0}.
-}
-  \item{showt0}{
-    should \dQuote{time zero} rows be returned in the output?
-    Only applies if \code{time.name} is \code{numeric} (or \code{integer}).
-    These rows may have been present in the original data (\code{dat}) or added by the function (see \code{addt0}).
-    Default value depends on \code{dat} \code{time.name} column content. 
-    If \code{time.name} column is numeric and contains 0 then the default value is \code{TRUE} and otherwise \code{FALSE}. 
-}
 
-  \item{std.message}{
-    should a message with the standard conditions be displayed? 
-    Default is \code{TRUE}. 
-  }
-  
-  \item{check}{
-    should input data be checked for unreasonable values (with warnings)? 
-    Default is \code{TRUE}.
-  }
-    
 }
 \details{
-  Using volume or mass data from \code{dat} and gas composition from \code{comp}, this function will calculate standardised biogas and methane production (if \code{comp} is provided) for each observation,  interpolating \code{comp.name} (from \code{comp} argument) to each \code{time.name} in \code{dat} if needed, and summing these for cumulative values.
+  Using volume, mass, or pressure data from \code{dat} and gas composition from \code{comp}, this function will calculate standardised biogas and methane production (if \code{comp} is provided) for each observation,  interpolating \code{comp.name} (from \code{comp} argument) to each \code{time.name} in \code{dat} if needed, and summing these for cumulative values.
   Use of volumetric measurements is the default case. 
-  Alternatively, if reactor mass is given in \code{dat}, a gravimetric approach (Hafner et al. in review) can be applied by setting \code{dat.type} to \code{"mass"}.
+  Alternatively, if reactor mass is given in \code{dat}, a gravimetric approach (Hafner et al. 2015) can be applied by setting \code{dat.type} to \code{"mass"}.
   In this case, to determine total cumulative biogas production for batch reactors, an initial mass should be included for each reactor.
+  If pressure is measured in \code{dat}, a manometric method can be applied by setting \code{dat.type} to \code{"pres"}.  
 
   For the volumetric method, all volumes (input and output) have the same units, e.g., mL, L, SCF.
   For the gravimetric method, output volumes will be in mL if input masses are in g.
-  Biogas composition (\code{comp.name} column in \code{comp}) is specified as the mole fraction of methane in dry biogas, normalised so mole fractions of methane and carbon dioxide sum to unity (Richards et al. 1991).
+  For the manometric method, inputs units are specified with \code{unit.pres}, and output volumes are the same as headspace volume, e.g., mL or L.
+  
+  Biogas composition (\code{comp.name} column in \code{comp}) is specified as the mole fraction of methane in dry biogas, normalised so mole fractions of methane and carbon dioxide sum to unity (Richards et al. 1991). Alternatively, if \code{cmethod} is set to \code{"total"}, biogas composition is the mole fraction of methane in dry biogas (include all the other gases except water). 
  
   Standard values and units for temperature and pressure can be globally set using the function \code{\link{options}}.
   See \code{\link{stdVol}}.
@@ -312,6 +373,24 @@ cum.prod <- cumBg(mass, dat.type = "mass", comp = comp, temp = 35,
                   pres = 1, time.name = "days", headspace = 300, 
                   headcomp = "N2", temp.init = 20, showt0 = FALSE)
 cum.prod
+
+# Pressure example
+data("strawPressure")
+data("strawComp")
+data("strawSetup")
+
+cum.prod <- cumBg(strawPressure, dat.type = 'pres', 
+                  comp = strawComp, temp = 35, 
+                  id.name = 'bottle', time.name ='time', 
+                  dat.name = 'pres', comp.name = 'xCH4',
+                  pres.resid = 'pres.resid', temp.init = 20, 
+                  pres.init = 101.325,
+                  headspace = strawSetup, 
+                  vol.hs.name = 'headspace', 
+                  extrap = TRUE, 
+                  unit.pres = 'kPa', pres.std = 101.325)
+
+head(cum.prod)
 
 }
 %% Add one or more standard keywords, see file "KEYWORDS" in the

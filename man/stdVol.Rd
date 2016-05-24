@@ -13,7 +13,7 @@ stdVol(vol, temp, pres, rh = 1,
        pres.std = getOption('pres.std', 1.0), 
        unit.temp = getOption('unit.temp', 'C'), 
        unit.pres = getOption('unit.pres', 'atm'), 
-       std.message = TRUE)
+       std.message = TRUE, warn = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -51,7 +51,12 @@ stdVol(vol, temp, pres, rh = 1,
     Options are \code{"C"} (degrees Celcius), \code{"F"} (degrees Fahrenheit), and \code{"K"} (Kelvin).
 }
   
-  \item{std.message}{should a message with the standard conditions be displayed? Default is TRUE.
+  \item{std.message}{
+    should a message with the standard conditions be displayed? Default is TRUE.
+}
+  
+  \item{warn}{
+    if \code{TRUE}, will return a warning if temperature is below 0 C  or above 100 C, or if pressure is below 50 kPa or above 150 kPa.
 }
 }
 \details{

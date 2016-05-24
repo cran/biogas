@@ -1,3 +1,24 @@
+biogas 1.4.0 
+2016 May 24
+---------------------------------------------------------------------
+NEW FEATURES
+
+*cumBg()
+New manometric method now available (use dat.type = "pres").
+
+New option to use either cumulative or interval (default) data. See 'interval' argument.
+
+BUG FIXES
+*summBg()
+Now returns error if 'when' argument is greater than available times for all reactors.
+
+*cumBg()
+Fixed error in cmethod = "total" calculation method. Now headspace volume is correctly 
+added to cumulative production.
+
+*Other minor fixes
+
+
 biogas 1.3.0 
 2016 April 14
 ---------------------------------------------------------------------

@@ -1,4 +1,4 @@
-# Modified: 2 April 2016 SDH
+# Modified: 14 May 2016 SDH
 
 stdVol <- function(
   vol,
@@ -9,7 +9,8 @@ stdVol <- function(
   pres.std = getOption('pres.std', 1.0),
   unit.temp = getOption('unit.temp', 'C'),
   unit.pres = getOption('unit.pres', 'atm'),
-  std.message = TRUE
+  std.message = TRUE,
+  warn = TRUE
 ) {
 
   # Check arguments
@@ -33,8 +34,10 @@ stdVol <- function(
   temp.std.k <- unitConvert(x = temp.std, unit = unit.temp, to = 'K')
 
   # Check pres and temp range
-  if(any(temp.k < 273.15 | temp.k > 373.15)) warning('temp ranges from ', min(na.omit(temp)), ' ', unit.temp, ' to ', max(na.omit(temp)), ' ', unit.temp, '. Is this really correct?')
-  if(any(pres.pa < 5E4 | pres.pa > 1.5E5)) warning('pres ranges from ', min(na.omit(pres)), ' ', unit.pres, ' to ', max(na.omit(pres)), ' ', unit.pres, '. Is this really correct?')
+  if(warn) {
+    if(any(temp.k < 273.15 | temp.k > 373.15)) warning('temp ranges from ', min(na.omit(temp)), ' ', unit.temp, ' to ', max(na.omit(temp)), ' ', unit.temp, '. Is this really correct?')
+    if(any(pres.pa < 5E4 | pres.pa > 1.5E5)) warning('pres ranges from ', min(na.omit(pres)), ' ', unit.pres, ' to ', max(na.omit(pres)), ' ', unit.pres, '. Is this really correct?')
+  }
  
   # Calculate water vapor pressure in atm (based on NIST)
   pH2O <- rh*watVap(temp.k = temp.k)

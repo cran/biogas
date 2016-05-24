@@ -1,10 +1,10 @@
-# Modified: 10 Feb 2016aaaaaaa
+# Modified: 12 May 2016 SDH
 
 interp <-
 function(times, y, time.out, method = 'linear', extrap = FALSE) {
 
   # Check arguments
-  checkArgClassValue(times, c('numeric', 'integer', 'POSIXct', 'POSIXlt', 'POSIXt', 'POSIX'))
+  checkArgClassValue(times, c('numeric', 'integer', 'POSIXct', 'POSIXlt', 'POSIXt', 'POSIX', 'difftime'))
   checkArgClassValue(y, c('numeric', 'integer'))
   checkArgClassValue(time.out, c('numeric', 'integer', 'POSIXct', 'POSIXlt', 'POSIXt', 'POSIX'))
   checkArgClassValue(method, c('character'), expected.values = c('linear', 'natural', 'hyman', 'fmm'))

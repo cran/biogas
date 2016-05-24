@@ -1,7 +1,6 @@
 # test values form the high level functions
 # Charlotte
-# 22 July 2015
-# modified 14 April 2016 SDH
+# Modified 24 May 2016
 
 context("Tests high level functions")
 
@@ -29,7 +28,7 @@ test_that('default methane prediction from predBg using a formula is stable', {
 
 # cumBg.R
 # NTS: for the moment everything is tested once, it could be good to separatae tests for - cH4 volume vs biogas volume and rates
-# NTS: might also be good to store the test data framse somewhere
+# NTS: might also be good to store the test data frames somewhere
 
 # volume molar values:
 vmch4 <- 22360.588
@@ -39,7 +38,7 @@ vmco2 <- 22263.009
 # volumetric
 test_that("cumulative sum and rates are corrrectly calculated with default values", {
   test.vol <- data.frame(id = rep(paste0('R_',1),5), time= c(2, 4, 5, 1, 3), vol = rep(20, 5))
-  res <- data.frame(id = rep('R_1', 6), time = c(0:5), vol = c(0, rep(20, 5)), vBg = c(0, rep(20,5)), cvBg = c(0, 20, 40, 60, 80, 100), rvBg = c(NA,rep(20,5)))
+  res <- data.frame(id = rep('R_1', 6), time = c(0:5), vol = c(NA, rep(20, 5)), vBg = c(0, rep(20,5)), cvBg = c(0, 20, 40, 60, 80, 100), rvBg = c(NA,rep(20,5)))
 
   expect_equal( cumBg(dat = test.vol), res)
 })
@@ -55,7 +54,7 @@ test_that("cumulative sum and rates are corrrectly calculated with default value
 test_that("cumulative sum, rates and methane volume are corrrectly calculated using one value for comp", {
   test.vol <- data.frame(id = rep(paste0('R_',1),5), time= c(2, 4, 5, 1, 3), vol = rep(20, 5))
 # wanted result : calculation for each column from data in test.mass
-  res <- data.frame(id = rep('R_1', 6), time = c(0:5), vol = c(0, rep(20, 5)), xCH4 = c(NA, rep(0.6, 5)))
+  res <- data.frame(id = rep('R_1', 6), time = c(0:5), vol = c(NA, rep(20, 5)), xCH4 = c(NA, rep(0.6, 5)))
   res$vBg <- stdVol(c(0, rep(20,5)), temp = 35, pres = 1)
   res$vCH4 <- res$vBg*0.6*vmch4 / (0.6*vmch4 + 0.4*vmco2) 
   res$cvBg <- rep(0,6)
@@ -102,9 +101,18 @@ test_that("missing arguments in gravimetric throw an error", {
 test_that("cumBg gives a message error if cumulative mass is negative", {
   test.mass <- read.csv('test.mass.csv')
   expect_that(cumBg(dat = test.mass, dat.type = "mass", comp = "comp", temp = 35, pres = 1, time.name = 'days'), throws_error())
-  
 }
 )
+
+# Volumetric test NTS: we need more tests!!!
+test_that("cumulative CH4 is corrrectly calculated from pressure with default values", {
+  test.pres <- data.frame(id = rep(1,5), time= c(2, 4, 5, 1, 3), pres = c(rep(1.5, 4), 1), pres.resid = 1)
+  calc <- cumBg(test.pres, dat.type = 'pres', temp.init = 20, pres.init = 1, headspace = 100, pres.resid = 'pres.resid', temp = 35, comp = 0.65)$cvCH4
+  expected <- c(0.00000, 24.12230, 51.90480, 50.83461, 79.68730, 107.46979)
+
+  expect_equal(calc, expected, tolerance = 1E-5)
+})
+
 
 
 # summBg

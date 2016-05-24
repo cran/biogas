@@ -361,7 +361,7 @@ In fact, we could use \texttt{predBg()} to estimate effective degradability (ign
 
 We see that substrates A and B had low degradability, while degradability of cellulose was high.
 Both substrates A and B were digestate from digesters, i.e., they had already been anaerobically digested once before these measurements, and so we should expect low degradability.
-We can conclude that are measured results are reasonable.
+We can conclude that our measured results are reasonable.
 
 \section{Continuing with the biogas package}
 The three functions demonstrated in this document can be used in other ways not described here.
