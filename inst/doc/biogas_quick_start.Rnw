@@ -263,9 +263,82 @@ Here we'll use the \texttt{qplot} function from the \texttt{ggplot2} package to 
 
 <<fig.width=6, fig.height=4, fig.align="center">>=
 library(ggplot2)
+
 qplot(x = days, y = cvCH4, data = cum.prod, xlab = "Time (d)", 
-      ylab = "Cumulative methane production (mL)",color = id, 
+      ylab = "Cumulative methane production (mL)", color = id, 
       geom = "line")
+@
+
+\subsection{Other data structures}
+As of bigoas version 1.5.0, the "long" data structures described above are not the other options.
+In addition, "wide" and combined "long" structures are possible.
+We can compare the three possible approaches using the same dataset.
+
+Let's load data on biogas production from three bottles with wastewater sludge.
+
+<<<>>=
+data("s3voll")
+data("s3compl")
+data("s3volw")
+data("s3compw")
+data("s3lcombo")
+@
+
+The "long" structure described above looks like this:
+
+<<>>=
+s3voll
+s3compl
+@
+
+The "wide" format contains (mostly) the same data, but there are separate columns for each reactor.
+
+<<>>=
+s3volw
+s3compw
+@
+
+Note the missing composition value in \texttt{s3compw}.
+With the "long" structure, a row was simply omitted.
+Both approaches will result in the same output though.
+With the "wide" approach all bottles must be measured at the same times.
+
+Finally, in the combined approach both volume and composition are in the same "long" data frame.
+
+<<>>=
+s3lcombo
+@
+
+Each of these structures can be used by \texttt{cumBg} by changing the \texttt{comp} argument.
+
+<<>>=
+cpl <- cumBg(s3lcombo, comp = s3compl, temp = 25, pres = 1,
+             id.name = 'id', time.name = 'time',
+             dat.name = 'vol', comp.name = 'xCH4',
+             extrap = TRUE)
+
+cpw <- cumBg(s3volw, comp = s3compw, temp = 25, pres = 1,
+             time.name = 'time',
+             data.struct = 'wide',
+             dat.name = 'D', comp.name = 'D',
+             extrap = TRUE)
+
+cpc <- cumBg(s3lcombo, temp = 25, pres = 1,
+             id.name = 'id', time.name = 'time',
+             data.struct = 'longcombo',
+             dat.name = 'vol', comp.name = 'xCH4',
+             extrap = TRUE)
+@
+
+Output is nearly identical here.
+The small differences result from the use of unique times for each bottle in the long formats.
+
+<<>>=
+head(cpl)
+
+head(cpw)
+
+head(cpc)
 @
 
 \subsection{Calculating BMP from cumulative production}

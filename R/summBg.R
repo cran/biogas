@@ -1,4 +1,4 @@
-# Modified: 23 May 2016 SDH
+# Modified: 3 Nov 2016 SDH
 
 summBg <- function(
   vol,
@@ -8,6 +8,7 @@ summBg <- function(
   descrip.name = 'descrip',
   inoc.name = NULL,
   norm.name = NULL,
+  norm.sd.name = NULL,
   inoc.m.name = 'minoc',
   vol.name = 'cvCH4',
   imethod = 'linear',
@@ -31,6 +32,7 @@ summBg <- function(
   checkArgClassValue(extrap, 'logical')
   checkArgClassValue(when, c('numeric', 'integer', 'character', 'NULL'))
   checkArgClassValue(show.obs, 'logical')
+  checkArgClassValue(sort, 'logical')
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   # Echo response variable
@@ -136,14 +138,15 @@ summBg <- function(
       summ1[summ1[, id.name]==i, c(time.name, vol.name)] <- dc[nrow(dc), c(time.name, vol.name)]
     }
 
-  } else if(length(when) == 1 && when == 'meas') { # Return values for all measurement times, which may differ among reactors
+  } else if(length(when) == 1 && when %in% c('meas', '1p')) { # Return values for all measurement times, which may differ among reactors
 
     summ1 <- vol[vol[, id.name] %in% ids, c(id.name, time.name, vol.name)]
 
-  } else {
+  } else  {
 
     stop('when argument not recognized. Options are numeric or integer vector, \"end\" or \"meas\".')
 
+  
   }
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -225,8 +228,53 @@ summBg <- function(
 
   }
 
+  # If selected, find times where rate drops below 1%/d of cumulative
+  # WIP
+  if(length(when) == 1 && when == '1p') { # Get 
+
+    # Find time when rvCH4 <= 1% of cvCH4
+    summ1temp <- NULL
+
+    for(i in ids) {
+
+      dd <- summ1[summ1[, id.name] == i, ]
+      dd <- dd[order(dd[, time.name]), ]
+      rr <- c(NA, diff(dd[, vol.name])/diff(dd[, time.name]))/dd[, vol.name]
+      # Next line finds first time that rel rate is <= 1% and next rel rate is also <= 1%. Cannot be latest time (note 0).
+      i1 <- which(rr <= 0.01 & c(rr[-1], 0) <= 0.01)[1]
+      if(!is.na(i1)) {
+        ss <- dd[i1, ]
+        summ1temp <- rbind(summ1temp, ss)
+      } else {
+        stop('You selected \"1p\" option for \"when\" argument but all rates are > 1% of cumulative production for id ', i, '. Either use a fixed time for \"when\" or remove this id.')
+      }
+
+    }
+
+    summ1 <- summ1temp
+
+    # If when = 1p check for different times for bottles with same descrip
+    if(length(when) == 1 && when == '1p') {
+      for(i in unique(summ1[, descrip.name])) {
+        summ1[summ1[, descrip.name] == i, time.name] <- max(summ1[summ1[, descrip.name] == i, time.name])
+      }
+    }
+
+
+  } 
+
   # Normalization
   if(!is.null(norm.name)) { 
+
+    # First calculate sd on normalized volume based on sd of VS
+    # Nearly equivalent to calculate relative error in norm.name and apply it directly (i.e., 10% for norm.name = 10% for vol.name)
+    if(!is.null(norm.sd.name)) {
+      summ1[, paste0(vol.name,'.sd')] <- (summ1[, vol.name]/(summ1[, norm.name] - summ1[, norm.sd.name]) - 
+                                          summ1[, vol.name]/(summ1[, norm.name] + summ1[, norm.sd.name]))/2
+    } else {
+      summ1[, paste0(vol.name,'.sd')] <- 0
+    }
+
     # Normalize remaining vol by norm.name (typically by substrate VS)
     summ1[, vol.name] <- summ1[, vol.name]/summ1[, norm.name]
 
@@ -239,9 +287,11 @@ summBg <- function(
       summ1[, paste0(vol.name, '.tot')] <- summ1[, paste0(vol.name, '.tot')]/summ1[, norm.name]
       summ1[, paste0(vol.name, '.inoc')] <- summ1[, paste0(vol.name, '.inoc')]/summ1[, norm.name]
     }
-  } 
+  } else {
+      summ1[, paste0(vol.name,'.sd')] <- 0
+  }
 
-    # Calculate means and sd for a summary
+  # Calculate means and sd for a summary
   if(!show.obs) {
     # Summarize by description
     summ2 <- unique(summ1[, c(time.name, descrip.name)]) # NTS: may want to put time second
@@ -251,8 +301,9 @@ summBg <- function(
       for(j in unique(dd[, time.name])) {
         ddd <- dd[dd[, time.name]==j, ]
         summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'mean'] <- mean(na.omit(ddd[, vol.name]))
-        #summ2[summ2[, descrip.name]==i, 'sd'] <- signif(sd(na.omit(ddd[, vol.name])), 5) # Original code with no contribution of inoc to sd
-        summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'sd'] <- sqrt(sd(na.omit(ddd[, vol.name]))^2 + mean(ddd[, 'sd.inoc'])^2) # NTS: Probably there is a better way to do this
+        summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'sd'] <- sqrt(sd(na.omit(ddd[, vol.name]))^2 + 
+                                                                              mean(ddd[, 'sd.inoc'])^2 + 
+                                                                              mean(ddd[, paste0(vol.name,'.sd')])^2) 
         summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'n'] <- sum(!is.na(ddd[, vol.name]))  
       }
     }

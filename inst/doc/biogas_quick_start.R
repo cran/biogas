@@ -44,9 +44,53 @@ dim(cum.prod)
 
 ## ----fig.width=6, fig.height=4, fig.align="center"-----------------------
 library(ggplot2)
+
 qplot(x = days, y = cvCH4, data = cum.prod, xlab = "Time (d)", 
-      ylab = "Cumulative methane production (mL)",color = id, 
+      ylab = "Cumulative methane production (mL)", color = id, 
       geom = "line")
+
+## ----<-------------------------------------------------------------------
+data("s3voll")
+data("s3compl")
+data("s3volw")
+data("s3compw")
+data("s3lcombo")
+
+## ------------------------------------------------------------------------
+s3voll
+s3compl
+
+## ------------------------------------------------------------------------
+s3volw
+s3compw
+
+## ------------------------------------------------------------------------
+s3lcombo
+
+## ------------------------------------------------------------------------
+cpl <- cumBg(s3lcombo, comp = s3compl, temp = 25, pres = 1,
+             id.name = 'id', time.name = 'time',
+             dat.name = 'vol', comp.name = 'xCH4',
+             extrap = TRUE)
+
+cpw <- cumBg(s3volw, comp = s3compw, temp = 25, pres = 1,
+             time.name = 'time',
+             data.struct = 'wide',
+             dat.name = 'D', comp.name = 'D',
+             extrap = TRUE)
+
+cpc <- cumBg(s3lcombo, temp = 25, pres = 1,
+             id.name = 'id', time.name = 'time',
+             data.struct = 'longcombo',
+             dat.name = 'vol', comp.name = 'xCH4',
+             extrap = TRUE)
+
+## ------------------------------------------------------------------------
+head(cpl)
+
+head(cpw)
+
+head(cpc)
 
 ## ----summBgargs----------------------------------------------------------
   args(summBg)

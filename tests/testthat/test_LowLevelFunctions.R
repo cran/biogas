@@ -1,7 +1,6 @@
 # test values form the lower level functions
 # Charlotte
-# 22 July 2015
-# Modified 10 April 2016 SDH
+# Modified: 02 Nov 2016 SDH
 
 # NTS No test yet for rbindf.R and partCO2.R
 
@@ -40,7 +39,8 @@ test_that("readFormula reads correctly the formulas independement from case sens
 # watVap.R
 test_that("results from watVAp is stable", {
   # water vapor at 20 C, 1 atm 
-  wV <- 10^(11.20963 - 2354.731/(293.15 + 7.559))
+  temp.c <- 20
+  wV <- 100*6.1094*exp(17.625*temp.c/(243.04 + temp.c))
   expect_equal(watVap(293.15),wV)
 })
 
@@ -86,7 +86,8 @@ test_that("calcCOD result is null for non organic formula - two letter elements"
 test_that("standard volume calculation is stable", {
   # convert 100ml at 35 C, rh = 1, 1 atm to 0 C, rh = 0, 1 atm
   rh <- 1
-  pH2O <- rh*watVap(273.15 + 35) 
+  # Note new pres.pa argument for enhancement factor
+  pH2O <- rh*watVap(273.15 + 35, pres.pa = 101325) 
   dv <- 100*(101325 - pH2O)/101325
   stdv <- dv*273.15 /  (35+273.15)
   expect_equal(stdVol(100, temp = 35, pres = 1, unit.temp = 'C', unit.pres = 'atm'), stdv)

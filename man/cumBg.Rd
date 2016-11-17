@@ -12,6 +12,7 @@ cumBg(
   # Main arguments
   dat, dat.type = 'vol', comp = NULL, temp = NULL, 
   pres = NULL, interval = TRUE,
+  data.struct = 'long',
   # Column names for volumetric method
   id.name = 'id', time.name = 'time', dat.name = dat.type,
   comp.name = 'xCH4', 
@@ -19,7 +20,7 @@ cumBg(
   pres.resid = NULL, temp.init = NULL, pres.init = NULL,
   rh.resid.init = 1, headspace = NULL, 
   vol.hs.name = 'vol.hs', headcomp = 'N2',
-  absolute = TRUE,
+  absolute = TRUE, pres.amb = NULL,
   # Calculation method and other settings
   cmethod = 'removed', imethod = 'linear', extrap = FALSE,
   addt0 = TRUE, showt0 = TRUE, 
@@ -35,9 +36,10 @@ cumBg(
 %- maybe also "usage" for other objects documented here.
 \arguments{
   \item{dat}{
-    a data frame with the columns reactor identification code; time of measurement (as \code{numeric}, or \code{POSIX}); and measured biogas volume or total reactor mass, in g (see \code{dat.type} argument).
-    The names of these columns are specified with \code{id.name}, \code{time.name}, and \code{dat.name}.
+    a data frame with reactor identification code; time of measurement (as \code{numeric}, or \code{POSIX}); and measured biogas volume, pressure in \code{pres.unit}, or total reactor mass (see \code{dat.type} argument).
+    See Details section for details on units.
     Additional columns can be present--these will be returned in the output data frame.
+    See \code{data.struct} argument for details on how data frames are structured.
 }
   \item{dat.type}{
   the type of data contained in \code{dat}. 
@@ -59,7 +61,7 @@ cumBg(
   \item{pres}{
     the pressure at which biogas volume was measured (when \code{dat.type = "vol"}), or of biogas just prior to exiting the reactor (when \code{dat.type = "mass"}).
     A length-one numeric vector.
-    Atmosphere by default (see \code{unit.pres} argument). 
+    Atmospheres by default (see \code{unit.pres} argument). 
     Default is \code{NULL}, which suppresses correction for temperature and pressure. 
     Not used for manometric method (when \code{dat.type = "pres"}).
 }
@@ -68,10 +70,23 @@ cumBg(
     do biogas measurements (volume or pressure) represent production only from the time interval between observations (default)?
     \code{interval = FALSE} means measured gas volume or pressure is cumulative.
     Applies to volumetric (\code{dat.type = "vol"}) and manometric methods (\code{dat.type = "pres"}). 
-    The gravimetric method (\code{dat.type = "mass"}) is cumulative by nature.
+    The gravimetric method (\code{dat.type = "mass"}) is cumulative by nature and the \code{interval} argument is not used.
     Default is \code{TRUE}.
   }
 
+  \item{data.struct}{
+    the structure of input data. The default of 'long' means separate objects for volume (or pressure or mass for manometric and gravimetric methods) and composition (if available). 
+    Each data frame must have reactor identification code and time columns with names specified with \code{id.name} and \code{time.name}.
+    The \code{dat} data frame must have volume (or pressure or mass) data in a single column with the name specified by \code{dat.name}.
+    The \code{comp} data frame must have biogas composition in a single column with the name specified by \code{comp.name}.
+    For the \code{data.struct = 'longcombo'} option, the composition column should be in the \code{dat} data frame, and the \code{comp} argument is not used.
+    For the \code{data.struct = 'wide'} option, two separate data frames are needed as in \code{'long'}, but there are no reactor identification code columns.
+    Instead, in \code{dat}, volume (or pressure or mass) data are in a separate column for each bottle, and column names are reactor identification codes.
+    Here, \code{dat.name} should be the name of the first column with volume (or pressure or mass) data.
+    All following columns are assumed to also have volume (or pressure or mass) data.
+    And in \code{comp}, biogas composition data are also in a separate column for each bottle, also with reactor identification codes for column names.
+    Here, \code{comp.name} should be the name of the first column with biogas composition data, as for \code{dat}.
+  }
 
   \item{id.name}{
     name of the reactor identification code column in \code{dat}. Must be the same in all data frames used in the function. Default is \code{"id"}.
@@ -94,8 +109,9 @@ cumBg(
 }
 
   \item{temp.init}{
-    (optional) initial headspace temperature in \code{unit.temp} units.
+    initial headspace temperature in \code{unit.temp} units.
     Used to correct for effect of initial reactor headspace on mass loss for the gravimetric method (\code{dat.type = "mass"}), and to determine initial gas volume in the manometric method (\code{dat.type = "pres"}).
+    Not used for volumetric method (\code{dat.type = "vol"}).
 }
 
  \item{pres.init}{
@@ -135,6 +151,13 @@ cumBg(
     is the headspace pressure measured in the manometric method absolute or gauge pressure? 
     Applies to manometric method only (\code{dat.type = "pres"}).
     Default is \code{TRUE}. 
+  }
+
+ \item{pres.amb}{
+    ambient pressure needed to calculate absolute pressure from gauge pressure measurements.
+    In atmospheres by default (see \code{unit.pres} argument). 
+    Only a single value is accepted. 
+    If ambient pressure differed among measurements, it is necessary to convert pressures to absolute values and use \code{absolute = TRUE} instead.
   }
  
  \item{cmethod}{
@@ -221,7 +244,7 @@ cumBg(
   If pressure is measured in \code{dat}, a manometric method can be applied by setting \code{dat.type} to \code{"pres"}.  
 
   For the volumetric method, all volumes (input and output) have the same units, e.g., mL, L, SCF.
-  For the gravimetric method, output volumes will be in mL if input masses are in g.
+  For the gravimetric method, output volumes will be in mL if input masses are in g (or in L if input masses are in kg, etc.).
   For the manometric method, inputs units are specified with \code{unit.pres}, and output volumes are the same as headspace volume, e.g., mL or L.
   
   Biogas composition (\code{comp.name} column in \code{comp}) is specified as the mole fraction of methane in dry biogas, normalised so mole fractions of methane and carbon dioxide sum to unity (Richards et al. 1991). Alternatively, if \code{cmethod} is set to \code{"total"}, biogas composition is the mole fraction of methane in dry biogas (include all the other gases except water). 
@@ -231,15 +254,16 @@ cumBg(
   To surpress volume correction to a \dQuote{standard} temperature and pressure, leave \code{temp} as \code{NULL} (the default).
 
   If \code{check = TRUE}, the input values of mole fraction of methane in biogas are checked, and a warning is returned if the are outside 0, 1.
+
   
 }
-
 
 \value{
   a data frame with all the columns originally present in \code{dat}, plus these others:
   \item{vBg}{Standardised volume of biogas production for individual event.}
   \item{xCH4}{Interpolated mole fraction of methane in biogas.}
   \item{vCH4}{Standardised volume of methane production for individual event. Only if \code{comp} is provided.}
+  \item{vhsCH4}{Standardised volume of methane present in reactor headspace. Only if \code{method = "total"} is used.}
   \item{cvBg}{Standardised cumulative volume of biogas production.}
   \item{cvCH4}{Standardised cumulative volume of methane production. Only if \code{comp} is provided.}
   \item{rvBg}{Production rate of biogas.}
@@ -391,6 +415,50 @@ cum.prod <- cumBg(strawPressure, dat.type = 'pres',
                   unit.pres = 'kPa', pres.std = 101.325)
 
 head(cum.prod)
+
+# Different data structures
+# Load example data
+data("s3voll")
+data("s3volw")
+data("s3compl")
+data("s3compw")
+data("s3lcombo")
+
+# wide
+
+# Check data structure first
+s3volw
+
+s3compw
+
+cum.prod <- cumBg(s3volw, comp = s3compw, temp = 25, pres = 1,
+                  time.name = 'time',
+                  data.struct = 'wide',
+                  dat.name = 'D', comp.name = 'D',
+                  extrap = TRUE)
+
+cum.prod
+
+# longcombo
+s3lcombo
+
+cum.prod <- cumBg(s3lcombo, temp = 25, pres = 1,
+                  id.name = 'id', time.name = 'time',
+                  data.struct = 'longcombo',
+                  dat.name = 'vol', comp.name = 'xCH4',
+                  extrap = TRUE)
+
+# Compare wide and longcombo to long (default)
+s3voll
+s3compl
+
+cum.prod <- cumBg(s3lcombo, comp = s3compl, temp = 25, pres = 1,
+                  id.name = 'id', time.name = 'time',
+                  dat.name = 'vol', comp.name = 'xCH4',
+                  extrap = TRUE)
+
+cum.prod
+
 
 }
 %% Add one or more standard keywords, see file "KEYWORDS" in the

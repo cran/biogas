@@ -63,14 +63,10 @@ stdVol(vol, temp, pres, rh = 1,
   Standardisation is done in a two-step process following Hafner et al. (2015).
   First, the contribution of water vapor is removed and volume is corrected to the standard pressure:
 
-  vd = vm*(pm - pw)/ps
+  vd = vm*(pm - rh*pw)/ps
 
-  where vd = dry volume at standard pressure ps, vm = measured volume at pressure pm, and pw = vapor pressure of water (all pressures in Pa).
-  Water vapor pressure pw is calculated from the Antoine equation:
-
-  pw = rh*10^(11.20963 - 2354.731/(T + 7.559)))
-
-  where rh = relative humidity (\code{rh} above) and T = measurement temperature (K, converted from \code{temp} argument).
+  where vd = dry volume at standard pressure ps, vm = measured volume at pressure pm, pw = saturation vapor pressure of water (all pressures in Pa), and rh = relative humidity (\code{rh} above).
+  Water vapor pressure pw is calculated from the Magnus form equation given in Alduchov and Eskridge (1996) (Eqs. (21) and (22)).
   In the second step, the volume is adjusted for temperature.
 
   vs = vd*Ts/T  
@@ -108,12 +104,8 @@ stdVol(vol, temp, pres, rh = 1,
   # 100 mL, measured at 35 C
   stdVol(100, temp = 35, pres = 1)
 
-  # Or, with different pressure units
-  stdVol(100, temp = 35, pres = 103, unit.pres = "kPa")
-
-  # With different units and standard conditions
-  stdVol(100, temp = 100, pres = 1, unit.pres = "bar", pres.std = 1, 
-         unit.temp = "F", temp.std = 68)
+  # Or, with different units
+  stdVol(100, temp = 35, pres = 103, unit.pres = "kPa", pres.std = 101.325)
   
   # Vectorized
   data(vol)

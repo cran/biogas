@@ -1,4 +1,4 @@
-# Modified: 14 May 2016 SDH
+# Modified: 19 Aug 2016 SDH
 
 stdVol <- function(
   vol,
@@ -40,7 +40,7 @@ stdVol <- function(
   }
  
   # Calculate water vapor pressure in atm (based on NIST)
-  pH2O <- rh*watVap(temp.k = temp.k)
+  pH2O <- rh*watVap(temp.k = temp.k, pres.pa = pres.pa)
 
   # Correct volume for water and to standard pressure
   vol.dry <- vol*(pres.pa - pH2O)/pres.std.pa

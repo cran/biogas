@@ -1,3 +1,40 @@
+biogas 1.5.0 
+2016 November 17
+---------------------------------------------------------------------
+NEW FEATURES
+
+*cumBg()
+Accepts two new data structures in addition to the original "long" structure: 
+"wide" and "longcombo". See data.struct argument. Five new example data sets
+have been added for use in examples to demonstrate.
+
+Missing values (NAs) for biogas composition are now OK. They will be automatically 
+dropped (and replaced with interpolated values if needed).
+
+The equation for water vapor pressure calculation has been changed. Resulting changes 
+in standardized volume will change very slightly as a result (<0.07%). (Thanks to 
+Izabel Kronenberg.)
+
+New pres.amb argument for use with manometric measurements and gauge pressure.
+
+*summBg()
+Now possible to include effect of uncertainty in substrate mass (standard deviation) 
+on final standard deviation in methane yield. See norm.sd.name argument.
+
+Instead of specifying a fixed time at which to evaluate biogas production, the 
+function can find the time when the production rate drops below 1% of cumulative 
+production per day. This value can be different for each substrate and can be applied 
+with or without inoculum subtraction. To use, set when = "1p".
+
+BUG FIXES
+
+*cumBg()
+Corrected calculation of initial standardized gas volume for manometric method 
+(dat.type = "pres").
+
+*Other minor fixes
+
+
 biogas 1.4.0 
 2016 May 24
 ---------------------------------------------------------------------

@@ -1,9 +1,99 @@
-
 biogas package
 
 ########################################
 ## DETAILED LOG ########################
 ########################################
+4 Nov 2016 - 16 Nov 2016 Sasha D. Hafner and Charlotte Rennuit
+Version 1.5.0
+
+summBg.R
+Changed name of new when option to '1p'. Fixed bug for when = '1p' option. Now
+function throws a useful error when a bottle does not have any rates that meet
+the criterion.
+
+3 Nov 2016 Sasha D. Hafner
+Version 1.5.0
+
+summBg.R
+Added when = 'r1%c' for automatic selection of times when rate of CH4
+production is <= 1% of cumulative value.
+
+cumBg.R
+Added difftime as a class for time.name column
+
+2 Nov 2016 Sasha D. Hafner
+Version 1.5.0
+
+cumBg.R
+Changed name of data.format to data.struct (because it describes data's
+structure not format). For 'longcombo' structure, added code to handle missing
+values in comp.name column. Previously comp interpolation section was skipped
+for longcombo, but now, if there are missing comp.name values, dat is split
+into dat and comp and data.struct is changed to 'long' so interpolation
+section is used. Added new pres.amb argument to (correctly) calculate absolute
+pressure from gauge values. Previously, residual pressure was incorrectly
+added. Absolute residual pressure is now also calculated. For all data
+structures missing comp values are now dropped before interpolation.
+
+30 Oct 2016 Sasha D. Hafner
+Version 1.4.2
+
+summBg.R
+Added new argument norm.sd.name and error propagation to normalization based
+on uncertainty in VS mass.
+
+25 Oct 2016 Sasha D. Hafner
+Version 1.4.2
+
+cumBg.R
+Dropped first.col.dat and first.col.comp arguments, instead just using
+dat.name and comp.name arguments.
+
+24 Oct 2016 Sasha D. Hafner
+Version 1.4.2
+
+cumBg.R
+Added data format flexibility. New argument for data format: data.format
+(options 'long' (default), 'wide', 'longcombo'). For 'wide' option, two other
+arguments are used: first.col.dat and first.col.comp to indicate where the dat
+and composition data start in the dat and comp data frames. Note that checks
+for input errors need to be updated.
+
+4-10 Oct 2016 Sasha D. Hafner
+Version 1.4.1
+
+cumBg.R
+Added check for missing observations in comp data frame. Now will throw useful
+error message. Possibly a few other changes.
+
+16-18 August 2016 Sasha D. Hafner
+Version 1.4.1
+
+cumBg.R
+For subtraction of initial headspace gas in manometric method when interval =
+FALSE, changed temp argument to temp.init. Also moved code for *.prev columns
+and (separately) rh.resid into if (interval) block because they are not used
+for interval = FALSE.  The pres.resid column is still added. 
+
+watVap.R
+Switched to a new equation from Alduchov and Eskridge J Applied Meteorology
+35: 601-609 . Changes in standardized volume becaue of change will be very
+small (<0.07%)
+
+06 June 2016 Sasha D. Hafner
+Version 1.4.1
+
+stdVol.Rd
+Added pres.std to example (had been using 1 kPa as standard--holdover from
+early version of code) and deleted an example.
+
+31 May 2016 Sasha D. Hafner
+Version 1.4.1
+
+cumBg.R
+Started adding unit.mass and unit.vol. Will need to add to others and update
+unitConvert.R.
+
 24 May 2016 Sasha D. Hafner
 Version 1.4.0
 

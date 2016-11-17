@@ -1,6 +1,6 @@
 # test values form the high level functions
 # Charlotte
-# Modified 24 May 2016
+# Modified: 02 Nov 2016 SDH
 
 context("Tests high level functions")
 
@@ -54,7 +54,7 @@ test_that("cumulative sum and rates are corrrectly calculated with default value
 test_that("cumulative sum, rates and methane volume are corrrectly calculated using one value for comp", {
   test.vol <- data.frame(id = rep(paste0('R_',1),5), time= c(2, 4, 5, 1, 3), vol = rep(20, 5))
 # wanted result : calculation for each column from data in test.mass
-  res <- data.frame(id = rep('R_1', 6), time = c(0:5), vol = c(NA, rep(20, 5)), xCH4 = c(NA, rep(0.6, 5)))
+  res <- data.frame(id = rep('R_1', 6), time = c(0:5), vol = c(NA, rep(20, 5)), xCH4 = c(NA, rep(0.6, 5)), temperature = c(NA, rep(35, 5)), pressure = c(NA, rep(1, 5)))
   res$vBg <- stdVol(c(0, rep(20,5)), temp = 35, pres = 1)
   res$vCH4 <- res$vBg*0.6*vmch4 / (0.6*vmch4 + 0.4*vmco2) 
   res$cvBg <- rep(0,6)
@@ -75,6 +75,7 @@ test_that("cumulative sum, rates and methane volume are corrrectly calculated us
   test.mass <- data.frame(id = rep(paste0('R_',1),6), time= c(2, 4, 5, 1, 3, 0), mass = c(95, 85, 80, 100, 90, 105))
   # wanted result : calculation for each column from data in test.mass
   res <- data.frame(id = rep('R_1',6) , time = c(0:5), mass = c(105, 100, 95, 90, 85, 80), xCH4 = rep(0.6, 6),  
+                    temperature = 35, pressure = 1,
                     massloss = c(0,rep(5,5)), cmassloss = c(0, 5, 10, 15, 20, 25))
   res <- data.frame( res, mass2vol(res$massloss, xCH4 = 0.6, temp = 35 , pres = 1, value= 'all'))
   res <- res[,-match('vCO2',names(res))]
@@ -107,8 +108,8 @@ test_that("cumBg gives a message error if cumulative mass is negative", {
 # Volumetric test NTS: we need more tests!!!
 test_that("cumulative CH4 is corrrectly calculated from pressure with default values", {
   test.pres <- data.frame(id = rep(1,5), time= c(2, 4, 5, 1, 3), pres = c(rep(1.5, 4), 1), pres.resid = 1)
-  calc <- cumBg(test.pres, dat.type = 'pres', temp.init = 20, pres.init = 1, headspace = 100, pres.resid = 'pres.resid', temp = 35, comp = 0.65)$cvCH4
-  expected <- c(0.00000, 24.12230, 51.90480, 50.83461, 79.68730, 107.46979)
+  calc <- signif(cumBg(test.pres, dat.type = 'pres', temp.init = 20, pres.init = 1, headspace = 100, pres.resid = 'pres.resid', temp = 35, comp = 0.65)$cvCH4, 4)
+  expected <- c(0.00, 24.08, 51.85, 50.78, 79.63, 107.40)
 
   expect_equal(calc, expected, tolerance = 1E-5)
 })
