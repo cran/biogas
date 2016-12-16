@@ -11,8 +11,8 @@
   }
 \usage{
 summBg(vol, setup, id.name = "id", time.name = "time", 
-       descrip.name = "descrip", inoc.name = NULL, 
-       norm.name = NULL, norm.sd.name = NULL, inoc.m.name = "minoc", vol.name = "cvCH4", 
+       descrip.name = "descrip", inoc.name = NULL, inoc.m.name = NULL,
+       norm.name = NULL, norm.sd.name = NULL,  vol.name = "cvCH4", 
        imethod = "linear", extrap = FALSE, when = 30, 
        show.obs = FALSE, sort = TRUE)
 }
@@ -47,10 +47,11 @@ summBg(vol, setup, id.name = "id", time.name = "time",
 }
   \item{inoc.m.name}{
     (optional) the name of the column in \code{setup} that has inoculum mass.
-    Length one character vector. Default is \code{"minoc"}. %CRE used for substraction of inoculum production
+    If specified, these data are used to subtract the inoculum contribution to methane production.
+    Length one character vector. Default is \code{"minoc"}. 
 }
   \item{vol.name}{
-    the name of the column in \code{vol} that contains the response variable --typically cumulative methane volume. %CRE that will be used for the summary
+    the name of the column in \code{vol} that contains the response variable used for the summary--typically cumulative methane volume. 
     The default is \code{"cvCH4"} for \emph{c}umulative \emph{v}olume of methane (CH4).
 }
   \item{imethod}{
@@ -83,7 +84,7 @@ summBg(vol, setup, id.name = "id", time.name = "time",
 If needed \code{summBg} can return values for all observations and be used for simpler operations e.g., determining cumulative biogas production at some specified time or normalising gas volume by different substrate characteristics.
 
 To summarise data, the \code{setup} data frame should have a column with a description of bottle substrate (or a code for this). 
-Its name is set by \code{descrip.name}.  %CRE Its name no clear -> this column name?
+The name of the column is set by the \code{descrip.name} argument.  
 If the inoculum effect is to be subtracted out, a column named \code{descrip.name} (for identifying replicates) and a column with the mass of inoculum present (any units), with a name set by \code{inoc.m.name} are both required in \code{setup}. 
 To normalise by substrate mass (or any mass to be used for normalisation), an additional column with the mass of substrate is needed in \code{setup} --its name is set by \code{norm.name}.
   
@@ -120,7 +121,8 @@ cum.prod <- cumBg(vol, comp = comp, temp = 20, pres = 1,
 
 head(cum.prod)
 
-# Cumulative methane production at 30 d (default) %CRE + use of default column names
+# Cumulative methane production (default) at 30 d 
+# Uses default names for some columns
 summBg(vol = cum.prod, setup = setup, time.name = "days", when = 30)
 
 # Or total cumulative biogas
@@ -129,22 +131,22 @@ summBg(vol = cum.prod, setup = setup, time.name = "days",
 
 # Cumulative CH4 only, subtract inoculum contribution
 summBg(vol = cum.prod, setup = setup, time.name = "days", 
-       inoc.name = "inoc", when = 30)
+       inoc.name = "inoc", inoc.m.name = "minoc", when = 30)
 
 # And normalise by mvs.sub column (mass of substrate VS here) (so the result is BMP)
 summBg(vol = cum.prod, setup = setup, time.name = "days", 
-       inoc.name = "inoc", when = 30, norm.name = "mvs.sub")
+       inoc.name = "inoc", inoc.m.name = "minoc", when = 30, norm.name = "mvs.sub")
 
 # Same example, but return results for three times
 summBg(vol = cum.prod, setup = setup, time.name = "days", 
-       inoc.name = "inoc", when = c(10, 30, 60), 
+       inoc.name = "inoc", inoc.m.name = "minoc", when = c(10, 30, 60), 
        norm.name = "mvs.sub")
 
 # Back to earlier example, but return all individual observations 
 # (and total production and individual contributions of substrate 
 # and inoculum) 
 summBg(vol = cum.prod, setup = setup, time.name = "days", 
-       inoc.name = "inoc", when = 30, 
+       inoc.name = "inoc", inoc.m.name = "minoc", when = 30, 
        norm.name = "mvs.sub", show.obs = TRUE)
 
 # Something different: interpolated biogas production rates
@@ -153,28 +155,43 @@ summBg(vol = cum.prod, setup = setup, time.name = "days",
 
 # The when argument could also be 'meas', 'end', or '1p' for any of these examples 
 summBg(vol = cum.prod, setup = setup, time.name = "days", 
-       inoc.name = "inoc", when = "end", 
+       inoc.name = "inoc", inoc.m.name = "minoc", when = "end", 
        norm.name = "mvs.sub")
 
 summBg(vol = cum.prod, setup = setup, time.name = "days", 
-       inoc.name = "inoc", when = "meas", 
+       inoc.name = "inoc", inoc.m.name = "minoc", when = "meas", 
        norm.name = "mvs.sub")
 
 summBg(vol = cum.prod, setup = setup, time.name = "days", 
-       inoc.name = "inoc", when = "1p", 
+       inoc.name = "inoc", inoc.m.name = "minoc", when = "1p", 
        norm.name = "mvs.sub")
 
 # If you want to apply the 1% criterion but also want a single fixed time for all bottles,
 # you have to use two calls
 summBg(vol = cum.prod, setup = setup, time.name = "days", 
-       inoc.name = "inoc", when = "1p", 
+       inoc.name = "inoc", inoc.m.name = "minoc", when = "1p", 
        norm.name = "mvs.sub")
 
 # From the first call, the longest time is 42 days, so use when = 42
 summBg(vol = cum.prod, setup = setup, time.name = "days", 
-       inoc.name = "inoc", when = 42, 
+       inoc.name = "inoc", inoc.m.name = "minoc", when = 42, 
        norm.name = "mvs.sub")
 
+# If an error is thrown because a bottle doesn't meet the 1% criterion, use 
+# show.obs = TRUE to see rates
+\dontrun{
+# Will return error
+cpshort <- cum.prod[cum.prod$days < 10, ]
+summBg(vol = cpshort, setup = setup, time.name = "days", 
+       inoc.name = "inoc", inoc.m.name = "minoc", when = "1p", 
+       norm.name = "mvs.sub")
+}
+
+# So then use this to see which bottles are causing problems
+cpshort <- cum.prod[cum.prod$days < 10, ]
+summBg(vol = cpshort, setup = setup, time.name = "days", 
+       inoc.name = "inoc", inoc.m.name = "minoc", when = "1p", 
+       norm.name = "mvs.sub", show.obs = TRUE)
 
 
 # Example with dataset with different column names

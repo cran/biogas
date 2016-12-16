@@ -3,6 +3,119 @@ biogas package
 ########################################
 ## DETAILED LOG ########################
 ########################################
+15-16 Dec 2016 Sasha D. Hafner
+Version 1.6.0
+
+cumBg.R 
+Removed hardcoded 'temp.init' used in pressure method.
+
+summBg.R
+Changes in when = '1p' option to fix bugs. Previously when time for
+bottles with same description differed, the time was changed to the max but
+the response variable was not changed. Now max time is selected first and
+summ1 data frame is then made. When a bottle doesn't have a time equal to the
+time selected for its desription, the next later time is used. This should
+show up in the resulting output.
+
+Also added relative rates to show.obs = TRUE output and moved show.obs
+return() call so it can be used to see rates without getting an error for
+rates > 1%.
+
+Changed argument order so inoc.name and inoc.m.name are next to each other.
+
+s3*.Rda and s3*.Rd
+Changed 'time' to 'time.d', 'vol' to 'vol.d'. Required changes in at least one
+other help file.
+
+12 Dec 2016 Sasha D. Hafner
+Version 1.5.1
+
+summBg.R
+Now NA in inoculum-only bottle volumes will be dropped before calculation of
+means. Updated warning message.
+
+8 Dec 2016 Sasha D. Hafner
+Version 1.5.1
+
+cumBg.R
+Added na.omit() to xCH4 check.
+
+summBg.R
+Changed default argument for m.inoc.name to NULL. Was previously 'minoc'. How
+did this work when user didn't want to subtract inoculum contribution?
+
+3 Dec 2016 Sasha D. Hafner
+Version 1.5.1
+
+cumBg.R
+Replaced check of xCH4 values > 1 with a correction (division by 100) in this
+case, along with a warning.
+
+1 Dec 2016 Sasha D. Hafner 
+Version 1.5.1
+
+cumBg.R
+Fixed bug that always used 'id' for new id.name column when starting with wide
+data. Now uses id.name argument.
+
+Added code to remove NAs present to the latest time for each bottle. Designed
+for wide data where measurements end for some bottles earlier than others.
+
+Fixed checks for missing columns in dat for long, longcombo, and wide.
+
+summBg.R
+Added check for inoc.m.name column in setup data frame.
+
+Added check for NAs in (interpolated) inoculum-only volumes.
+
+Now when there is only one inoculum-only bottle, sd for inoculum contribution
+is set to 0, which allows calculation of BMP sd (was NA before).
+
+
+28 Nov 2016 Sasha D. Hafner 
+Version 1.5.1
+
+cumBg.R
+Added new 'dry' argument for so standardized (dry) volumetric data can be used
+(thinking of AMPTS output).
+
+26 Nov 2016 Sasha D. Hafner 
+Version 1.5.1
+
+summBg.R
+Improved when = '1p' option. Criterion is now: rate <1% for observation and
+all following observations, and observation is >= 3 days from end of
+incubation.
+
+23 Nov 2016 Sasha D. Hafner 
+Version 1.5.1
+
+cumBg.R
+Added warning for case when composition data were not provided.
+
+Fixed bug in skipping interpolation for a single comp observation for mass
+data written when options were only mass and vol around line 229.
+
+21 Nov 2016 Sasha D. Hafner 
+Version 1.5.1
+
+cumBg.Rd
+Clarified pres.init gauge/absolute pressure.
+
+cumBg.R
+Fixed error in pres and temp arguments in mass2vol() call for times 1 and 2.
+Row index had been omitted. 
+
+Function now expects pres.init as gauge pressure if absolute = FALSE. 
+Previously pres.init always had to be as absolute pressure.
+
+19 Nov 2016 Sasha D. Hafner 
+Version 1.5.1
+
+cumBg.Rd
+Clarified how absolute argument applies to pres.resid (applies) and pres.amb
+(doesn't).
+
 4 Nov 2016 - 16 Nov 2016 Sasha D. Hafner and Charlotte Rennuit
 Version 1.5.0
 

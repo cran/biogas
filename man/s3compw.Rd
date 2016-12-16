@@ -11,7 +11,7 @@
 \format{
   A data frame with 5 observations on the following 4 variables:
   \describe{
-    \item{\code{time}}{elapsed time of mass measurements (from bottle setup) in days, a numeric vector.}
+    \item{\code{time.d}}{elapsed time of mass measurements (from bottle setup) in days, a numeric vector.}
     \item{\code{D}}{biogas methane content at \code{time} from bottle \dQuote{D} as mole fraction, a numeric vector.}
     \item{\code{E}}{biogas methane content at \code{time} from bottle \dQuote{E} as mole fraction, a numeric vector.}
     \item{\code{F}}{biogas methane content at \code{time} from bottle \dQuote{F} as mole fraction, a numeric vector.}

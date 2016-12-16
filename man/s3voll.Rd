@@ -12,9 +12,9 @@
   A data frame with 21 observations on the following 4 variables:
   \describe{
     \item{\code{id}}{identification code, a unique value for each bottle in the dataset. }
-    \item{\code{time}}{elapsed time of mass measurements (from bottle setup) in days, a numeric vector.}
-    \item{\code{vol}}{volume of biogas removed at \code{time} in mL, a numeric vector.}
-    \item{\code{cvol}}{cumulative sum of \code{vol}.}
+    \item{\code{time.d}}{elapsed time of mass measurements (from bottle setup) in days, a numeric vector.}
+    \item{\code{vol.ml}}{volume of biogas removed at \code{time} in mL, a numeric vector.}
+    \item{\code{cvol.ml}}{cumulative sum of \code{vol}.}
   }
 }
 \details{

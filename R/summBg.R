@@ -1,4 +1,4 @@
-# Modified: 3 Nov 2016 SDH
+# Modified: 15 Dec 2016 SDH
 
 summBg <- function(
   vol,
@@ -7,9 +7,9 @@ summBg <- function(
   time.name = 'time',
   descrip.name = 'descrip',
   inoc.name = NULL,
+  inoc.m.name = NULL,
   norm.name = NULL,
   norm.sd.name = NULL,
-  inoc.m.name = 'minoc',
   vol.name = 'cvCH4',
   imethod = 'linear',
   extrap = FALSE,
@@ -61,6 +61,16 @@ summBg <- function(
 
   if(!is.null(norm.name) && !norm.name %in% names(setup)) {
     stop('norm.name ', deparse(substitute(norm.name)), ' not found in the column names of ', deparse(substitute(setup)), '.')
+  }
+
+  # And inoc.m.name
+  if(!is.null(inoc.m.name) && !inoc.m.name %in% names(setup)) {
+    stop('inoc.m.name ', deparse(substitute(inoc.m.name)), ' not found in the column names of ', deparse(substitute(setup)), '.')
+  }
+
+  # Problem if inoc.name is given but inoc.m.name is not
+  if(!is.null(inoc.name) & is.null(inoc.m.name)) {
+    stop('inoc.m.name must be provided in order to subtract inoculumn contribution.')
   }
 
   # Check for case when 'when' argument > all times
@@ -180,6 +190,12 @@ summBg <- function(
 
     }
 
+    # Check for NAs in inoculum data (probably extrapolation issue)
+    if(any(is.na(summ.inoc[, vol.name]))) {
+      warning('Missing values in inoculum-only volumes. Did the inoculum-only incubation end before other bottles or before \'when\'? Dropping observation(s). Try extrap = TRUE to retain (but be aware of what this means).')
+      summ.inoc <- summ.inoc[!is.na(summ.inoc[, vol.name]), ]
+    }
+
     # Merge to add mass inoculum and VS in substrate
     summ.inoc <- merge(setup, summ.inoc, by.x = id.name, by.y = 'id')
 
@@ -191,7 +207,14 @@ summBg <- function(
 
     for(i in times.summ) {
       vol.mi <- summ.inoc[summ.inoc$time == i, 'vol.mi']
-      inoc.vol <- rbind(inoc.vol, c(time = i, mn = mean(vol.mi), s = sd(vol.mi)))
+      # Calculate sd only if there is more than one observation
+      if(length(vol.mi) > 1) {
+        ss <- sd(vol.mi)
+      } else {
+        ss <- 0
+        warning('Only one inoculum-only bottle is present, so reported sd does not include variation within inoculum-only bottles.')
+      }
+      inoc.vol <- rbind(inoc.vol, c(time = i, mn = mean(vol.mi), s = ss))
     }
 
     names(inoc.vol) <- c(time.name, 'vol.mi.mn', 'vol.mi.sd')
@@ -229,37 +252,81 @@ summBg <- function(
   }
 
   # If selected, find times where rate drops below 1%/d of cumulative
-  # WIP
-  if(length(when) == 1 && when == '1p') { # Get 
+  if(length(when) == 1 && when == '1p') { 
 
     # Find time when rvCH4 <= 1% of cvCH4
-    summ1temp <- NULL
+    s1times <- NULL
+    summ1$rrvCH4 <- NA
 
+    # Calculate relative rates
     for(i in ids) {
-
       dd <- summ1[summ1[, id.name] == i, ]
       dd <- dd[order(dd[, time.name]), ]
       rr <- c(NA, diff(dd[, vol.name])/diff(dd[, time.name]))/dd[, vol.name]
-      # Next line finds first time that rel rate is <= 1% and next rel rate is also <= 1%. Cannot be latest time (note 0).
-      i1 <- which(rr <= 0.01 & c(rr[-1], 0) <= 0.01)[1]
-      if(!is.na(i1)) {
-        ss <- dd[i1, ]
-        summ1temp <- rbind(summ1temp, ss)
+      # Add rates to summ1 only for exporting with show.obs = TRUE
+      summ1[summ1[, id.name] == i, 'rrvCH4'] <- signif(100*rr, 4)
+    }
+
+    # Return observations here (early to avoid problem in next 2 blocks--see error messages)
+    if(show.obs) {
+      return(summ1)
+    }
+
+    # Back to working with rates (after show.obs option above)
+    for(i in ids) {
+      dd <- summ1[summ1[, id.name] == i, ]
+
+      rr <- dd$rrvCH4/100
+
+      # Find rates < 1%
+      i1 <- which(rr <= 0.01)
+
+      # That are consecutive
+      i1d <- diff(i1)
+
+      # That are uninterupted by a high rate
+      if(any(i1d > 1)) {
+        i2 <- max(which(i1d > 1)) + 1 
       } else {
-        stop('You selected \"1p\" option for \"when\" argument but all rates are > 1% of cumulative production for id ', i, '. Either use a fixed time for \"when\" or remove this id.')
+        i2 <- 1
+      }
+
+      i3 <- i1[i2]
+
+      # Check time (>= 3 days)
+      if(!is.na(i3)) {
+        if(diff(dd[c(i3, nrow(dd)), time.name]) < 3) i3 <- NA
+      }
+
+      # Drop those rows that are not consecutive
+      if(!is.na(i3)) {
+        ss <- dd[i3, ]
+        s1times <- rbind(s1times, ss)
+      } else {
+        stop('You selected \"1p\" option for \"when\" argument but there are not 2 consecutive rates < 1% of cumulative production per d for id ', i, '. Either use a fixed time for \"when\" or remove this id. Set show.obs = TRUE to check rates for all bottles.')
+        ##ss <- dd[nrow(dd), ]
+        ##s1times <- rbind(s1times, ss)
+      }
+
+    }
+
+    # Check for different times for bottles with same descrip
+    summ1temp <- data.frame()
+
+    for(i in unique(s1times[, descrip.name])) {
+      tt <- max(s1times[s1times[, descrip.name] == i, time.name])
+
+      for(j in unique(summ1[summ1[, descrip.name] == i, id.name])) {
+        # Select times >= max time for this decrip.name level
+        ss <- summ1[summ1[, id.name] == j & summ1[, time.name] >= tt, ]
+        if(length(ss) == 0) stop('when = "1p" problem. Re-run function with show.obs = TRUE')
+        ss <- ss[1, ]
+        summ1temp <- rbind(summ1temp, ss)
       }
 
     }
 
     summ1 <- summ1temp
-
-    # If when = 1p check for different times for bottles with same descrip
-    if(length(when) == 1 && when == '1p') {
-      for(i in unique(summ1[, descrip.name])) {
-        summ1[summ1[, descrip.name] == i, time.name] <- max(summ1[summ1[, descrip.name] == i, time.name])
-      }
-    }
-
 
   } 
 
@@ -338,7 +405,11 @@ summBg <- function(
 
   # Sort result
   if(sort) {
-    summ2 <- summ2[order(summ2[, descrip.name], summ2[, time.name]), ]
+    if(show.obs) {
+      summ2 <- summ2[order(summ2[, descrip.name], summ2[, id.name], summ2[, time.name]), ]
+    } else {
+      summ2 <- summ2[order(summ2[, descrip.name], summ2[, time.name]), ]
+    }
   } else {
     # Get original reactor order from setup
     descrip.order <- 1:length(unique(setup[, descrip.name]))

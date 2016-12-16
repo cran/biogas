@@ -37,7 +37,7 @@ This document provides a brief introduction to the biogas package for new users.
 We have assumed that readers are familiar with biogas data collection and R.
 
 \section{Overview of functions}
-The package includes six ``low-level'' functions (Table \ref{tab:lowfunctionsummary}) and three ``high-level'' functions (Table \ref{tab:highfunctionsummary}).
+The package includes seven ``low-level'' functions (Table \ref{tab:lowfunctionsummary}) and three ``high-level'' functions (Table \ref{tab:highfunctionsummary}).
 To go from data collected in the laboratory to biogas and methane (\ce{CH4}) production or biochemical methane potential (BMP), two high-level functions are needed: \texttt{cumBg()} and \texttt{summBg()}.
 Comparing results to theory is facilitated by the remaining high-level function: \texttt{predBg()}.
 The low-level functions support the calculations carried out by the high-level functions, and may also be useful for some simple operations (e.g., converting reported biogas volumes to different standard conditions).
@@ -64,6 +64,7 @@ This document describes the use of the high-level functions.
     Calculate molar mass of a compound           &   \texttt{molMass()} \\
     Calculate biogas volume from mass loss       &   \texttt{mass2vol()} \\
     Calculate mass loss from biogas volume       &   \texttt{vol2mass()} \\ 
+    Convert gas volume to moles                  &   \texttt{vol2mol()} \\ 
 		\hline
   \end{tabular}
   \end{center}
@@ -86,15 +87,15 @@ This document describes the use of the high-level functions.
   
   
 \section{An example: calculation and prediction of biochemical methane potential}
-Calculation of biochemical methane potential (BMP) typically requires three data frames: initial mass, biogas volume (or reactor mass loss), and biogas composition.
-Volume and composition data frames must be in a ``long'' format, with the measured variable in a single column (Fig. \ref{fig:timedata}).
-Columns with unique reactor IDs and time allow the \texttt{biogas} functions to link observations in the two data frames\footnote{
+Calculation of biochemical methane potential (BMP) typically requires three data frames: initial mass, biogas quantity (volume, pressure, or bottle mass loss), and biogas composition.
+Input data may be structured in one of three ways: ``long'', ``wide'', or ``combined''.
+In a ``long'' format (\texttt{data.struct = 'long'}, the default), the measured variable (e.g., biogas volume) is in a single column (Fig. \ref{fig:timedata}).
+In this case columns with unique reactor IDs and time allow the \texttt{biogas} functions to link observations in the two data frames\footnote{
   But observations need not be for the same times. 
   Interpolation by \texttt{interp} takes care of this.
   Note that the time columns can be date/time objects as well as numeric or integer.
 }.
 Any order of observations can be used in input data frames.
-It is possible to put volume and composition data in a single data frame, but since composition is not always measured concurrently with volume, a better approach is to use two separate data frames.
 
 \vspace{5mm}
 
@@ -147,6 +148,9 @@ It should contain at least a reactor ID column and a description of the reactor 
 If the contribution of an inoculum is to be subtrated (as in the BMP test), the mass of inoculum added should be included here.
 Any measurements to be used to normalise biogas or \ce{CH4} production are included here, using a ``wide'' format (Fig. \ref{fig:inidata}).
 Note that there is no time column in this data frame--these values are independent of time.
+
+With the ``wide'' data structure (\texttt{data.struct = 'wide'}) the biogas quantity data frame contains a separate column for each bottle.
+And in the ``combined'' option (\texttt{data.struct = 'longcombo'}) a single data frame contains both biogas quantity and composition in a ``long'' structure.
 
 \vspace{5mm}
 
@@ -313,20 +317,20 @@ Each of these structures can be used by \texttt{cumBg} by changing the \texttt{c
 
 <<>>=
 cpl <- cumBg(s3lcombo, comp = s3compl, temp = 25, pres = 1,
-             id.name = 'id', time.name = 'time',
-             dat.name = 'vol', comp.name = 'xCH4',
+             id.name = 'id', time.name = 'time.d',
+             dat.name = 'vol.ml', comp.name = 'xCH4',
              extrap = TRUE)
 
 cpw <- cumBg(s3volw, comp = s3compw, temp = 25, pres = 1,
-             time.name = 'time',
+             time.name = 'time.d',
              data.struct = 'wide',
              dat.name = 'D', comp.name = 'D',
              extrap = TRUE)
 
 cpc <- cumBg(s3lcombo, temp = 25, pres = 1,
-             id.name = 'id', time.name = 'time',
+             id.name = 'id', time.name = 'time.d',
              data.struct = 'longcombo',
-             dat.name = 'vol', comp.name = 'xCH4',
+             dat.name = 'vol.ml', comp.name = 'xCH4',
              extrap = TRUE)
 @
 

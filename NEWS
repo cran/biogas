@@ -1,3 +1,47 @@
+biogas 1.6.0
+2016 December 16
+---------------------------------------------------------------------
+NEW FEATURES
+
+*cumBg()
+New dry argument (dry = FALSE by default) so that standardised gas volumes can be 
+used (e.g., AMPTS II data).
+
+If any CH4 concentration values are > 1, all are divided by 100. This allows the use
+of CH4 concentrations as % vol (% mol) without division first.
+
+*sumBg()
+Standard deviation of BMP or similar summary is now calculated even with only one 
+inoculum-only bottle, with a warning.
+
+*Vignette
+Slight updates to "Getting started" vignette on data structures (more details in 
+cumBg() help file).
+
+BUG FIXES
+
+*cumBg()
+When gauge = FALSE, pres.init should now be gauge pressure (pres.amb must be absolute
+pressure).
+
+Fixed a bug in id column name for wide format.
+
+*sumBg()
+Improved when = '1p' option (1% criterion). Criterion is now: rate <1% of cumulative
+CH4 per day for current observation and all following observations, and observation 
+is >= 3 days from end of incubation.
+
+Other problem with the when = '1p' option apparent only when rates varied
+significantly among replicates was fixed.
+
+*Other minor fixes
+
+REMOVED FUNCTIONALITY
+*summBg()
+Removed default value for inoc.m.name argument to avoid mistakes.
+
+
+
 biogas 1.5.0 
 2016 November 17
 ---------------------------------------------------------------------
@@ -33,6 +77,7 @@ Corrected calculation of initial standardized gas volume for manometric method
 (dat.type = "pres").
 
 *Other minor fixes
+
 
 
 biogas 1.4.0 
@@ -82,6 +127,8 @@ of reactor ID in setup data frame.
 *predBg()
 New options for 'value' argument to just return chemical reactions: use "reactionn" 
 for a numeric reaction and "reactionc" for a character version.
+
+
 
 biogas 1.2.0 
 2015 November 13

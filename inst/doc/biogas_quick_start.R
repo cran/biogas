@@ -69,20 +69,20 @@ s3lcombo
 
 ## ------------------------------------------------------------------------
 cpl <- cumBg(s3lcombo, comp = s3compl, temp = 25, pres = 1,
-             id.name = 'id', time.name = 'time',
-             dat.name = 'vol', comp.name = 'xCH4',
+             id.name = 'id', time.name = 'time.d',
+             dat.name = 'vol.ml', comp.name = 'xCH4',
              extrap = TRUE)
 
 cpw <- cumBg(s3volw, comp = s3compw, temp = 25, pres = 1,
-             time.name = 'time',
+             time.name = 'time.d',
              data.struct = 'wide',
              dat.name = 'D', comp.name = 'D',
              extrap = TRUE)
 
 cpc <- cumBg(s3lcombo, temp = 25, pres = 1,
-             id.name = 'id', time.name = 'time',
+             id.name = 'id', time.name = 'time.d',
              data.struct = 'longcombo',
-             dat.name = 'vol', comp.name = 'xCH4',
+             dat.name = 'vol.ml', comp.name = 'xCH4',
              extrap = TRUE)
 
 ## ------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-# Modified: 03 Nov 2016
+# Modified: 28 Nov 2016
 
 cumBg <- function(
   # Main arguments
@@ -30,6 +30,8 @@ cumBg <- function(
   extrap = FALSE,
   addt0 = TRUE,
   showt0 = TRUE,
+  # Additional argument for volumetric data only (when data are already standardized to dry conditions)
+  dry = FALSE,
   ##gas = 'CH4',
   # Warnings and messages
   std.message = TRUE,
@@ -70,13 +72,18 @@ cumBg <- function(
   checkArgClassValue(extrap, 'logical')
   checkArgClassValue(addt0, 'logical')
   checkArgClassValue(showt0, 'logical')
+  checkArgClassValue(dry, 'logical')
   checkArgClassValue(std.message, 'logical')
   checkArgClassValue(check, 'logical')
   checkArgClassValue(absolute, 'logical')
   checkArgClassValue(pres.amb, c('integer', 'numeric', 'NULL'))
 
   # Hard-wire rh for now at least
-  rh <- 1
+  if(!dry) {
+    rh <- 1
+  } else {
+    rh <- 0
+  }
 
   # Check column names in argument data frames
   # comp needs id (time) xCH4, time optional
@@ -87,9 +94,13 @@ cumBg <- function(
   }
 
   # dat (volume or mass)
-  if(data.struct == 'long') {
+  if(data.struct %in% c('long', 'longcombo')) {
     if(any(missing.col <- !c(id.name, time.name, dat.name) %in% names(dat))){
-      stop('Specified columns in dat data frame (', deparse(substitute(dat)), ') not found: ', c(id.name, time.name, dat.name)[missing.col], '.')
+      stop('Specified columns in dat data frame (', deparse(substitute(dat)), ') not found: ', paste(c(id.name, time.name, dat.name)[missing.col], collapse = ', '), '.')
+    } 
+  } else if(data.struct == 'wide') {
+    if(any(missing.col <- !c(time.name, dat.name) %in% names(dat))){
+      stop('Specified columns in dat data frame (', deparse(substitute(dat)), ') not found: ', paste(c(time.name, dat.name)[missing.col], collapse = ', '), '.')
     } 
   }
 
@@ -105,23 +116,25 @@ cumBg <- function(
   }
 
   # Check for input errors
+  # NTS: add checks for column types (catches problem with data read in incorrectly, e.g., from Excel with)
   #if(!is.null(comp) && class(comp)=='data.frame' && data.struct == 'long' && any(is.na(comp[, comp.name]))) stop('Missing data in comp data frame. See rows ', paste(which(is.na(comp[, comp.name])), collapse = ', '), '.')
   # Drop missing comp rows
 
   # NTS: Add other checks here (e.g., missing values elsewhere)
 
-  if(check) {
-    # Composition
-    if(is.numeric(comp) | is.integer(comp)) {
-      if(any(comp < 0 | comp > 1)) {
-	warning('Check biogas composition in ', deparse(substitute(comp)), '. One or more values is outside of range 0.0-1.0.')
-      }
-    } else {
-      if(any(comp[, comp.name] < 0 | comp[, comp.name] > 1)) {
-	warning('Check biogas composition in ', deparse(substitute(comp)), '$', comp.name, '. One or more values is outside of range 0.0-1.0.')
-      }
-    }
-  }
+  ### This check has been replaced with a conversion below
+  ##if(check) {
+  ##  # Composition
+  ##  if(is.numeric(comp) | is.integer(comp)) {
+  ##    if(any(comp < 0 | comp > 1)) {
+  ##      warning('Check biogas composition in ', deparse(substitute(comp)), '. One or more values is outside of range 0.0-1.0.')
+  ##    }
+  ##  } else {
+  ##    if(any(comp[, comp.name] < 0 | comp[, comp.name] > 1)) {
+  ##      warning('Check biogas composition in ', deparse(substitute(comp)), '$', comp.name, '. One or more values is outside of range 0.0-1.0.')
+  ##    }
+  ##  }
+  ##}
 
   # Convert date.type to lowercase so it is more flexible for users
   dat.type <- tolower(dat.type)
@@ -141,14 +154,17 @@ cumBg <- function(
     dat2 <- dat
     dat <- dat[ , 1:which.first.col]
     names(dat)[which.first.col] <- dat.name
-    dat <- data.frame(id = ids[1], dat)
+    dat <- data.frame(idxyz = ids[1], dat)
 
     for(i in 2:nr - 1) {
       x <- dat2[ , c(1:(which.first.col - 1), which.first.col + i)]
       names(x)[which.first.col] <- dat.name
-      x <- data.frame(id = ids[i + 1], x)
+      x <- data.frame(idxyz = ids[i + 1], x)
       dat <- rbind(dat, x)
     }
+
+    # Fix id name
+    names(dat)[names(dat) == 'idxyz'] <- id.name
 
     # Now for comp
     if(!is.numeric(comp)) {
@@ -161,14 +177,17 @@ cumBg <- function(
       comp2 <- comp
       comp <- comp[ , 1:which.first.col]
       names(comp)[which.first.col] <- comp.name
-      comp <- data.frame(id = ids[1], comp)
+      comp <- data.frame(idxyz = ids[1], comp)
 
       for(i in 2:nr - 1) {
         x <- comp2[ , c(1:(which.first.col - 1), which.first.col + i)]
         names(x)[which.first.col] <- comp.name
-        x <- data.frame(id = ids[i + 1], x)
+        x <- data.frame(idxyz = ids[i + 1], x)
         comp <- rbind(comp, x)
       }
+
+      # Fix id name
+      names(comp)[names(comp) == 'idxyz'] <- id.name
     }
 
     data.struct <- 'long'
@@ -226,7 +245,7 @@ cumBg <- function(
           } else {
             # There is a time column in dc/comp
             for(j in 1:nrow(dat[dat[, id.name]==i, ])) {
-              if(j > 1 | dat.type=='vol') { # This just to avoid warning for first observation for mass data
+              if(j > 1 | dat.type!='mass') { # This just to avoid warning for first observation for mass data
                 if(dc[, time.name]==dat[dat[, id.name]==i, time.name][j]) { 
                   # If times match
                   dat[dat[, id.name]==i, comp.name][j] <- dc[, comp.name]
@@ -284,6 +303,12 @@ cumBg <- function(
     } 
   }
 
+  # Correct composition data if it seems to be a percentage
+  if(any(na.omit(dat[, comp.name] > 1))) {
+    dat[, comp.name] <- dat[, comp.name]/100
+    warning('Methane concentration was > 1.0 mol/mol for at least one observation, so is assumed to be a percentage, and was corrected by dividing by 100. ',
+            'Range of new values: ', min(na.omit(dat[, comp.name])), '-', max(na.omit(dat[, comp.name])))
+  }
 
 
   # Volumetric
@@ -325,6 +350,8 @@ cumBg <- function(
 
         dat[, aa <- paste0(pres.resid, '.abs')] <- dat[, pres.resid] + pres.amb
         pres.resid <- aa
+
+        pres.init <- pres.init + pres.amb
       }
 
       # Add residual rh (after pressure measurement and venting)
@@ -357,13 +384,17 @@ cumBg <- function(
                           pres.std = pres.std, temp.std = temp.std, unit.temp = unit.temp, 
                           unit.pres = unit.pres, std.message = std.message)
       } else {
-        # Second call (subtracted bit) is original bottle headspace (standardized), assumed to start at first pres.resid (NTS: may have been sealed at RT--could be changed)
+        # Second call (subtracted bit) is original bottle headspace (standardized), assumed to start at first pres.resid 
         dat$vBg <- stdVol(dat[, vol.hs.name], temp = dat[, temp], pres = dat[, dat.name], rh = rh, 
                           pres.std = pres.std, temp.std = temp.std, unit.temp = unit.temp, 
                           unit.pres = unit.pres, std.message = FALSE, warn = FALSE) - 
-                   stdVol(dat[, vol.hs.name], temp = dat[, 'temp.init'], pres = pres.init, rh = rh.resid.init,  
+                   stdVol(dat[, vol.hs.name], temp = temp.init, pres = pres.init, rh = rh.resid.init,  
                           pres.std = pres.std, temp.std = temp.std, unit.temp = unit.temp, 
                           unit.pres = unit.pres, std.message = std.message, warn = FALSE)
+# NTS: when did next block ever work? Changed 15 Dec 2016. Is above correct?
+#                   stdVol(dat[, vol.hs.name], temp = dat[, temp.init], pres = pres.init, rh = rh.resid.init,  
+#                          pres.std = pres.std, temp.std = temp.std, unit.temp = unit.temp, 
+#                          unit.pres = unit.pres, std.message = std.message, warn = FALSE)
       }
     }
 
@@ -490,11 +521,45 @@ cumBg <- function(
     dat <- dat[order(dat[, id.name], dat[, time.name]), ]
 
     if(is.null(comp) & data.struct != 'longcombo') { # NTS: revisit if data.struct is ever expanded
+      warning('Biogas composition date (\'comp\' and \'name.comp\' arguments) not provided so CH4 results will not be returned.')
       dat <- dat[, ! names(dat) %in% c(comp.name, 'vCH4', 'cvCH4', 'rvCH4')]
     }
 
     if(all(is.na(dt))) {
       dat <- dat[, ! names(dat) %in% c('rvBg','rvCH4')]
+    }
+
+    # Drop NAs if they extend to the latest time for a given bottle (based on problem with AMPTSII data, sometimes shorter for some bottles)
+    if(any(is.na(dat[, dat.name]))) {
+      dat2 <- data.frame()
+      for(i in unique(dat[, id.name])) {
+        dd <- dat[dat[, id.name] == i, ]
+        if(is.na(dd[nrow(dd), dat.name])) {
+          # All NAs
+          i1 <- which(is.na(dd[, dat.name]))
+
+          # Look for consecutive NAs
+          i1d <- diff(i1)
+
+          # That are uninterupted by a value
+          if(any(i1d > 1)) {
+            i2 <- max(which(i1d > 1)) + 1 
+          } else {
+            i2 <- 1
+          }
+
+          i3 <- i1[i2]
+
+          dat2 <- rbind(dat2, dd[-c(i3:nrow(dd)), ])
+
+        } else {
+
+          dat2 <- rbind(dat2, dd)
+
+        }
+      }
+
+      dat <- dat2
     }
 
     rownames(dat) <- 1:nrow(dat)
@@ -536,7 +601,7 @@ cumBg <- function(
     if(!is.null(headspace)) {
       # Apply initial headspace correction only for times 1 and 2 (i.e., one mass loss measurement per reactor)
       which1and2 <- sort(c(which(starts$start), which(starts$start) + 1) )
-      mass[which1and2, c('vBg', 'vCH4')] <- mass2vol(mass = mass$massloss[which1and2], xCH4 = mass[which1and2, comp.name], temp = mass[, temp], pres = mass[, pres], temp.std = temp.std, pres.std = pres.std, unit.temp = unit.temp, unit.pres = unit.pres, value = 'all', headspace = mass[which1and2, vol.hs.name], headcomp = 'N2', temp.init = temp.init, std.message = FALSE)[, c('vBg', 'vCH4')]
+      mass[which1and2, c('vBg', 'vCH4')] <- mass2vol(mass = mass$massloss[which1and2], xCH4 = mass[which1and2, comp.name], temp = mass[which1and2, temp], pres = mass[which1and2, pres], temp.std = temp.std, pres.std = pres.std, unit.temp = unit.temp, unit.pres = unit.pres, value = 'all', headspace = mass[which1and2, vol.hs.name], headcomp = 'N2', temp.init = temp.init, std.message = FALSE)[, c('vBg', 'vCH4')]
     }
     # Set time zero volumes to zero--necessary because xCH4 is always missing
     mass[mass$massloss==0, c('vBg', 'vCH4')] <- 0

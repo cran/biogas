@@ -24,6 +24,7 @@ cumBg(
   # Calculation method and other settings
   cmethod = 'removed', imethod = 'linear', extrap = FALSE,
   addt0 = TRUE, showt0 = TRUE, 
+  dry = FALSE,
   # Warnings and messages
   std.message = TRUE, check = TRUE,
   # Units and standard conditions
@@ -105,6 +106,7 @@ cumBg(
     headspace pressure after venting. 
     Either a single numeric value, assumed to be the same for all observations, or the name of a column in \code{dat} that contains these values for each observation.
     Used in manometric method only (\code{dat.type = "pres"}).
+    Can be absolute (default) or gauge depending on the value of \code{absolute}.
     Length one numeric or character vector.
 }
 
@@ -117,6 +119,7 @@ cumBg(
  \item{pres.init}{
     headspace pressure at the begining of the experiment. 
     Used in manometric method only (\code{dat.type = "pres"}).
+    Can be absolute (default) or gauge depending on the value of \code{absolute}.
     Length one numeric vector.
 }
 
@@ -148,13 +151,13 @@ cumBg(
 }
 
  \item{absolute}{
-    is the headspace pressure measured in the manometric method absolute or gauge pressure? 
+    is the headspace pressure measured in the manometric method (\code{dat.name} and \code{pres.resid} values/columns) absolute or gauge pressure? 
     Applies to manometric method only (\code{dat.type = "pres"}).
     Default is \code{TRUE}. 
   }
 
  \item{pres.amb}{
-    ambient pressure needed to calculate absolute pressure from gauge pressure measurements.
+    absolute ambient pressure needed to calculate absolute pressure from gauge pressure measurements.
     In atmospheres by default (see \code{unit.pres} argument). 
     Only a single value is accepted. 
     If ambient pressure differed among measurements, it is necessary to convert pressures to absolute values and use \code{absolute = TRUE} instead.
@@ -197,6 +200,12 @@ cumBg(
     Default value depends on \code{dat} \code{time.name} column content. 
     If \code{time.name} column is numeric and contains 0 then the default value is \code{TRUE} and otherwise \code{FALSE}. 
 }
+
+  \item{dry}{
+    set to \code{TRUE} is volume data are standardised to dry conditions (e.g., AMPTS II data). 
+    Only applies to volumetric data (dat.type = 'vol').
+    The default (\code{FALSE}) means biogas is assumed to be saturated with water vapor.
+  }
 
   \item{std.message}{
     should a message with the standard conditions be displayed? 
@@ -310,17 +319,23 @@ head(cum.prod)
 cum.prod <- cumBg(vol, comp = comp, temp = 20, pres = 1, time.name = "days", extrap = TRUE)
 
 # Plot results
+\dontrun{
+# Not run just because it is a bit slow
 library(ggplot2)
 qplot(x = days, y = cvCH4, data = cum.prod, xlab = "Time (d)", 
       ylab = "Cumulative methane production (mL)",color = id, geom = "line")
+}
 
 # Omit added time zero rows
 cum.prod <- cumBg(vol, comp = comp, temp = 20, pres = 1, time.name = "days", extrap = TRUE, 
 		  showt0 = FALSE)
 head(cum.prod)
 
+\dontrun{
+# Not run just because it is a bit slow
 qplot(x = days, y = cvCH4, data = cum.prod, xlab = "Time (d)", 
       ylab = "Cumulative methane production (mL)", color = id, geom = "line")
+}
 
 # Previous is different from never adding them in the first place (rates not calculated for first 
 # observations here)
@@ -328,8 +343,11 @@ cum.prod <- cumBg(vol, comp = comp, temp = 20, pres = 1, time.name = "days", ext
 		  addt0 = FALSE)
 head(cum.prod)
 
+\dontrun{
+# Not run just because it is a bit slow
 qplot(x = days, y = cvCH4, data = cum.prod, xlab = "Time (d)", 
       ylab = "Cumulative methane production (mL)", color = id, geom = "line")
+}
 
 # Can use POSIX objects for time (but cumBg cannot add t0 rows here)
 class(vol$date.time)
@@ -337,8 +355,11 @@ class(comp$date.time)
 cum.prod <- cumBg(vol, comp = comp, temp = 20, pres = 1, time.name = "date.time", extrap = TRUE)
 head(cum.prod)
 
+\dontrun{
+# Not run just because it is a bit slow
 qplot(x = date.time, y = cvCH4, data = cum.prod, xlab = "Time (d)", 
       ylab = "Cumulative methane production (mL)", color = id, geom = "line")
+}
 
 # Can leave out composition data, and then CH4 is not included in results
 cum.prod <- cumBg(vol, temp = 20, pres = 1, time.name = "days")
@@ -371,9 +392,12 @@ cum.prod <- cumBg(vol2, comp = comp2, temp = 20, pres = 1,
                   extrap = TRUE)
 head(cum.prod)
 
+\dontrun{
+# Not run just because it is a bit slow
 qplot(x = days, y = cvCH4, data = cum.prod, xlab = "Time (d)", 
       ylab = "Cumulative methane production (mL)", 
       color = bottle, geom = "line")
+}
 
 # Mass example
 data("mass")
@@ -432,7 +456,7 @@ s3volw
 s3compw
 
 cum.prod <- cumBg(s3volw, comp = s3compw, temp = 25, pres = 1,
-                  time.name = 'time',
+                  time.name = 'time.d',
                   data.struct = 'wide',
                   dat.name = 'D', comp.name = 'D',
                   extrap = TRUE)
@@ -443,9 +467,9 @@ cum.prod
 s3lcombo
 
 cum.prod <- cumBg(s3lcombo, temp = 25, pres = 1,
-                  id.name = 'id', time.name = 'time',
+                  id.name = 'id', time.name = 'time.d',
                   data.struct = 'longcombo',
-                  dat.name = 'vol', comp.name = 'xCH4',
+                  dat.name = 'vol.ml', comp.name = 'xCH4',
                   extrap = TRUE)
 
 # Compare wide and longcombo to long (default)
@@ -453,8 +477,8 @@ s3voll
 s3compl
 
 cum.prod <- cumBg(s3lcombo, comp = s3compl, temp = 25, pres = 1,
-                  id.name = 'id', time.name = 'time',
-                  dat.name = 'vol', comp.name = 'xCH4',
+                  id.name = 'id', time.name = 'time.d',
+                  dat.name = 'vol.ml', comp.name = 'xCH4',
                   extrap = TRUE)
 
 cum.prod

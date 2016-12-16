@@ -12,7 +12,7 @@
   A data frame with 14 observations on the following 3 variables:
   \describe{
     \item{\code{id}}{identification code, a unique value for each bottle in the dataset. }
-    \item{\code{time}}{elapsed time of mass measurements (from bottle setup) in days, a numeric vector.}
+    \item{\code{time.d}}{elapsed time of mass measurements (from bottle setup) in days, a numeric vector.}
     \item{\code{xCH4}}{biogas methane content as a mole fraction, excluding water and all other gases other than carbon dioxide, a numeric vector}
   }
 }
