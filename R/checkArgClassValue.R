@@ -1,6 +1,18 @@
 # Modified 12 May 2016 SDH
 
-checkArgClassValue <- function(object, expected.class = NULL, expected.values = NULL, expected.range = NULL, warn.only = FALSE) {
+checkArgClassValue <- function(
+  object, 
+  expected.class = NULL, 
+  expected.values = NULL, 
+  expected.range = NULL, 
+  case.sens = TRUE,
+  warn.only = FALSE
+  ) {
+
+  if(any(expected.class == 'character') & !case.sens) {
+    object <- tolower(object)
+    expected.values <- tolower(expected.values)
+  }
 
   # call. set to FALSE so user does not see reference to unknown checkArgClassValue() function.
   if(!is.null(expected.class) && !class(object) %in% expected.class)  {

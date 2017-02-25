@@ -1,3 +1,46 @@
+biogas 1.7.0
+2017 February 24
+---------------------------------------------------------------------
+NEW FEATURES
+
+*Loading message
+When biogas is loaded a short message is displayed. Our hope to is to make more users 
+aware of the mailing list and OBA, a web app interface to the biogas package.
+
+*cumBg()
+New "absolute GC" method based on molar quantity of methane. Set dat.type to "gca" 
+to use it. 
+
+Added warnings for missing observations.
+
+*summBg()
+Added warnings for missing observations.
+
+When "1p" option is used but methane production rates exceed the 1% criterion, the 
+function throws an error. To help identify those bottles that haven't met the 
+criterion, set when = "1p" and show.obs = TRUE to see relative rates for all bottles 
+(rrvCH4 column).
+
+BUG FIXES
+
+*cumBg()
+Fixed bug in dat.struct = "wide" option that caused problems when the number of 
+columns exceeded the number of rows. 
+
+*summBg()
+Fixed some problems with "1p" option.
+
+ACKNOWLEDGEMENTS
+
+Ilona Sárvári Horváth (University of Borås, Sweden) provided details on the 
+"absolute GC" method as well as example data for testing.
+
+Christof Holliger (École polytechnique fédérale de Lausanne, Switzerland), Konrad 
+Koch (Technische Universität München, Germany), and Hélène Carrere (INRA 
+Laboratoire de Biotechnologie de l'Environnement, France) provided data for testing
+and suggestions related to cumBg().
+
+
 biogas 1.6.0
 2016 December 16
 ---------------------------------------------------------------------

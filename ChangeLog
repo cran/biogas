@@ -3,6 +3,123 @@ biogas package
 ########################################
 ## DETAILED LOG ########################
 ########################################
+24 Feb 2017 Sasha D. Hafner
+Version 1.7.0
+
+NEWS and DESCRIPTION
+Updated for submission to CRAN.
+
+*cumBg.R
+Column name "time" was used in data frame t0 temporarily in two places.
+Replaced with "tt" to try to avoid check warning (but was unrelated).
+
+Fixed bug line 139 where time was used as a data frame name instead of dat.
+
+23 Feb 2017 Sasha D. Hafner
+Version 1.6.3
+
+cumBg.R
+Minor changes to returned value for gca method.
+
+22 Feb 2017 Sasha D. Hafner
+Version 1.6.2
+
+cumBg.R
+Continuing with gca method. Changed input units to micromoles. Added if
+constructs to stop adding xCH4 column. Added sorting at end.
+
+20 Feb 2017 Sasha D. Hafner
+Version 1.6.2
+
+summBg.R
+Fixed problem that showed up with setup had a column named "time". Now only
+merge inoculum mass column with summ.inoc instead of complete setup data
+frame.
+
+
+16 Feb 2017 Sasha D. Hafner
+Version 1.6.2
+
+predBg.R
+Reduced digits in mcomp output formula (also used for calculations) from 6 to
+4.
+
+13 Feb 2017 Sasha D. Hafner
+Version 1.6.2
+
+cumBg.R
+Fixed check from 9 Feb for id.name that was causing an "undefined column"
+error. Now only checked if id.name is in dat (was problem for wide data where
+id.name is not present in dat).
+
+9 Feb 2017 Sasha D. Hafner
+Version 1.6.2
+
+cumBg.R
+Added checks for missing observations in id.name, dat.name, and time.name
+columns.
+
+For calculation of residual relative humidity for manometric method, values >
+1.0 were possible when residual pressure was > initial pressure. Set to
+maximum of 1.0.
+
+1-4 Feb 2017 Sasha D. Hafner
+Version 1.6.2
+
+cumBg.R
+Finished first draft of gca method.
+
+summBg.R
+Notes on 1p (confirmed it makes sense)
+
+27 Jan 2017 Sasha D. Hafner
+Version 1.6.2
+
+checkArgClassValue.R
+Added case.sens argument, default = TRUE
+
+cumBg.R
+Added method for dat.type = 'gca'. Needs refinement.
+
+23 Jan 2017 Sasha D. Hafner
+Version 1.6.2
+
+summBg.R
+Again 1p option for when. It will now return first observation < 1% for three
+days not three + (replaced i3 with i3 - 1 in index).
+
+21 Jan 2017 Sasha D. Hafner
+Version 1.6.2
+
+summBg.R
+Now drops NA values in vol.name column so when = 'end' will work when 
+there are NAs at the end.
+
+Added warning for case when inoculum-only times do not go as far as other
+times. Problem for when = 'end'.
+
+7 Jan 2017 Sasha D. Hafner
+Version 1.6.2
+
+summBg.R
+Corrected bug in 1p option. Now it behaves as described below. Tested with
+Konrad Koch's data.
+
+1 Jan 2017 Sasha D. Hafner
+Vesion 1.6.1
+
+summBg.R
+Changed 1p option again.
+Now selected time must be at least three days from first time < 1%/d, and all
+following rates must be < 1%/d.
+
+16 Dec 2016 Sasha D. Hafner
+Version 1.6.1
+
+cumBg.R
+Fixed bug in getting vol columnes for data.struct = 'wide'. I had used nrow()
+instead of ncol().
+
 15-16 Dec 2016 Sasha D. Hafner
 Version 1.6.0
 
@@ -14,7 +131,7 @@ Changes in when = '1p' option to fix bugs. Previously when time for
 bottles with same description differed, the time was changed to the max but
 the response variable was not changed. Now max time is selected first and
 summ1 data frame is then made. When a bottle doesn't have a time equal to the
-time selected for its desription, the next later time is used. This should
+time selected for its description, the next later time is used. This should
 show up in the resulting output.
 
 Also added relative rates to show.obs = TRUE output and moved show.obs

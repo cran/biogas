@@ -109,6 +109,13 @@ summBg <- function(
   }
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+  # Drop missing values from vol with a warning
+  if(any(is.na(vol[, vol.name]))) {
+    warning('Missing volume data in vol dataframe will be dropped.')
+    print('here')
+    vol <- vol[!is.na(vol[, vol.name]), ]
+  }
+
   # Interpolate cvCH4 to common time for each reactor~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Or select values for analysis (when = 'end' or 'meas')
 
@@ -196,8 +203,14 @@ summBg <- function(
       summ.inoc <- summ.inoc[!is.na(summ.inoc[, vol.name]), ]
     }
 
+    # See if latest times have been dropped/are not available
+    if(max(summ.inoc$time) < max(summ1[, time.name])) {
+      warning('Times for the inoculum-only bottles do not extend as far as times for other bottles. See NaNs in output. Select a shorter time to avoid NaNs.')
+    }
+
     # Merge to add mass inoculum and VS in substrate
-    summ.inoc <- merge(setup, summ.inoc, by.x = id.name, by.y = 'id')
+    # Merge only necessary columns!
+    summ.inoc <- merge(setup[, c(id.name, inoc.m.name)], summ.inoc, by.x = id.name, by.y = 'id')
 
     # Volume contribution per unit inoculum mass
     summ.inoc$vol.mi <- summ.inoc[, vol.name]/summ.inoc[, inoc.m.name]
@@ -277,6 +290,7 @@ summBg <- function(
       dd <- summ1[summ1[, id.name] == i, ]
 
       rr <- dd$rrvCH4/100
+      tt <- dd[, time.name]
 
       # Find rates < 1%
       i1 <- which(rr <= 0.01)
@@ -291,19 +305,15 @@ summBg <- function(
         i2 <- 1
       }
 
+      # Take first following time at least 3 d after obs preceeding first obs below 1% (this is correct!--think about production for first obs starting just after preceeding obs, so 3 d count should start then
       i3 <- i1[i2]
+      i3 <- which(tt - tt[i3 - 1] >= 3)[1]
 
-      # Check time (>= 3 days)
-      if(!is.na(i3)) {
-        if(diff(dd[c(i3, nrow(dd)), time.name]) < 3) i3 <- NA
-      }
-
-      # Drop those rows that are not consecutive
       if(!is.na(i3)) {
         ss <- dd[i3, ]
         s1times <- rbind(s1times, ss)
       } else {
-        stop('You selected \"1p\" option for \"when\" argument but there are not 2 consecutive rates < 1% of cumulative production per d for id ', i, '. Either use a fixed time for \"when\" or remove this id. Set show.obs = TRUE to check rates for all bottles.')
+        stop('You selected \"1p\" option for \"when\" argument but there are no observations that meet the criterion for id ', i, ' (and possibly others). Either use a fixed time for \"when\" or remove this id. Leave when = \"1p\" and set show.obs = TRUE to check rates for all bottles.')
         ##ss <- dd[nrow(dd), ]
         ##s1times <- rbind(s1times, ss)
       }

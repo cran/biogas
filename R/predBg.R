@@ -97,7 +97,7 @@ predBg <- function(
 
     # Get molar masses and convert mass values in mcomp to moles
     mcomp <- mcomp/molMass(names(mcomp))
-    mcomp <- signif(mcomp/min(mcomp), 6)
+    mcomp <- signif(mcomp/min(mcomp), 4)
 
     # Create form from mcomp
     names(mcomp) <- paste0('(', names(mcomp), ')')

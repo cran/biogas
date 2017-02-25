@@ -1,4 +1,4 @@
-# Modified: 28 Nov 2016
+# Modified: 
 
 cumBg <- function(
   # Main arguments
@@ -24,6 +24,9 @@ cumBg <- function(
   headcomp = 'N2',
   absolute = TRUE,
   pres.amb = NULL,
+  # For GCA method
+  mol.f.name = NULL,
+  vol.syr = NULL,
   # Calculation method and other settings
   cmethod = 'removed',
   imethod = 'linear',
@@ -46,7 +49,7 @@ cumBg <- function(
 ){
   # Check arguments
   checkArgClassValue(dat, 'data.frame')
-  checkArgClassValue(dat.type, 'character', expected.values = c('vol', 'mass', 'pres', 'volume', 'pressure'))
+  checkArgClassValue(dat.type, 'character', expected.values = c('vol', 'mass', 'pres', 'volume', 'pressure', 'gca'), case.sens = FALSE)
   checkArgClassValue(comp, c('data.frame', 'integer', 'numeric', 'NULL'))
   checkArgClassValue(temp, c('integer', 'numeric', 'character', 'NULL'))
   checkArgClassValue(pres, c('integer', 'numeric', 'character', 'NULL'))
@@ -77,6 +80,7 @@ cumBg <- function(
   checkArgClassValue(check, 'logical')
   checkArgClassValue(absolute, 'logical')
   checkArgClassValue(pres.amb, c('integer', 'numeric', 'NULL'))
+  checkArgClassValue(vol.syr, c('integer', 'numeric', 'NULL'))
 
   # Hard-wire rh for now at least
   if(!dry) {
@@ -116,6 +120,27 @@ cumBg <- function(
   }
 
   # Check for input errors
+  if(!is.null(id.name) & id.name %in% names(dat)) {
+    if(any(is.na(dat[, id.name]))) {
+      w <- which(is.na(dat[, id.name]))
+      stop('Missing values in id.name column! See rows ', paste(w, collapse = ', '), '.')
+    }
+  }
+
+  if(!is.null(dat.name)) {
+    if(any(is.na(dat[, dat.name]))) {
+      w <- which(is.na(dat[, dat.name]))
+      stop('Missing values in dat.name column! See rows ', paste(w, collapse = ', '), '.')
+    }
+  }
+
+  if(!is.null(time.name)) {
+    if(any(is.na(dat[, time.name]))) {
+      w <- which(is.na(dat[, time.name]))
+      stop('Missing values in time.name column! See rows ', paste(w, collapse = ', '), '.')
+    }
+  }
+
   # NTS: add checks for column types (catches problem with data read in incorrectly, e.g., from Excel with)
   #if(!is.null(comp) && class(comp)=='data.frame' && data.struct == 'long' && any(is.na(comp[, comp.name]))) stop('Missing data in comp data frame. See rows ', paste(which(is.na(comp[, comp.name])), collapse = ', '), '.')
   # Drop missing comp rows
@@ -149,7 +174,7 @@ cumBg <- function(
     nr <- ncol(dat) - which.first.col + 1
 
     # Reactor names taken from column names
-    ids <- names(dat)[which.first.col:nrow(dat)]
+    ids <- names(dat)[which.first.col:ncol(dat)]
 
     dat2 <- dat
     dat <- dat[ , 1:which.first.col]
@@ -204,8 +229,9 @@ cumBg <- function(
   }
 
   # Sort out composition data if using long data.struct
-  # Skipped for longcombo (xCH4 already included in dat)
-  if(tolower(data.struct) == 'long') {
+  # Skipped for longcombo with no NAs (xCH4 already included in dat)
+  # GCA method has no biogas composition
+  if(tolower(data.struct) == 'long' & dat.type != 'gca') {
 
     mssg.no.time <- mssg.interp <- FALSE
     # First sort so can find first observation for mass data to ignore it
@@ -254,7 +280,7 @@ cumBg <- function(
                     dat[dat[, id.name]==i, comp.name][j] <- dc[, comp.name]
                   } else {
                     dat[dat[, id.name]==i, comp.name][j] <- NA
-        	          warning('Not enough ', comp.name, ' data (one observation) to interpolate for reactor ', i,' so results will be missing.\n If you prefer, you can use extrapolation by setting extrap = TRUE.')
+        	          warning('Not enough ', comp.name, ' data (one observation) to interpolate for reactor ', i,' so results will be missing.\n If you prefer, you can use constant extrapolation by setting extrap = TRUE.')
                   }
                 }
               }
@@ -262,11 +288,11 @@ cumBg <- function(
           }
         }
       }
-    } else if(!is.null(comp) && class(comp) %in% c('numeric', 'integer') && length(comp)==1) {
+    } else if (!is.null(comp) && class(comp) %in% c('numeric', 'integer') && length(comp)==1) {
       # Or if a single value is given, use it
       message('Only a single value was provided for biogas composition (', comp, '), so applying it to all observations.')
       dat[, comp.name] <- comp
-    } else {
+    } else if (dat.type != 'gca') {
       # If no composition data is given, just use NA
       dat[, comp.name] <- NA 
     }
@@ -304,10 +330,12 @@ cumBg <- function(
   }
 
   # Correct composition data if it seems to be a percentage
-  if(any(na.omit(dat[, comp.name] > 1))) {
-    dat[, comp.name] <- dat[, comp.name]/100
-    warning('Methane concentration was > 1.0 mol/mol for at least one observation, so is assumed to be a percentage, and was corrected by dividing by 100. ',
-            'Range of new values: ', min(na.omit(dat[, comp.name])), '-', max(na.omit(dat[, comp.name])))
+  if (dat.type != 'gca') {
+    if (any(na.omit(dat[, comp.name] > 1))) {
+      dat[, comp.name] <- dat[, comp.name]/100
+      warning('Methane concentration was > 1.0 mol/mol for at least one observation, so is assumed to be a percentage, and was corrected by dividing by 100. ',
+              'Range of new values: ', min(na.omit(dat[, comp.name])), '-', max(na.omit(dat[, comp.name])))
+    }
   }
 
 
@@ -341,7 +369,6 @@ cumBg <- function(
       }
 
       # If absolute != TRUE, calculate absolute pressure and add to dat
-      # WIP
       if(!absolute) {
         if(is.null(pres.amb)) stop('Pressure measurements are GAUGE but pres.amb argument was not provided.')
 
@@ -357,6 +384,7 @@ cumBg <- function(
       # Add residual rh (after pressure measurement and venting)
       if(interval) {
         dat$rh.resid <- dat[, pres.resid]/dat[, dat.name]
+        dat$rh.resid[dat$rh.resid > 1] <- 1
       }
 
       # Sort to add *previous* residual pressure, rh, and temperature columns
@@ -445,7 +473,7 @@ cumBg <- function(
     # Not added if there are already zeroes present!
     if(addt0 & !class(dat[, time.name])[1] %in% c('numeric', 'integer', 'difftime')) addt0 <- FALSE
     if(addt0 & !any(dat[, time.name]==0)) {
-      t0 <- data.frame(id = unique(dat[, id.name]), time = 0)
+      t0 <- data.frame(id = unique(dat[, id.name]), tt = 0)
       names(t0) <- c(id.name, time.name)
       t0[, 'vBg'] <- t0[, 'vCH4'] <- 0
 
@@ -640,5 +668,53 @@ cumBg <- function(
     
     return(mass)
 
-  } else stop('Either \"vol\" or \"mass\" must be provided.')
+  } else if (dat.type == 'gca') {
+    # WIP needs work
+
+    mol.name <- dat.name
+
+    # If no post-venting value is provided, there was no venting, set to pre-venting value
+    dat[is.na(dat[, mol.f.name]), mol.f.name] <- dat[is.na(dat[, mol.f.name]), mol.name]
+
+    # CH4 volume in syringe
+    # Input data are umol CH4
+    vCH4.syr <- dat[, mol.name]/1E6/vol2mol(1, 'CH4', temp = 0, pres = 1, rh = 0, unit.temp = 'C', unit.pres = 'atm', tp.message = FALSE)
+
+    # CH4 volume within bottle
+    dat$vCH4.bot <- vCH4.syr*dat[, vol.hs.name]/vol.syr
+
+    # Residual CH4 after venting
+    vCH4.syr <- dat[, mol.f.name]/1E6/vol2mol(1, 'CH4', temp = 0, pres = 1, rh = 0, unit.temp = 'C', unit.pres = 'atm', tp.message = FALSE)
+    dat$vCH4.resid <- vCH4.syr*dat[, vol.hs.name]/vol.syr
+    dat$vCH4.vent <- dat$vCH4.bot - dat$vCH4.resid
+
+    # For column order add vCH4 first (calculated below)
+    dat[, 'vCH4'] <- NA
+
+    # Sort for calculations
+    dat <- dat[order(dat[, id.name], dat[, time.name]), ]
+
+    # Calculate vCH4 from cumulative values
+    for(i in unique(dat[, id.name])) {
+      dat[dat[, id.name]==i, 'cvCH4'] <- dat[dat[, id.name]==i, 'vCH4.bot'] + cumsum(c(0, dat[dat[, id.name]==i, 'vCH4.vent'][-nrow(dat[dat[, id.name]==i, ])]))
+      dat[dat[, id.name]==i, 'vCH4'] <- diff(c(0, dat[dat[, id.name]==i, 'cvCH4']))
+    }
+
+    # Add t0?
+    if(addt0 & !class(dat[, time.name])[1] %in% c('numeric', 'integer', 'difftime')) addt0 <- FALSE
+    if(addt0 & !any(dat[, time.name]==0)) {
+      t0 <- data.frame(id = unique(dat[, id.name]), tt = 0)
+      names(t0) <- c(id.name, time.name)
+      t0[, 'vCH4.bot'] <- t0[, 'vCH4.resid'] <- t0[, 'vCH4.vent'] <- t0[, 'cvCH4'] <- t0[, 'vCH4'] <- 0
+
+      dat <- rbindf(dat, t0)
+    }
+
+    dat <- dat[order(dat[, id.name], dat[, time.name]), ]
+
+    rownames(dat) <- 1:nrow(dat)
+ 
+    return(dat)
+    
+  } else stop('Problem with dat.type argument.')
 }

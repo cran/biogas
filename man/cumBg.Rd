@@ -21,6 +21,8 @@ cumBg(
   rh.resid.init = 1, headspace = NULL, 
   vol.hs.name = 'vol.hs', headcomp = 'N2',
   absolute = TRUE, pres.amb = NULL,
+  # Additional arguments for GCA method
+  mol.f.name = NULL, vol.syr = NULL,
   # Calculation method and other settings
   cmethod = 'removed', imethod = 'linear', extrap = FALSE,
   addt0 = TRUE, showt0 = TRUE, 
@@ -162,15 +164,28 @@ cumBg(
     Only a single value is accepted. 
     If ambient pressure differed among measurements, it is necessary to convert pressures to absolute values and use \code{absolute = TRUE} instead.
   }
+
+ \item{mol.f.name}{
+    name of the column in \code{dat} that contains the post-venting (f for final) quantity of methane in the syringe. 
+    Used for the absolute GC method (\code{dat.type = "gca"}) only (Hansen et al., 2004).
+    If venting was not done for a particular observation, the value in this column should be NA.
+    The pre-venting column name is given in the \code{dat.name} column.
+  }
+
+ \item{vol.syr}{
+    volume of the syringe used in the absolute GC method (Hansen et al., 2004) (\code{dat.type = "gca"}) in mL.
+    Only a single value is accepted. 
+    If other volume units are used (e.g., microL), the units used for the (\code{headspace}) argument must match, and the output volume unit will be the same.
+  }
  
  \item{cmethod}{
     method for calculating cumulative methane production.
+    Applies to \code{dat.type = "vol"} and \code{dat.type = "pres"} methods only. 
     Use \code{"removed"} to base production on \code{xCH4} and gas volumes removed (default).
     Use \code{"total"} to base it on the sum of methane removed and methane remaining in the reactor headspace.
     For \code{"removed"}, \emph{\code{xCH4} should be calculated based on methane and CO2 only (xCH4 + xCO2 = 1.0).}
     For \code{"total"}, \emph{\code{xCH4} should be calculated including all biogas components (CH4, CO2, N2, H2S, etc.) except water.}
     Length one character vector. 
-    %Default is \code{"removed"}.
 }
   \item{imethod}{
     method used for interpolation of \code{xCH4}.
@@ -200,7 +215,7 @@ cumBg(
     Default value depends on \code{dat} \code{time.name} column content. 
     If \code{time.name} column is numeric and contains 0 then the default value is \code{TRUE} and otherwise \code{FALSE}. 
 }
-
+ 
   \item{dry}{
     set to \code{TRUE} is volume data are standardised to dry conditions (e.g., AMPTS II data). 
     Only applies to volumetric data (dat.type = 'vol').
@@ -246,13 +261,14 @@ cumBg(
 
 }
 \details{
-  Using volume, mass, or pressure data from \code{dat} and gas composition from \code{comp}, this function will calculate standardised biogas and methane production (if \code{comp} is provided) for each observation,  interpolating \code{comp.name} (from \code{comp} argument) to each \code{time.name} in \code{dat} if needed, and summing these for cumulative values.
+  Using volume, mass, pressure, or molar quantity data from \code{dat} and gas composition from \code{comp}, this function will calculate standardised biogas and methane production (if \code{comp} is provided) for each observation,  interpolating \code{comp.name} (from \code{comp} argument) to each \code{time.name} in \code{dat} if needed, and summing these for cumulative values.
   Use of volumetric measurements is the default case. 
   Alternatively, if reactor mass is given in \code{dat}, a gravimetric approach (Hafner et al. 2015) can be applied by setting \code{dat.type} to \code{"mass"}.
   In this case, to determine total cumulative biogas production for batch reactors, an initial mass should be included for each reactor.
   If pressure is measured in \code{dat}, a manometric method can be applied by setting \code{dat.type} to \code{"pres"}.  
+  Lastly, molar quantity of methane can be used in the absolute GC method by setting \code{dat.type} to \code{"gca"}.  
 
-  For the volumetric method, all volumes (input and output) have the same units, e.g., mL, L, SCF.
+  For the volumetric and absolute GC methods, all volumes (input and output) have the same units, e.g., mL, L, SCF.
   For the gravimetric method, output volumes will be in mL if input masses are in g (or in L if input masses are in kg, etc.).
   For the manometric method, inputs units are specified with \code{unit.pres}, and output volumes are the same as headspace volume, e.g., mL or L.
   
@@ -280,6 +296,8 @@ cumBg(
 }
 \references{
   Hafner, S.D., Rennuit, C., Triolo, J.M., Richards, B.K. 2015. Validation of a simple gravimetric method for measuring biogas production in laboratory experiments. \emph{Biomass and Bioenergy} \bold{83}, 297-301.
+
+  Hansen, T.L., Schmidt, J.E., Angelidaki, I., Marca, E., Jansen, J. la C., Mosbak, H. and Christensen, T.H. 2004. Method for determination of methane potentials of solid organic waste. \emph{Waste Management} \bold{24}, 393-400
 
   Richards, B.K., Cummings, R.J., White, T.E., Jewell, W.J. 1991. Methods for kinetic analysis of methane fermentation in high solids biomass digesters. \emph{Biomass and Bioenergy} 1: 65-73.
 }
@@ -439,6 +457,35 @@ cum.prod <- cumBg(strawPressure, dat.type = 'pres',
                   unit.pres = 'kPa', pres.std = 101.325)
 
 head(cum.prod)
+
+# Absolute GC method (long format is the only option)
+
+# Generate some data--two bottles with identical results
+# Units for n1 and n2 are micromoles of CH4
+biogas <- data.frame(id = rep(c('A', 'B'), each = 5), 
+                     time.d = rep(1:5, 2), 
+                     n1 = rep(c(1.1, 2.4, 3.8, 5.9, 2.3), 2), 
+                     n2 = rep(c(NA, NA, NA, 1.2, NA), 2))
+
+# Bottles were vented after the measurements on day 4
+biogas
+
+# Syringe volume is 0.25 mL
+# Headspace volume is 50 mL
+
+cp <- cumBg(biogas, id.name = 'id', time.name = 'time.d', 
+            dat.name = 'n1', mol.f.name = 'n2', vol.syr= 0.25,
+            headspace = 50, dat.type = 'gca')
+cp
+
+# Suppose the bottles had two difference headspace volumes
+setup <- data.frame(id = c('A', 'B'), vol.hs = c(50, 60))
+
+cp2 <- cumBg(biogas, id.name = 'id', time.name = 'time.d', 
+            dat.name = 'n1', mol.f.name = 'n2', vol.syr= 0.25,
+            headspace = setup, vol.hs.name = 'vol.hs', dat.type = 'gca')
+cp2
+
 
 # Different data structures
 # Load example data
