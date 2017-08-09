@@ -1,3 +1,21 @@
+biogas 1.8.0
+2017 August 9
+---------------------------------------------------------------------
+NEW FEATURES
+
+*summBg()
+New "0.5p" option for the when argument can be used to select those times where 
+methane rate drops below 0.5% of cumulative production per day.
+
+BUG FIXES
+
+*calcCOD()
+Fixed an error that applied to vectorized calculations.
+
+*cumBg()
+Minor fixes.
+
+
 biogas 1.7.0
 2017 February 24
 ---------------------------------------------------------------------

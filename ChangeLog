@@ -3,6 +3,56 @@ biogas package
 ########################################
 ## DETAILED LOG ########################
 ########################################
+9 August 2017 Sasha D. Hafner
+
+startup.R
+Updated email address
+
+
+7 April 2017 Sasha D. Hafner
+Version 1.7.2
+
+cumBg.Rd
+Added details for pres argument. Can be character as well as numeric, but must
+be absolute pressure.
+
+
+10 Mar 2017 Sasha D. Hafner
+Version 1.7.2
+
+calcCOD.R
+Major bug in code (assumed readFormula() was vectorized when it wasn't) caused
+nonsense COD' values for input with length > 1. Put all calcs in a loop. 
+
+9 Mar 2017 Sasha D. Hafner
+Version 1.7.1
+
+cumBg.R
+Added exception to error for missing dat.name for wide data. Now NAs are
+dropped with warning.
+
+Added check.names = FALSE on data.frame() calls for reshaping from wide to
+long and elsewhere to avoid problems with poor OBA names
+
+6 Mar 2017 Sasha D. Hafner
+Version 1.7.1
+
+summBg.R
+Added 0.5p option. Just extension of 1p option but with cutoff of 0.5%.
+
+28 Feb 2017 Sasha D. Hafner
+Version 1.7.1
+
+cumBg.R
+Added exception for check for missing values in dat.name column when data are
+cumulative. And below, drop missing values in this case. Not tested.
+
+25 Feb 2017 Sasha D. Hafner
+Version 1.7.1
+
+summBg.R
+Small change for clarity in 1p code. No expected effect on calculations.
+
 24 Feb 2017 Sasha D. Hafner
 Version 1.7.0
 

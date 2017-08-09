@@ -1,4 +1,4 @@
-# Modified: 14 NOV 2015
+# Modified: 10 Mar 2017
 
 calcCOD <-
 function(form) {
@@ -6,17 +6,20 @@ function(form) {
   # Check argument
   checkArgClassValue(form, 'character')
 
-  # If and only if first letter of form is lowercase, entire string is capitalized
-  for(i in 1:length(form)) {
-    if(grepl('^[a-z]', form[i])) form[i] <- toupper(form[i])
-  }
-
-  # Read chemical formula
-  fc <- readFormula(form, elements = c('C', 'H', 'O', 'N'))
+  # Get molar masses
   mmass <- molMass(form)
 
-  # Calculate COD based on Rittmann and McCarty
-  COD <- as.vector((2*fc['C'] + 0.5*fc['H'] - 1.5*fc['N'] - fc['O'])*molMass('O')/mmass)
+  # Read chemical formula, calculate COD
+  fc <- list()
+  COD <- numeric()
+  for(i in 1:length(form)) {
+    # If and only if first letter of form is lowercase, entire string is capitalized
+    if(grepl('^[a-z]', form[i])) form[i] <- toupper(form[i])
+    # Read formula (function not vectorized)
+    fc[[i]] <- readFormula(form[i], elements = c('C', 'H', 'O', 'N'))
+    # Calculate COD based on Rittmann and McCarty
+    COD[i] <- as.vector((2*fc[[i]]['C'] + 0.5*fc[[i]]['H'] - 1.5*fc[[i]]['N'] - fc[[i]]['O'])*molMass('O')/mmass[i])
+  }
 
   return(COD)
 }

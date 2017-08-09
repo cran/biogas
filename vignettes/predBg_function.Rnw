@@ -432,7 +432,7 @@ Stoichiometry of a complete biomethanation reaction is determined based on \cite
 
 \begin{equation*}
   \ce{
-    C_nHO_bN_c + (2n + c - b - \frac{9df_s}{20} - \frac{9f_e}{4})H2O -> 
+    C_nH_aO_bN_c + (2n + c - b - \frac{9df_s}{20} - \frac{9f_e}{4})H2O -> 
   }
 \end{equation*}
 

@@ -62,8 +62,8 @@ cumBg(
     Default is \code{NULL}, which suppresses correction for temperature and pressure. 
 }
   \item{pres}{
-    the pressure at which biogas volume was measured (when \code{dat.type = "vol"}), or of biogas just prior to exiting the reactor (when \code{dat.type = "mass"}).
-    A length-one numeric vector.
+    the absolute pressure at which biogas volume was measured (when \code{dat.type = "vol"}), or of biogas just prior to exiting the reactor (when \code{dat.type = "mass"}).
+    A length-one numeric vector or a character vector giving the name of the column in \code{dat} with the pressure measurements.
     Atmospheres by default (see \code{unit.pres} argument). 
     Default is \code{NULL}, which suppresses correction for temperature and pressure. 
     Not used for manometric method (when \code{dat.type = "pres"}).

@@ -1,10 +1,10 @@
 # test values form the lower level functions
 # Charlotte
-# Modified: 02 Nov 2016 SDH
+# Modified: 10 Mar 2017 SDH
 
 # NTS No test yet for rbindf.R and partCO2.R
 
-context( "Tests low level and hidden functions")
+context("Tests low level and hidden functions")
 
 # volume molar values:
 vmch4 <- 22360.588
@@ -59,11 +59,11 @@ test_that("molMass results is correct for non organic formula - two letter eleme
   mmNaCl <- 22.990 + 35.45
   expect_equal(molMass('NaCl'), mmNaCl, tolerance = 0.01)
 })
-test_that("molMass results is correct for formula mixing one and two letter elements", {
+test_that("molMass result is correct for formula mixing one and two letter elements", {
   mm <-  12.01 + 1.008 + 16.00 + 14.007 + 32.06 + 30.974 + 22.990 + 39.098 + 35.45
   expect_equal(molMass('CHONNaClSPK'), mm, tolerance = 0.01)
 })
-test_that("molMass results is correct for formula with parentheses", {
+test_that("molMass result is correct for formula with parentheses", {
   mm <-  
   expect_equal(molMass('FeSO4(H2O)7'), 278.0146, tolerance = 0.01)
 })
@@ -79,6 +79,9 @@ test_that("calcCOD results are not influenced by case sensitivity ", {
 })
 test_that("calcCOD result is null for non organic formula - two letter elements", {
   expect_equal(calcCOD('NaCl'), 0)
+})
+test_that("calcCOD gives correct vectorized results", {
+  expect_equal(c(calcCOD('CH3CH2OH'), calcCOD('CH2(CH2)2OH')), calcCOD(c('CH3CH2OH', 'CH2(CH2)2OH')))
 })
 
 # stdVol.R --- depends on watVap  

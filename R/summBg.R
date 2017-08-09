@@ -1,4 +1,4 @@
-# Modified: 15 Dec 2016 SDH
+# Modified: 
 
 summBg <- function(
   vol,
@@ -112,7 +112,6 @@ summBg <- function(
   # Drop missing values from vol with a warning
   if(any(is.na(vol[, vol.name]))) {
     warning('Missing volume data in vol dataframe will be dropped.')
-    print('here')
     vol <- vol[!is.na(vol[, vol.name]), ]
   }
 
@@ -155,7 +154,7 @@ summBg <- function(
       summ1[summ1[, id.name]==i, c(time.name, vol.name)] <- dc[nrow(dc), c(time.name, vol.name)]
     }
 
-  } else if(length(when) == 1 && when %in% c('meas', '1p')) { # Return values for all measurement times, which may differ among reactors
+  } else if(length(when) == 1 && when %in% c('meas', '1p', '0.5p')) { # Return values for all measurement times, which may differ among reactors
 
     summ1 <- vol[vol[, id.name] %in% ids, c(id.name, time.name, vol.name)]
 
@@ -265,7 +264,14 @@ summBg <- function(
   }
 
   # If selected, find times where rate drops below 1%/d of cumulative
-  if(length(when) == 1 && when == '1p') { 
+  if(length(when) == 1 && when %in% c('1p', '0.5p')) { 
+
+    # Get cutoff (could eventually use gsub)
+    if(when == '1p') {
+      cutoff <- 0.01 
+    } else {
+      cutoff <- 0.005
+    }
 
     # Find time when rvCH4 <= 1% of cvCH4
     s1times <- NULL
@@ -293,19 +299,22 @@ summBg <- function(
       tt <- dd[, time.name]
 
       # Find rates < 1%
-      i1 <- which(rr <= 0.01)
+      i1 <- which(rr <= cutoff)
 
       # That are consecutive
+      # If i1 is length 1, this is integer(0)
       i1d <- diff(i1)
 
       # That are uninterupted by a high rate
-      if(any(i1d > 1)) {
+      if(length(i1d) > 0 & any(i1d > 1)) {
         i2 <- max(which(i1d > 1)) + 1 
       } else {
         i2 <- 1
       }
 
       # Take first following time at least 3 d after obs preceeding first obs below 1% (this is correct!--think about production for first obs starting just after preceeding obs, so 3 d count should start then
+      # But, limitation of this approach is that a single observation < 1% can end trial (as long as it is at least 3 d after previous)
+      # Users should avoid case when returned 1p time = final time in trial
       i3 <- i1[i2]
       i3 <- which(tt - tt[i3 - 1] >= 3)[1]
 
@@ -313,7 +322,7 @@ summBg <- function(
         ss <- dd[i3, ]
         s1times <- rbind(s1times, ss)
       } else {
-        stop('You selected \"1p\" option for \"when\" argument but there are no observations that meet the criterion for id ', i, ' (and possibly others). Either use a fixed time for \"when\" or remove this id. Leave when = \"1p\" and set show.obs = TRUE to check rates for all bottles.')
+        stop('You selected ', when, ' option for \"when\" argument but there are no observations that meet the criterion for id ', i, ' (and possibly others). Either use a fixed time for \"when\" or remove this id. Leave when = ', when, ' and set show.obs = TRUE to check rates for all bottles.')
         ##ss <- dd[nrow(dd), ]
         ##s1times <- rbind(s1times, ss)
       }

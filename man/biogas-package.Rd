@@ -12,8 +12,8 @@ Functions for working with biogas data. Both low- and high-level functions are i
 \tabular{ll}{
 Package: \tab biogas\cr
 Type: \tab Package\cr
-Version: \tab 1.2.1\cr
-Date: \tab 2015-11-14\cr
+Version: \tab 1.8.0\cr
+Date: \tab 2017-08-09\cr
 License: \tab GPL-2\cr
 }
     The \code{biogas} package provides several low-level functions for working with biogas measurements and related data.
@@ -21,12 +21,14 @@ License: \tab GPL-2\cr
     For interpolating biogas composition or cumulative production, use \code{\link{interp}}.
     The function \code{\link{molMass}} and \code{\link{calcCOD}} can be used to calculate molar mass and chemical oxygen demand based on a chemical formula.
     And for gravimetric measurement of biogas production, there is \code{\link{mass2vol}} and \code{\link{vol2mass}}.
+    To convert gas volume to moles, use \code{\link{vol2mol}}.
 
     Additionally, there are two high-level functions in the \code{biogas} package that simplify processing of biogas measurements. 
     \code{\link{cumBg}} calculates cumulative biogas and methane production from separate, indvidual observations of biogas volume (or reactor mass) and biogas composition for any number of batch reactors.
     Interpolation is automatically applied as needed. 
     And \code{\link{summBg}} summarises cumulative methane production by providing cumulative values for a specified time.
     \code{\link{summBg}} can calculate biochemical methane potential (BMP) from measurements by subtracting the contribution of an inoculum, and normalising results by substrate mass.
+    Time can be defined explicitely (e.g., 60 days) or based on methane production rates.
 
     Lastly, \code{\link{predBg}} can be used to predict biogas production and composition based on substrate composition, along with degradability and other optional parameters.
     \code{\link{predBg}} will predict biogas and methane volume (and mass) based on an empirical formula or \dQuote{macromolecule}-based composition.
@@ -35,7 +37,7 @@ License: \tab GPL-2\cr
 \author{
 Sasha D. Hafner, Charlotte Rennuit, Jin Mi Triolo, and Ali Heidarzadeh Vazifehkhoran.
 
-Maintainer: Sasha D. Hafner <saha@kbm.sdu.dk>
+Maintainer: Sasha D. Hafner <sasha.hafner@eng.au.dk>
 }
 \references{
   Hafner, S.D., Rennuit, C., Triolo, J.M., Richards, B.K. 2015. Validation of a simple gravimetric method for measuring biogas production in laboratory experiments. \emph{Biomass and Bioenergy} \bold{83}, 297-301.

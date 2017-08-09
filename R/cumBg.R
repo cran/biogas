@@ -127,8 +127,11 @@ cumBg <- function(
     }
   }
 
+  # For dat (vol, etc) missing values are OK if they are cumulative
+  # Applies to wide data
+  # But now wide data excepted totally
   if(!is.null(dat.name)) {
-    if(any(is.na(dat[, dat.name]))) {
+    if(any(is.na(dat[, dat.name])) & interval & data.struct != 'wide') {
       w <- which(is.na(dat[, dat.name]))
       stop('Missing values in dat.name column! See rows ', paste(w, collapse = ', '), '.')
     }
@@ -179,15 +182,22 @@ cumBg <- function(
     dat2 <- dat
     dat <- dat[ , 1:which.first.col]
     names(dat)[which.first.col] <- dat.name
-    dat <- data.frame(idxyz = ids[1], dat)
+    # Note check.names, prevented problem with odd time.name names (OBA issue)
+    dat <- data.frame(idxyz = ids[1], dat, check.names = FALSE)
 
     for(i in 2:nr - 1) {
       x <- dat2[ , c(1:(which.first.col - 1), which.first.col + i)]
       names(x)[which.first.col] <- dat.name
-      x <- data.frame(idxyz = ids[i + 1], x)
+      x <- data.frame(idxyz = ids[i + 1], x, check.names = FALSE)
       dat <- rbind(dat, x)
     }
 
+    # Drop missing dat values and warn
+    if (any(is.na(dat[, dat.name]))) {
+      warning('Missing values in dat.name column have been dropped!')
+      dat <- dat[!is.na(dat[, dat.name]), ]
+    }
+    
     # Fix id name
     names(dat)[names(dat) == 'idxyz'] <- id.name
 
@@ -202,12 +212,12 @@ cumBg <- function(
       comp2 <- comp
       comp <- comp[ , 1:which.first.col]
       names(comp)[which.first.col] <- comp.name
-      comp <- data.frame(idxyz = ids[1], comp)
+      comp <- data.frame(idxyz = ids[1], comp, check.names = FALSE)
 
       for(i in 2:nr - 1) {
         x <- comp2[ , c(1:(which.first.col - 1), which.first.col + i)]
         names(x)[which.first.col] <- comp.name
-        x <- data.frame(idxyz = ids[i + 1], x)
+        x <- data.frame(idxyz = ids[i + 1], x, check.names = FALSE)
         comp <- rbind(comp, x)
       }
 
@@ -217,6 +227,11 @@ cumBg <- function(
 
     data.struct <- 'long'
 
+  }
+
+  # Remove missing values for cumulative data only
+  if(!interval) {
+    dat <- dat[!is.na(dat[, dat.name]), ]
   }
 
   # If there are missing values in a longcombo data frame, switch to long
@@ -473,7 +488,7 @@ cumBg <- function(
     # Not added if there are already zeroes present!
     if(addt0 & !class(dat[, time.name])[1] %in% c('numeric', 'integer', 'difftime')) addt0 <- FALSE
     if(addt0 & !any(dat[, time.name]==0)) {
-      t0 <- data.frame(id = unique(dat[, id.name]), tt = 0)
+      t0 <- data.frame(id = unique(dat[, id.name]), tt = 0, check.names = FALSE)
       names(t0) <- c(id.name, time.name)
       t0[, 'vBg'] <- t0[, 'vCH4'] <- 0
 
@@ -703,7 +718,7 @@ cumBg <- function(
     # Add t0?
     if(addt0 & !class(dat[, time.name])[1] %in% c('numeric', 'integer', 'difftime')) addt0 <- FALSE
     if(addt0 & !any(dat[, time.name]==0)) {
-      t0 <- data.frame(id = unique(dat[, id.name]), tt = 0)
+      t0 <- data.frame(id = unique(dat[, id.name]), tt = 0, check.names = FALSE)
       names(t0) <- c(id.name, time.name)
       t0[, 'vCH4.bot'] <- t0[, 'vCH4.resid'] <- t0[, 'vCH4.vent'] <- t0[, 'cvCH4'] <- t0[, 'vCH4'] <- 0
 
