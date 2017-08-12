@@ -12,8 +12,8 @@ Functions for working with biogas data. Both low- and high-level functions are i
 \tabular{ll}{
 Package: \tab biogas\cr
 Type: \tab Package\cr
-Version: \tab 1.8.0\cr
-Date: \tab 2017-08-09\cr
+Version: \tab 1.8.1\cr
+Date: \tab 2017-08-12\cr
 License: \tab GPL-2\cr
 }
     The \code{biogas} package provides several low-level functions for working with biogas measurements and related data.

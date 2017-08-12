@@ -4,12 +4,6 @@
 
 \documentclass{article}
 
-\usepackage[margin = 1.2in]{geometry}
-\setlength{\parindent}{0pt}
-\setlength{\parskip}{5pt plus 1pt minus 1pt}
-
-%%%\usepackage{natbib}
-\usepackage{siunitx}
 \usepackage[version=3]{mhchem} %chemical formulas
 \usepackage[colorlinks = true, urlcolor = blue]{hyperref} % Must be loaded as the last package
 
@@ -274,7 +268,7 @@ qplot(x = days, y = cvCH4, data = cum.prod, xlab = "Time (d)",
 @
 
 \subsection{Other data structures}
-As of bigoas version 1.5.0, the "long" data structures described above are not the other options.
+As of bigoas version 1.5.0, the "long" data structures described above is not the only option.
 In addition, "wide" and combined "long" structures are possible.
 We can compare the three possible approaches using the same dataset.
 
@@ -400,7 +394,7 @@ Using its chemical formula (\ce{C6H10O5}), we can calculate theoretical methane 
 predBg("C6H10O5")
 @
 
-So we see that theoretical methane potential of cellulose is 414 \si{mL.g^{-1}}. 
+So we see that theoretical methane potential of cellulose is 414 mL g$^{-1}$. 
 Comparing expected cellulose BMP to measurements is an important way to check BMP experiments.
 How does this compare to our measurements?
 <<cellbmpcomp>>=
@@ -418,11 +412,11 @@ predBg("C6H10O5", fs = 0.1)
 Measured and predicted values are close after making this correction.
 
 We don't have empirical formulas for substrates A and B, but we can predict theoretical potential by using the COD.
-Initial COD masses are in the \texttt{setup} data frame, and from these we can calculate COD:VS ratios for substrates A and B of 1.439 and 1.561 \si{g.g^{-1}}. 
+Initial COD masses are in the \texttt{setup} data frame, and from these we can calculate COD:VS ratios for substrates A and B of 1.439 and 1.561 {g g$^{-1}$. 
 Cellulose has a calculated oxygen demand (COD$'$)\footnote{
   Oxygen demand can be calculated with the \texttt{calcCOD} function.  
 }
- of 1.184 \si{g.g^{-1}}.
+ of 1.184 g g$^{-1}$.
 Predicted \ce{CH4} production per g VS is therefore:
 
 <<>>=

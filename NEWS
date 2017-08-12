@@ -1,3 +1,11 @@
+biogas 1.8.1
+2017 August 11
+---------------------------------------------------------------------
+BUG FIXES
+
+*Removed reference to two LaTeX packages that were causing problems in
+a vignette.
+
 biogas 1.8.0
 2017 August 9
 ---------------------------------------------------------------------

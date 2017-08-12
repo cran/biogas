@@ -4,10 +4,6 @@
 
 \documentclass{article}
 
-\usepackage[margin = 1.2in]{geometry}
-\setlength{\parindent}{0pt}
-\setlength{\parskip}{5pt plus 1pt minus 1pt}
-
 %%%\usepackage{natbib}
 \usepackage[version=3]{mhchem} %chemical formulas
 \usepackage[colorlinks = true, urlcolor = blue]{hyperref} % Must be loaded as the last package

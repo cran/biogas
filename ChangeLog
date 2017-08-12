@@ -3,7 +3,14 @@ biogas package
 ########################################
 ## DETAILED LOG ########################
 ########################################
+11 August 2017 Sasha D. Hafner
+Version 1.8.1
+
+Removed two LaTeX style files from vignettes directory (had been added in 
+v1.8.0) and removed use of geometry and siunitx packages in both vignettes.
+
 9 August 2017 Sasha D. Hafner
+Version 1.8.0
 
 startup.R
 Updated email address
