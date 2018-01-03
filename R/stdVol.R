@@ -1,12 +1,11 @@
-# Modified: 19 Aug 2016 SDH
 
 stdVol <- function(
   vol,
   temp,
   pres,
   rh = 1,
-  temp.std = getOption('temp.std', 0.0),
-  pres.std = getOption('pres.std', 1.0),
+  temp.std = getOption('temp.std', as.numeric(NA)),
+  pres.std = getOption('pres.std', as.numeric(NA)),
   unit.temp = getOption('unit.temp', 'C'),
   unit.pres = getOption('unit.pres', 'atm'),
   std.message = TRUE,
@@ -23,6 +22,16 @@ stdVol <- function(
   checkArgClassValue(unit.temp, c('character'))
   checkArgClassValue(unit.pres, c('character'))
   checkArgClassValue(std.message, c('logical'))
+
+  # Determine standard conditions if they are omitted
+  if(is.na(pres.std)) {
+    pres.std <- unitConvert(x = 1, unit = 'atm', to = unit.pres)
+  }
+
+  if(is.na(temp.std)) {
+    temp.std <- unitConvert(x = 0, unit = 'C', to = unit.temp)
+  }
+
 
   # Echo standard conditions
   if(std.message) message('Using a standard pressure of ', pres.std, ' ', unit.pres, ' and standard temperature of ', temp.std, ' ', unit.temp, ' for standardizing volume.')

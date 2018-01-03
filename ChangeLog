@@ -3,6 +3,95 @@ biogas package
 ########################################
 ## DETAILED LOG ########################
 ########################################
+3 Jan 2018 Sasha D. Hafner
+Version 1.9.0
+
+Vignettes
+Removed mhchem package reference and use of \ce{} (which means some ugly stuff
+now) because of problem with r-release-osx-x86_64. 
+
+summBg.R
+Added when argument warning and override when show.rates = TRUE so when no 
+longer matters.
+
+31 Dec 2017 Sasha D. Hafner
+Version 1.8.3
+
+summBg.R
+Now summ1 is sorted by id and time before being returned when show.rates =
+TRUE.
+
+19 Dec 2017 Sasha D. Hafner
+Version 1.8.3
+
+summBg.R
+Replaced when = '1p' etc. with more flexible approach, could be '1p3d' 0.5p2d'
+etc.
+
+13 Dec 2017 Sasha D. Hafner
+Version 1.8.2
+
+summBg.R
+Changed error propagation for substrate VS
+
+constants.R
+Changed formula for protein to ADM1 version.
+
+28 Nov 2017 Sasha D. Hafner
+Version 1.8.2
+
+stdVol.R and cumBg.R
+Added automatic conversion of standard conditions if unspecified
+
+unitConvert.R
+Added mbar
+
+22 Nov 2017 Sasha D. Hafner
+Version 1.8.2
+
+constants.R
+Added ash = "NaCl"
+
+checkArgClassValue
+Added any() call so objects with multiple classes check correctly.
+Added with data tables in mind.
+Then undid this change because data tables do not work for other checks in
+summBg() at least.
+
+17 Nov 2017 Sasha D. Hafner
+Version 1.8.2
+
+summBg.R
+Adding to show.more output
+
+31 Oct 2017 Sasha D. Hafner
+Version 1.8.2
+
+summBg.R
+Added show.more argument for additional information.
+
+
+22 October 2017 Sasha D. Hafner
+Version 1.8.2
+
+summBg.R
+Added quiet argument to suppress messages.
+
+25 September 2017 Sasha D. Hafner
+Version 1.8.2
+
+summBg.R
+Added show.rates argument to do what show.obs did when when argument was 
+when = '1p',  which was to return data frame with all obs and rates.
+Now it is possible to use show.obs with when = '1p'
+
+23 August 2017 Sasha D. Hafner
+Version 1.8.2
+
+predBg.R
+Finally fixed error in reactionc option that dropped substrate. Fixed by
+adding drop = FALSE to indexing operation around line 166.
+
 11 August 2017 Sasha D. Hafner
 Version 1.8.1
 

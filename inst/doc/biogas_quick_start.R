@@ -101,7 +101,7 @@ summBg(cum.prod, setup = setup, time.name = "days", descrip.name = "descrip",
 
 ## ------------------------------------------------------------------------
 BMP <- summBg(cum.prod, setup = setup, time.name = "days", inoc.name = "inoc", 
-	      inoc.m.name = "minoc", norm.name = "mvs.sub", when = 60)
+	      inoc.m.name = "minoc", norm.name = "mvs.sub", when = "1p3d")
 BMP
 
 ## ------------------------------------------------------------------------

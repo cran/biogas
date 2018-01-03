@@ -5,7 +5,7 @@
 \documentclass{article}
 
 %%%\usepackage{natbib}
-\usepackage[version=3]{mhchem} %chemical formulas
+%%\usepackage[version=3]{mhchem} %chemical formulas
 \usepackage[colorlinks = true, urlcolor = blue]{hyperref} % Must be loaded as the last package
 
 <<include=FALSE, cache=FALSE>>=
@@ -32,7 +32,7 @@ library(biogas)
 
 
 \title{Predicting methane and biogas production with the biogas package}
-\author{Sasha D. Hafner (\texttt{saha@kbm.sdu.dk}) and Charlotte Rennuit (\texttt{cre@kbm.sdu.dk})}
+\author{Sasha D. Hafner (\texttt{sasha.hafner@eng.au.dk}) and Charlotte Rennuit}
 
 \begin{document}
 \maketitle
@@ -62,15 +62,15 @@ Use the next command to load the `biogas' package.
 
 \section{Methane production from defined substrates}
 \subsection{Cellulose control in BMP test}
-Cellulose is often included in biochemical methane potential (BMP) experiments as a positive control--a comparison between the measured and expected quantity of \ce{CH4} produced is used to evaluate the accuracy of the measurements.
-How much \ce{CH4} should we expect from cellulose?
+Cellulose is often included in biochemical methane potential (BMP) experiments as a positive control--a comparison between the measured and expected quantity of CH$_4$ produced is used to evaluate the accuracy of the measurements.
+How much CH$_4$ should we expect from cellulose?
 To predict this we only need the chemical formula of cellulose.
 
 <<cellulose1>>=
   predBg(form = "C6H10O5")
 @
 
-So if it were all converted to \ce{CH4}, we should see about 414 mL of \ce{CH4} (dry, at 101.325 kPa and 0$^\circ$C)\footnote{
+So if it were all converted to CH$_4$, we should see about 414 mL of CH$_4$ (dry, at 101.325 kPa and 0$^\circ$C)\footnote{
   All volumes returned by the function are standardised to dry conditions at $0^\circ$C and 101.325 kPa (1.0 atm).
   They can be converted to different conditions using \texttt{stdVol()}.
 } per g of cellulose.
@@ -96,16 +96,16 @@ The only required argument is \texttt{form}, or an alternative called \texttt{mc
 All these arguments will be described below.
 In this section, we'll focus on \texttt{form} and \texttt{mass} only.
 
-Continuing with our example, to predict \ce{CH4} from 5.75 g of cellulose, set \texttt{mass = 5.75}.
+Continuing with our example, to predict CH$_4$ from 5.75 g of cellulose, set \texttt{mass = 5.75}.
 
 <<cellulose2>>=
   predBg("C6H10O5", mass = 5.75)
 @
 
-In this case we should expect about 2400 mL of \ce{CH4}.
+In this case we should expect about 2400 mL of CH$_4$.
 For a pure degradable compound like microcrystaline cellulose, it is reasonable to expect that 100\% of the added mass is degraded by the microbial community.
 In other cases (e.g., when the substrate is plant biomass), we should reduce the degradability using the \texttt{fd} argument (which has a default of unity).
-But even for a substrate that is completely consumed by the bacteria and archaea in an anaerobic reactor (like microcrystaline cellulose) not all of the substrate is converted to \ce{CH4}.
+But even for a substrate that is completely consumed by the bacteria and archaea in an anaerobic reactor (like microcrystaline cellulose) not all of the substrate is converted to CH$_4$.
 This is beacuse the microorganisms use some fraction of it to synthesize their own cell biomass.
 The fraction of substrate that is used for cell synthesis can be set with the \texttt{fs} argument (which has a default of zero).
 In our example, we might expect \texttt{fs} between 5\% and 25\%, so we might find it useful to compare results from the calls below.
@@ -122,24 +122,24 @@ But the function is vectorized in almost all arguments, so the single call below
   predBg("C6H10O5", mass = 5.75, fs = c(0, 0.05, 0.2))
 @
 
-We can conclude that \ce{CH4} production from our 5.75 g of cellulose should be at least 1900 mL.
+We can conclude that CH$_4$ production from our 5.75 g of cellulose should be at least 1900 mL.
 
 \subsection{Designing a methanogen activity assay}
 Any chemical formula--for a pure compound, a mixture, or an empirical biomass formula--can be used for the \texttt{form} argument.
 For example, in methanogen activity tests, media typically include acetate, formate, or propionate as substrates. 
 Let's assume we are developing an assay and want to determine how much substrate to use.
-We can start by comparing theoretical \ce{CH4} production from each substrate on  mass and molar bases.
+We can start by comparing theoretical CH$_4$ production from each substrate on  mass and molar bases.
 
 <<afp1>>=
   predBg(c("CHOOH", "CH3COOH", "CH3CH2COOH"), mol = 1)
   predBg(c("CHOOH", "CH3COOH", "CH3CH2COOH"), mass = 1)
 @
 
-From these results we can see that \ce{CH4} production increases with the molecular mass of the acid, on both a mass and mole basis\footnote{
+From these results we can see that CH$_4$ production increases with the molecular mass of the acid, on both a mass and mole basis\footnote{
 This trend is consistent with the relative degree of oxidation: the O content is the same for these three acids is 2 moles per mole acid while the quantity of C and H increases with size.
 }.
-For a particular assay, assume we plan on using 60 mL of medium containing formic acid:acetic acid at 1:1 (mole basis) in a 100 mL serum bottle, and need at least 5 mL of \ce{CH4} for accurate quantification.
-We can specify predict \ce{CH4} production from such a mixture using the notation for \texttt{form} shown below.
+For a particular assay, assume we plan on using 60 mL of medium containing formic acid:acetic acid at 1:1 (mole basis) in a 100 mL serum bottle, and need at least 5 mL of CH$_4$ for accurate quantification.
+We can specify predict CH$_4$ production from such a mixture using the notation for \texttt{form} shown below.
 
 <<fa1>>=
   predBg("(CHOOH)0.5 (CH3COOH)0.5", mass = 1)
@@ -156,7 +156,7 @@ If we assume we need a predicted maximum of at least 50 mL, the required substra
 @
 
 Based on this result, we could plan on 3.6 mmol of our combined substrate.
-Let's double-check to make sure it would provide a maximum of 50 mL of \ce{CH4}.
+Let's double-check to make sure it would provide a maximum of 50 mL of CH$_4$.
 
 
 <<fa3>>=
@@ -175,8 +175,8 @@ Let's illustrate this with the acetic acid/formic acid example from above.
 @
 
 In the ouput we can see the substrate formula (\texttt{form}) and mass (\texttt{mass}, g), along with its molar mass (\texttt{mol.mass}, g mol$^{-1}$), and calculated oxygen demand (\texttt{COD}, g).
-The response variable that we are interested in (and the one we worked with above) is the predicted \ce{CH4} volume \texttt{vCH4}, in mL.
-The remaining columns show hydrolytic water consumption (\texttt{hydro}, g of \ce{H2O}) (in this example, \ce{H2O} is produced, not consumed), the molar fraction of \ce{CH4} in the reaction products (\ce{CH4} + \ce{CO2}) (\texttt{fCH4}), and the masses of of \ce{CH4} and \ce{CO2} produced (\texttt{mCH4} and \texttt{mCO2}, g).
+The response variable that we are interested in (and the one we worked with above) is the predicted CH$_4$ volume \texttt{vCH4}, in mL.
+The remaining columns show hydrolytic water consumption (\texttt{hydro}, g of H$_2$O) (in this example, H$_2$O is produced, not consumed), the molar fraction of CH$_4$ in the reaction products (CH$_4$ + CO$_2$) (\texttt{fCH4}), and the masses of of CH$_4$ and CO$_2$ produced (\texttt{mCH4} and \texttt{mCO2}, g).
 
 In contrast to the default output (\texttt{value = "CH4"}), which is a vector, here output is a data frame.
 This difference isn't really apparent unless we get multiple sets of results.
@@ -190,7 +190,7 @@ This addition will result in multiple rows in the output, as well as some additi
 
 Since \texttt{fs} is given, substrate partitioning parameters \texttt{fs} and \texttt{fe} (as well as degradability \texttt{fd}).
 Substrate partitioning parameters \texttt{fs} and \texttt{fe} are the fraction of substrate used for cell synthesis and energy production, and always sum to unity.
-With these parameters, biomass production (\texttt{m.bio}, g) and the reduced N requirement (\ce{NH4+}) for biomass production (\texttt{N.req}, g) can be calculate and are returned.
+With these parameters, biomass production (\texttt{m.bio}, g) and the reduced N requirement (NH$_4^+$) for biomass production (\texttt{N.req}, g) can be calculate and are returned.
 
 Now we have enough information to answer a second question: how much N is required in our medium?
 To get the most useful anser, let's switch our call a bit to use concentrations and not total masses.
@@ -202,18 +202,18 @@ The only needed change is in \texttt{mol}, which we will switch from the total s
 @
 
 For methanogens, \texttt{fs} should not exceed 0.08\cite{rittmann_environmental_2001}, but to provide a safety factor, we could use the N need from the case where \texttt{fs = 0.15}. 
-So we can conclude that we need at least 31 mg L$^{-1}$ of \ce{NH4+} in our medium.
+So we can conclude that we need at least 31 mg L$^{-1}$ of NH$_4^+$ in our medium.
 
 \section{Unknown composition: using COD}
-If the composition of a substrate is not known, it is still possible to predict \ce{CH4} production based on a measured chemical oxygen demand (COD).
+If the composition of a substrate is not known, it is still possible to predict CH$_4$ production based on a measured chemical oxygen demand (COD).
 For example, assume we have a waste stream with a COD of 2600 mg L$^{-1}$.
-What is the maximum volume of \ce{CH4} that could be produced?
+What is the maximum volume of CH$_4$ that could be produced?
 
 <<cod1>>=
   predBg(COD = 2.6)
 @
 
-We should expect no more than 908 mL \ce{CH4}, and probably much less, depending on the degradability of our substrate.
+We should expect no more than 908 mL CH$_4$, and probably much less, depending on the degradability of our substrate.
 For example, perhaps we have data indicating that the organic matter in the waste stream is 60\% degradable, and we assume that \texttt{fs} is 0.10.
 
 <<cod2>>=
@@ -257,7 +257,7 @@ The ouput now shows an alternative expression for the empirical formula.
 
 This approach is only needed if an empirical formula is not available for a substrate.
 If the elemental composition of a substrate has been determined, an empirical chemical formula can be calculated, and this formula can be used with \texttt{predBg()}.
-For example, we could take the empirical formula calculated above, \ce{C_{29.2587}H_{46.984}O_{18.9464}N_1}, round it for simplicity to \ce{C_{29.3}H_{47}O_{18.9}N} and use it as the \texttt{form} argument.
+For example, we could take the empirical formula calculated above, C$_{29.2587}$H$_{46.984}$O$_{18.9464}$N$_1$, round it for simplicity to C$_{29.3}$H$_{47}$O$_{18.9}$N and use it as the \texttt{form} argument.
 
 <<manure4.7>>=
   predBg("C29.2H47O18.9N", mass = 1, fd = 0.4, fs = 0.1, shortform = FALSE, value = "all")
@@ -283,7 +283,7 @@ Alternatively, since we now have an approximate empirical formula for this manur
   predBg(mcomp = c(C29.2H47O18.9N = 0.8, C3H8O3 = 0.2), mass = 1, fd = 0.4, fs = 0.1)
 @
 
-We can see that predicted \ce{CH4} production per g of (mixed) substrate increases substantially when crude glycerol is added.
+We can see that predicted CH$_4$ production per g of (mixed) substrate increases substantially when crude glycerol is added.
 Any chemical formula can be used in this way through the \texttt{mcomp} argument.
 But one limitation at the present is that a single degradability parameter \texttt{fd} applies to the complete mixture.
 
@@ -312,8 +312,8 @@ In this case the calculation is shown below.
 @
 
 \section{Total biogas production and composition}
-Predicting total biogas production is complicated by the behavior of \ce{CO2} after it is produced.
-Unlike \ce{CH4}, which is only sparingly soluble in water, a significant fraction of \ce{CO2} produced remains in solution, and therefore does not contribute to biogas volume or affect its composition.
+Predicting total biogas production is complicated by the behavior of CO$_2$ after it is produced.
+Unlike CH$_4$, which is only sparingly soluble in water, a significant fraction of CO$_2$ produced remains in solution, and therefore does not contribute to biogas volume or affect its composition.
 Let's continue with the paper and vegetable oil example from the last section\footnote{
   But change our masses to avoid a warning.
 }.
@@ -322,9 +322,9 @@ Let's continue with the paper and vegetable oil example from the last section\fo
   predBg(mcomp = c(C6H10O5 = 5/6, C54H100O7 = 1/6), mass = 1, value = "all")
 @
 
-The \texttt{fCH4} value is $\approx 55\%$ in our example, which is not the same as the \ce{CH4} fraction in biogas.
-The difference is caused by a significant fraction of the \ce{CO2} remaining in solution as \ce{CO2 (aq)}, \ce{H2CO3}, \ce{HCO3-}, and \ce{CO3$^{-2}$}.
-The \texttt{predBg()} function can also predict this partitioning of inorganic carbon between biogas and solution, if values are provided for three additional arguments: \texttt{conc.sub}, which is substrate concentration in g per kg \ce{H2O}; \texttt{pH}, which is the pH of the final solution; and \texttt{temp}, which is the system temperature in $^\circ$C.
+The \texttt{fCH4} value is $\approx 55\%$ in our example, which is not the same as the CH$_4$ fraction in biogas.
+The difference is caused by a significant fraction of the CO$_2$ remaining in solution as CO$_2$ (aq), H$_2$CO$_3$, HCO$_3^-$, and CO$_3^{-2}$.
+The \texttt{predBg()} function can also predict this partitioning of inorganic carbon between biogas and solution, if values are provided for three additional arguments: \texttt{conc.sub}, which is substrate concentration in g per kg H$_2$O; \texttt{pH}, which is the pH of the final solution; and \texttt{temp}, which is the system temperature in $^\circ$C.
 Here, we'll assume the pH is well-buffered at pH 7.5, and our total substrate concentration is 50 g kg$^{-1}$.
 We will also assume that degradability is high (\texttt{fd = 0.8}) and substrate used for cell synthesis is typical (\texttt{fs = 0.1}).
 
@@ -334,11 +334,11 @@ We will also assume that degradability is high (\texttt{fd = 0.8}) and substrate
 	 value = "all")
 @
 
-Only after specifying values for these additional arguments will \texttt{predBg} return a column with biogas composition: \texttt{xCH4} gives the mole fraction of \ce{CH4} in dry biogas. 
+Only after specifying values for these additional arguments will \texttt{predBg} return a column with biogas composition: \texttt{xCH4} gives the mole fraction of CH$_4$ in dry biogas. 
 In this example, we can see that at 62\% \texttt{xCH4} is substantially higher than based on stoichiometry alone (\texttt{fCH4}).
 The difference between the two is, as explained above, TIC in solution.
-Additional new columns in this output give data for the volume of \ce{CO2} in biogas (\texttt{vCO2}, mL), the total volume of (dry, standardized) biogas (\texttt{vBg}, mL), the mass of \ce{CO2} in biogas and in solution (\texttt{mCO2Bg} and \texttt{mCO2.sol}, g), and the total inorganic carbon concentration in solution (\texttt{cTIC}, mol kg$^{-1}$).
-In fact, nearly one-third of all the \ce{CO2} produced ends up in the solution in this example--it may be higher in other cases.
+Additional new columns in this output give data for the volume of CO$_2$ in biogas (\texttt{vCO2}, mL), the total volume of (dry, standardized) biogas (\texttt{vBg}, mL), the mass of CO$_2$ in biogas and in solution (\texttt{mCO2Bg} and \texttt{mCO2.sol}, g), and the total inorganic carbon concentration in solution (\texttt{cTIC}, mol kg$^{-1}$).
+In fact, nearly one-third of all the CO$_2$ produced ends up in the solution in this example--it may be higher in other cases.
 
 How might pH affect biogas composition?
 Let's look at a range of values.
@@ -361,8 +361,8 @@ Let's look at a range of values.
 Clearly, pH alone could have a major effect on biogas quality and volume!
 
 Predicting production and quality of biogas when the starting solution contains inorganic carbon is more complicated.
-The method assumes that all \ce{CO2} in the system is accounted by the empirical formula (\texttt{form}).
-This may not be the case--for example if a bicarbonate (\ce{HCO3-}) salt is included as a buffer in our BMP test with cellulose, or for our manure example, there is certainly significant TIC in raw manure.
+The method assumes that all CO$_2$ in the system is accounted by the empirical formula (\texttt{form}).
+This may not be the case--for example if a bicarbonate (HCO$_3^-$) salt is included as a buffer in our BMP test with cellulose, or for our manure example, there is certainly significant TIC in raw manure.
 Here we need to be careful, and understand where our empirical formula came from.
 Does it include all C, or just the amount in the organic fraction?
 Does it include the O in TIC?
@@ -373,13 +373,13 @@ Additional TIC could easily be added in with the \texttt{predBg()} function, but
 %  predBg('C29H47O19N')
 %@
 %
-%To predict \ce{CO2} partitioning, we need to add values from several parameters.
+%To predict CO$_2$ partitioning, we need to add values from several parameters.
 %
 %<<manurepart2>>=
 %  predBg('C29H47O19N', mass = 1, fd = 0.4, fs = 0.1, conc.sub = 40, pH = c(7, 7.5, 8), temp = 35, value = "all")
 %@
 %
-%The function predicts a relatively high \ce{CH4} content at the highest pH: 86\%!
+%The function predicts a relatively high CH$_4$ content at the highest pH: 86\%!
 %Is this likely to be accurate?
 %No--because the chemical formula we used was based only on the organic component of the manure, and so excludes TIC.
 %Raw cattle manure might contain 0.1  to 0.2 mol kg$^{-1}$ TIC (with a lot of variability).
@@ -426,31 +426,25 @@ Additional TIC could easily be added in with the \texttt{predBg()} function, but
 How are the calculations presented above carried out?
 Stoichiometry of a complete biomethanation reaction is determined based on \cite{rittmann_environmental_2001}.
 
-\begin{equation*}
-  \ce{
-    C_nH_aO_bN_c + (2n + c - b - \frac{9df_s}{20} - \frac{9f_e}{4})H2O -> 
-  }
-\end{equation*}
+\begin{equation}
+    C_nH_aO_bN_c + (2n + c - b - \frac{9df_s}{20} - \frac{9f_e}{4})H_2O -> 
+\end{equation}
 
-\begin{equation*}
-  \ce{
-    \frac{df_e}{8}CH4 + (n - c - \frac{df_s}{5} - \frac{df_e}{8})CO2 + \frac{df_s}{20}C5H7O2N
-  }
-\end{equation*}
+\begin{equation}
+    \frac{df_e}{8}CH_4 + (n - c - \frac{df_s}{5} - \frac{df_e}{8})CO_2 + \frac{df_s}{20}C_5H_7O_2N
+\end{equation}
 
-\begin{equation*}
-  \ce{
-    + (c - \frac{df_s}{20})NH4+ + (c - \frac{df_s}{20})HCO3-
-  }
-\end{equation*}
+\begin{equation}
+    + (c - \frac{df_s}{20})NH_4^+ + (c - \frac{df_s}{20})HCO_3^-
+\end{equation}
 
-Here, $f_s$ and $f_e$ are the fraction of substrate electrons going to cell synthesis and energy production, respectively, the formula \ce{C5H7O2N} is an empirical formula for cell biomass\footnote{
+Here, $f_s$ and $f_e$ are the fraction of substrate electrons going to cell synthesis and energy production, respectively, the formula C$_5$H$_7$O$_2$N is an empirical formula for cell biomass\footnote{
   Presently it is not possible to use a different formula.
 }, and $d= 4n + a -2b - 3c$.
-In addition to providing estimates of \ce{CH4} production, this approach allows \texttt{predBg()} to return production of \ce{CO2}\footnote{
-  More accurately, total inorganic carbon (TIC), which includes both \ce{CO2} and \ce{HCO3-} from the above reaction.
+In addition to providing estimates of CH$_4$ production, this approach allows \texttt{predBg()} to return production of CO$_2$\footnote{
+  More accurately, total inorganic carbon (TIC), which includes both CO$_2$ and HCO$_3^-$ from the above reaction.
 }, consumption or production of ammonia, and production of cell biomass.
-Predicted \ce{CH4} is always expressed in mL (cm$^3$) at standard conditions of 101.325 kPa (1.0 atm) and 0$^\circ$C (273.15 K).
+Predicted CH$_4$ is always expressed in mL (cm$^3$) at standard conditions of 101.325 kPa (1.0 atm) and 0$^\circ$C (273.15 K).
 
 For these estimates to approach observed values, it is necessary to include and accurately set $f_s$.
 How should a $f_s$ value be selected?
@@ -487,24 +481,24 @@ Complex substrates are not completely degraded during anaerobic digestion, and t
 For complex substrates, the degradability of different components within a single substrate will differ, e.g., cellulose is much more degradable than lignin.
 But the current approach used for \texttt{predBg()} assumes that all components have the same degradability $f_d$.
 
-The \texttt{predBg()} function can also calculate \ce{CH4} production from COD.
-In this case, \ce{CH4} volume is calculated based on the oxidation of \ce{CH4} with \ce{O2}\footnote{
+The \texttt{predBg()} function can also calculate CH$_4$ production from COD.
+In this case, CH$_4$ volume is calculated based on the oxidation of CH$_4$ with O$_2$\footnote{
 This reaction is based on a single electron equivalent.  
 }\cite{rittmann_environmental_2001}:
 
-\begin{equation*}
-  \ce{1/8CH4 + 1/4O2 -> 1/8CO2 + 1/4H2O }
-\end{equation*}
+\begin{equation}
+  1/8CH_4 + 1/4O_2 -> 1/8CO_2 + 1/4H_2O
+\end{equation}
 
-which gives a ratio of \ce{CH4} to \ce{O2} of $\ce{1/8}:\ce{1/4} = 1:2$.
-Based on conservation of COD, potential \ce{CH4} production of a substrate with COD $c$ is therefore:
+which gives a ratio of CH$_4$ to O$_2$ of $1/8:1/4 = 1:2$.
+Based on conservation of COD, potential CH$_4$ production of a substrate with COD $c$ is therefore:
 
 \begin{equation}
   \label{eq:ch4fromcod}
   V_{CH_4} = v_{CH_4}c/(M_{O_2}/2)
 \end{equation}
 
-where $v_{CH_4}=$ molar volume of \ce{CH4} (22361 mL g$^{-1}$, defined at 1 atm and 0$^\circ$C \cite{linstrom_nist_2011}) and $M_{O_2}$ is the molar mass of \ce{O2} (32.0 g mol$^{-1}$).
+where $v_{CH_4}=$ molar volume of CH$_4$ (22361 mL g$^{-1}$, defined at 1 atm and 0$^\circ$C \cite{linstrom_nist_2011}) and $M_{O_2}$ is the molar mass of O$_2$ (32.0 g mol$^{-1}$).
 If $f_e$ and $f_d$ are available, they reduce the fraction of COD converted.
 
 \begin{equation}
@@ -512,7 +506,7 @@ If $f_e$ and $f_d$ are available, they reduce the fraction of COD converted.
   V_{CH_4} = f_df_ev_{CH_4}c/(M_{O_2}/2)
 \end{equation}
 
-The approach used to calculate \ce{CO2} partitioning is based on equilibrium speciation as described in \cite{hafner_role_2012} and should be accurate for continuous reactors with stable operation at least.
+The approach used to calculate CO$_2$ partitioning is based on equilibrium speciation as described in \cite{hafner_role_2012} and should be accurate for continuous reactors with stable operation at least.
 Predictions for batch reactors are more difficult and results will probably be less accurate.
 
 \bibliographystyle{plain}  

@@ -39,7 +39,8 @@ predBg(form = NULL, mass = 1, mol = NULL, fs = 0, fd = 1,
     (optional) \dQuote{macromolecule}-based composition of the substrate.
     A named numeric vector with relative masses of macromolecular groups or any chemical. 
     Options for macromolecular groups include: \code{VFA} (volatile fatty acids, VFAs), \code{protein}, \code{carbohydrate}, \code{lipid}, and \code{lignin}.
-    An empirical \code{form} will be calculated based on assumed compositions of: C2H4O2 for VFAs, C5H7O2N for protein, C6H10O5 for carbohydrate, C57H104O6 for lipid, and C10H13O3 for lignin (Triolo et al., 2011).
+    An empirical \code{form} will be calculated from fixed chemical formulas.
+    To see the available options, use \code{biogas:::std.forms}.
 }
   \item{COD}{
     (optional) chemical oxygen demand (COD) of the substrate (g oxygen).

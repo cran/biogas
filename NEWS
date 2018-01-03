@@ -1,3 +1,39 @@
+biogas 1.9.0
+2018 January 3
+---------------------------------------------------------------------
+BUG FIXES
+
+*predBg()
+Corrected error for value = "reactionc" where substrate (reactant) was omitted 
+in some cases.
+
+NEW FEATURES
+
+*predBg()
+New ash component for mcomp argument.
+
+*Units (applies to multiple functions)
+Add mbar for pressure.
+
+*stdVol() and functions that call it
+Standard conditions are automatically converted to specified units now.
+
+*summBg()
+Added show.more argument to see additional ouput. Added show.rates argument to
+facilitate checking rates for 1% etc. criterion. Changed specification of
+automatic selection of BMP evaluation time based on relative rate. Now any rate
+and any duration can be used, e.g., when = "1p3d" for 1% per day for 3 d. Added
+quiet argument (default FALSE) to supress warnings.
+
+OTHER CHANGES
+
+*predBg()
+Slight change in protein composition for mcomp to match ADM1.
+
+*summBg()
+Slight change to error propagation.
+
+
 biogas 1.8.1
 2017 August 11
 ---------------------------------------------------------------------

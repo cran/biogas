@@ -1,12 +1,11 @@
 # Constants used in functions
 # These are not exported
-# Modified 7 April 2016 SDH
 
 # Standard chemical formulas for mcomp
 std.forms <- c(
 	       # Standard macromolecules
 	       vfa = 'C2H4O2', 
-	       protein = 'C5H7O2N', 
+	       protein = 'C4H6.1O1.2N', # 'C5H7O2N', 
 	       carbohydrate = 'C6H10O5', 
 	       lipid = 'C57H104O6', 
 	       lignin = 'C10H13O3', 
@@ -19,7 +18,10 @@ std.forms <- c(
 	       ethanol = 'CH3CH2OH', 
 	       cellulose = 'C6H10O5', 
 	       # Carbohydrates
-	       glucose = 'C6H12O6')
+	       glucose = 'C6H12O6',
+	       # Ash
+	       ash = 'NaCl'
+	       )
 
 # Standard atomic weights
 # These are from CIAAW (http://www.ciaaw.org/atomic-weights.htm), significant digits only

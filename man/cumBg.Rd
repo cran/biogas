@@ -30,8 +30,8 @@ cumBg(
   # Warnings and messages
   std.message = TRUE, check = TRUE,
   # Units and standard conditions
-  temp.std = getOption('temp.std', 0.0), 
-  pres.std = getOption('pres.std', 1.0),
+  temp.std = getOption('temp.std', as.numeric(NA)), 
+  pres.std = getOption('pres.std', as.numeric(NA)),
   unit.temp = getOption('unit.temp', 'C'),
   unit.pres = getOption('unit.pres', 'atm')
   ) 
@@ -237,13 +237,13 @@ cumBg(
   \item{temp.std}{
     standard temperature for presentation of biogas and methane results.
     Length one numeric vector.
-    Default value is 0 degrees C.
+    Default value is 0 degrees C (set in \code{\link{stdVol}}).
     Argument is passed to \code{\link{stdVol}}.
 }
   \item{pres.std}{
     standard pressure for presentation of biogas and methane results.
     Length one numeric vector.
-    Default value is 1.0 atm (101325 Pa).
+    Default value is 1.0 atm (101325 Pa) (set in \code{\link{stdVol}}).
     Argument is passed to \code{\link{stdVol}}.
 }
    \item{unit.temp}{

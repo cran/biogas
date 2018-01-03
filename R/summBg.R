@@ -15,7 +15,10 @@ summBg <- function(
   extrap = FALSE,
   when = 30,
   show.obs = FALSE, 
-  sort = TRUE) 
+  show.rates = FALSE, 
+  show.more = FALSE,
+  sort = TRUE,
+  quiet = FALSE) 
 {
 
   # Argument checks~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -35,8 +38,21 @@ summBg <- function(
   checkArgClassValue(sort, 'logical')
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+  # Check for pd when argument
+  # First for backward compatability
+  if(when == '1p') when <- '1p3d'
+  if(when == '0.5p') when <- '0.5p3d'
+  pdwhen <- gsub('[0-9.]', '', when) == 'pd'
+
+  # Warning on show.rates
+  if(!pdwhen & show.rates) {
+      warning('You set \"show.rates = TRUE\", so \"when\" argument will be ignored.')
+      pdwhen <- TRUE
+      when <- '1p1d'
+  }
+
   # Echo response variable
-  message('Response variable (volume) is ', deparse(substitute(vol)), '$', vol.name, '.')
+  if(!quiet) message('Response variable (volume) is ', deparse(substitute(vol)), '$', vol.name, '.')
 
   # Check for missing columns in vol
   if(class(when) %in% c('numeric', 'integer')) {
@@ -154,7 +170,8 @@ summBg <- function(
       summ1[summ1[, id.name]==i, c(time.name, vol.name)] <- dc[nrow(dc), c(time.name, vol.name)]
     }
 
-  } else if(length(when) == 1 && when %in% c('meas', '1p', '0.5p')) { # Return values for all measurement times, which may differ among reactors
+  #} else if(length(when) == 1 && when %in% c('meas', '1p', '0.5p')) { # Return values for all measurement times, which may differ among reactors
+  } else if(length(when) == 1 && (when == 'meas' | pdwhen)) { 
 
     summ1 <- vol[vol[, id.name] %in% ids, c(id.name, time.name, vol.name)]
 
@@ -230,6 +247,7 @@ summBg <- function(
     }
 
     names(inoc.vol) <- c(time.name, 'vol.mi.mn', 'vol.mi.sd')
+    inoc.vol$vol.mi.rsd <- 100*inoc.vol$vol.mi.sd/inoc.vol$vol.mi.mn
     # inoc.vol has mean and sd vol per unit mass inoc for all times
 
   }
@@ -245,7 +263,7 @@ summBg <- function(
     summ1 <- merge(summ1, inoc.vol, by = time.name)
 
     # Calculate and substract inoc contribution
-    # Next three lines only for returning additional info when show.obs = TRUE
+    # Next three lines only for returning additional info when show.rates = TRUE
     summ1[, paste0(vol.name, '.tot')] <- summ1[, vol.name]
     summ1[, paste0(vol.name, '.inoc')] <- summ1$vol.mi.mn*summ1[, inoc.m.name]
     summ1[, 'fv.inoc'] <- summ1[, paste0(vol.name, '.inoc')]/summ1[, paste0(vol.name, '.tot')]
@@ -264,14 +282,15 @@ summBg <- function(
   }
 
   # If selected, find times where rate drops below 1%/d of cumulative
-  if(length(when) == 1 && when %in% c('1p', '0.5p')) { 
+  if(length(when) == 1 && pdwhen) { 
 
-    # Get cutoff (could eventually use gsub)
-    if(when == '1p') {
-      cutoff <- 0.01 
-    } else {
-      cutoff <- 0.005
-    }
+    # Get cutoff 
+    cutoff <- as.numeric(gsub('p.+$', '', when))/100
+##    if(when == '1p') {
+##      cutoff <- 0.01 
+##    } else {
+##      cutoff <- 0.005
+##    }
 
     # Find time when rvCH4 <= 1% of cvCH4
     s1times <- NULL
@@ -282,16 +301,17 @@ summBg <- function(
       dd <- summ1[summ1[, id.name] == i, ]
       dd <- dd[order(dd[, time.name]), ]
       rr <- c(NA, diff(dd[, vol.name])/diff(dd[, time.name]))/dd[, vol.name]
-      # Add rates to summ1 only for exporting with show.obs = TRUE
+      # Add rates to summ1 only for exporting with show.rates = TRUE
       summ1[summ1[, id.name] == i, 'rrvCH4'] <- signif(100*rr, 4)
     }
 
     # Return observations here (early to avoid problem in next 2 blocks--see error messages)
-    if(show.obs) {
+    if(show.rates) {
+      summ1 <- summ1[order(summ1[, id.name], summ1[, time.name]), ]
       return(summ1)
     }
 
-    # Back to working with rates (after show.obs option above)
+    # Back to working with rates (after show.rates option above)
     for(i in ids) {
       dd <- summ1[summ1[, id.name] == i, ]
 
@@ -312,17 +332,18 @@ summBg <- function(
         i2 <- 1
       }
 
-      # Take first following time at least 3 d after obs preceeding first obs below 1% (this is correct!--think about production for first obs starting just after preceeding obs, so 3 d count should start then
+      # Take first following time at least dur (usually 3 d) after obs preceeding first obs below 1% (this is correct!--think about production for first obs starting just after preceeding obs, so 3 d count should start then
       # But, limitation of this approach is that a single observation < 1% can end trial (as long as it is at least 3 d after previous)
       # Users should avoid case when returned 1p time = final time in trial
+      dur <- as.numeric(gsub('^.+p(.+)d', '\\1', when))
       i3 <- i1[i2]
-      i3 <- which(tt - tt[i3 - 1] >= 3)[1]
+      i3 <- which(tt - tt[i3 - 1] >= dur)[1]
 
       if(!is.na(i3)) {
         ss <- dd[i3, ]
         s1times <- rbind(s1times, ss)
       } else {
-        stop('You selected ', when, ' option for \"when\" argument but there are no observations that meet the criterion for id ', i, ' (and possibly others). Either use a fixed time for \"when\" or remove this id. Leave when = ', when, ' and set show.obs = TRUE to check rates for all bottles.')
+        stop('You selected ', when, ' option for \"when\" argument but there are no observations that meet the criterion for id ', i, ' (and possibly others). Either use a fixed time for \"when\" or remove this id. Leave when = ', when, ' and set show.rates = TRUE to check rates for all bottles.')
         ##ss <- dd[nrow(dd), ]
         ##s1times <- rbind(s1times, ss)
       }
@@ -338,7 +359,7 @@ summBg <- function(
       for(j in unique(summ1[summ1[, descrip.name] == i, id.name])) {
         # Select times >= max time for this decrip.name level
         ss <- summ1[summ1[, id.name] == j & summ1[, time.name] >= tt, ]
-        if(length(ss) == 0) stop('when = "1p" problem. Re-run function with show.obs = TRUE')
+        if(length(ss) == 0) stop('when = "xpyd" problem. Re-run function with show.rates = TRUE')
         ss <- ss[1, ]
         summ1temp <- rbind(summ1temp, ss)
       }
@@ -353,10 +374,11 @@ summBg <- function(
   if(!is.null(norm.name)) { 
 
     # First calculate sd on normalized volume based on sd of VS
-    # Nearly equivalent to calculate relative error in norm.name and apply it directly (i.e., 10% for norm.name = 10% for vol.name)
     if(!is.null(norm.sd.name)) {
-      summ1[, paste0(vol.name,'.sd')] <- (summ1[, vol.name]/(summ1[, norm.name] - summ1[, norm.sd.name]) - 
-                                          summ1[, vol.name]/(summ1[, norm.name] + summ1[, norm.sd.name]))/2
+      summ1[, paste0(vol.name,'.sd')] <- summ1[, vol.name]/summ1[, norm.name] * summ1[, norm.sd.name]/summ1[, norm.name]
+    # Original approach nearly equivalent to calculate relative error in norm.name and apply it directly (i.e., 10% for norm.name = 10% for vol.name)
+      #summ1[, paste0(vol.name,'.sd')] <- (summ1[, vol.name]/(summ1[, norm.name] - summ1[, norm.sd.name]) - 
+      #                                    summ1[, vol.name]/(summ1[, norm.name] + summ1[, norm.sd.name]))/2
     } else {
       summ1[, paste0(vol.name,'.sd')] <- 0
     }
@@ -391,6 +413,13 @@ summBg <- function(
                                                                               mean(ddd[, 'sd.inoc'])^2 + 
                                                                               mean(ddd[, paste0(vol.name,'.sd')])^2) 
         summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'n'] <- sum(!is.na(ddd[, vol.name]))  
+	if(!is.null(inoc.name)) {
+          summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'rsd.inoc'] <- ddd[1, 'vol.mi.rsd']
+          summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'fv.inoc'] <- mean(na.omit(ddd[, 'fv.inoc']))
+          summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'sd1'] <- sd(na.omit(ddd[, vol.name]))
+          summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'sd2'] <- mean(ddd[, 'sd.inoc'])
+          summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'sd3'] <- mean(ddd[, paste0(vol.name,'.sd')])
+	}
       }
     }
   } else { # If show.obs = TRUE, just return individual observations
@@ -404,22 +433,26 @@ summBg <- function(
   # Messages about inoculum 
   if(!is.null(inoc.name) && inoc.name %in% setup[, descrip.name]) { # Inoculum contribution subtracted
     #message('Inoculum contribution subtracted based on ', deparse(substitute(setup.orig)), '$', inoc.m.name, '.') 
-    message('Inoculum contribution subtracted based on setup$', inoc.m.name, '.') 
+    if(!quiet) message('Inoculum contribution subtracted based on setup$', inoc.m.name, '.') 
   } else {
-      message('Inoculum contribution not subtracted.') 
+      if(!quiet) message('Inoculum contribution not subtracted.') 
   }
 
   # Message about normalization
   if(!is.null(norm.name)) { 
     #message('Response normalized by ', deparse(substitute(setup)), '$', norm.name, '.')
-    message('Response normalized by setup$', norm.name, '.')
+    if(!quiet) message('Response normalized by setup$', norm.name, '.')
   } else {
-    message('No normalization by substrate mass.')
+    if(!quiet) message('No normalization by substrate mass.')
   }
 
   # Select columns
   if(!show.obs) {
-    summ2 <- summ2[ , c(descrip.name, time.name, 'mean', 'sd', 'n')]
+    if(show.more) {
+      summ2 <- summ2[ , c(descrip.name, time.name, 'mean', 'sd', 'n', 'rsd.inoc', 'fv.inoc', 'sd1', 'sd2', 'sd3')]
+    } else {
+      summ2 <- summ2[ , c(descrip.name, time.name, 'mean', 'sd', 'n')]
+    }
   } 
 
   # Sort result

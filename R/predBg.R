@@ -163,7 +163,7 @@ predBg <- function(
       # Change name from substrate (should switch to extraction of vector at top of loop instead)
       names(rxncoefs)[1] <- form[i]
 
-      reactants <- - rxncoefs[i, rxncoefs[i,] < 0]
+      reactants <- - rxncoefs[i, rxncoefs[i,] < 0, drop = FALSE]
       reactants <- signif(reactants, 4)
       reactants[reactants == 1] <- ''
       reactants <- as.vector(reactants)

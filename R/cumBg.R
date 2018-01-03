@@ -40,8 +40,8 @@ cumBg <- function(
   std.message = TRUE,
   check = TRUE,
   # Units and standard conditions
-  temp.std = getOption('temp.std', 0.0), 
-  pres.std = getOption('pres.std', 1.0),
+  temp.std = getOption('temp.std', as.numeric(NA)),
+  pres.std = getOption('pres.std', as.numeric(NA)),
   unit.temp = getOption('unit.temp', 'C'),
   unit.pres = getOption('unit.pres', 'atm')##,
   ##unit.vol = getOption('unit.vol', 'ml'),

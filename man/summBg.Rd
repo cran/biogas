@@ -14,7 +14,8 @@ summBg(vol, setup, id.name = "id", time.name = "time",
        descrip.name = "descrip", inoc.name = NULL, inoc.m.name = NULL,
        norm.name = NULL, norm.sd.name = NULL,  vol.name = "cvCH4", 
        imethod = "linear", extrap = FALSE, when = 30, 
-       show.obs = FALSE, sort = TRUE)
+       show.obs = FALSE, show.rates = FALSE, show.more = FALSE,
+       sort = TRUE, quiet = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -66,16 +67,25 @@ summBg(vol, setup, id.name = "id", time.name = "time",
   \item{when}{
     value(s) of \code{time.name} in \code{vol} data frame at which the results should be evaluated.
     Alternatively, set to \code{"end"} (to return the latest values for each bottle) or \code{"meas"} (to return a value for each measured time for each bottle).
-    To select a time for each bottle based on the methane production rate, use \code{"1p"}.
-    In this case, the earliest time where production rate drops below 1\% of cumulative production per day (for at least two consecutive samples) will be used.
+    To select a time for each bottle based on the methane production rate, use, e.g., \code{"1p3d"} for 1\% per day for at least 3 d (any values can be used, even something impractical like \code{"0.1p10d"}).
+    In this case, the earliest time where production rate drops below 1\% of cumulative production per day for at least 3 days will be used.
     Where this time differs for multiple bottles with the same \code{descrip.name}, the latest one will be used.
     Numeric or character vector.
 }
   \item{show.obs}{
     set to \code{TRUE} to return all observations, otherwise means and standard deviations are returned. Default is \code{FALSE}. 
 }
+  \item{show.rates}{
+    set to \code{TRUE} to return all observations with relative rates. Used to check rates for evaluation time. The \code{when} argument will be ignored if \code{show.rates = TRUE}. Default is \code{FALSE}. 
+}
+  \item{show.more}{
+    set to \code{TRUE} to return additional details, including fraction of total methane produced by inoculum. Default is \code{FALSE}. 
+}
   \item{sort}{
     controls sorting of results, which is by \code{descrip.name} and then \code{time.name} by default. Set to \code{FALSE} to use order of \code{descrip.name} from the \code{setup} data frame. Default is \code{TRUE}.
+}
+  \item{quiet}{
+    use to suppress messages. Default is \code{FALSE}.
 }
 }
 \details{
@@ -153,7 +163,7 @@ summBg(vol = cum.prod, setup = setup, time.name = "days",
 summBg(vol = cum.prod, setup = setup, time.name = "days", 
        vol.name = "rvBg", when = 30, show.obs = TRUE)
 
-# The when argument could also be 'meas', 'end', or '1p' for any of these examples 
+# The when argument could also be 'meas', 'end', or '1p3d' (or related) for any of these examples 
 summBg(vol = cum.prod, setup = setup, time.name = "days", 
        inoc.name = "inoc", inoc.m.name = "minoc", when = "end", 
        norm.name = "mvs.sub")
@@ -163,13 +173,13 @@ summBg(vol = cum.prod, setup = setup, time.name = "days",
        norm.name = "mvs.sub")
 
 summBg(vol = cum.prod, setup = setup, time.name = "days", 
-       inoc.name = "inoc", inoc.m.name = "minoc", when = "1p", 
+       inoc.name = "inoc", inoc.m.name = "minoc", when = "1p3d", 
        norm.name = "mvs.sub")
 
 # If you want to apply the 1% criterion but also want a single fixed time for all bottles,
 # you have to use two calls
 summBg(vol = cum.prod, setup = setup, time.name = "days", 
-       inoc.name = "inoc", inoc.m.name = "minoc", when = "1p", 
+       inoc.name = "inoc", inoc.m.name = "minoc", when = "1p3d", 
        norm.name = "mvs.sub")
 
 # From the first call, the longest time is 42 days, so use when = 42
@@ -178,7 +188,7 @@ summBg(vol = cum.prod, setup = setup, time.name = "days",
        norm.name = "mvs.sub")
 
 # If an error is thrown because a bottle doesn't meet the 1% criterion, use 
-# show.obs = TRUE to see rates
+# show.rates = TRUE to see rates
 \dontrun{
 # Will return error
 cpshort <- cum.prod[cum.prod$days < 10, ]
@@ -191,7 +201,7 @@ summBg(vol = cpshort, setup = setup, time.name = "days",
 cpshort <- cum.prod[cum.prod$days < 10, ]
 summBg(vol = cpshort, setup = setup, time.name = "days", 
        inoc.name = "inoc", inoc.m.name = "minoc", when = "1p", 
-       norm.name = "mvs.sub", show.obs = TRUE)
+       norm.name = "mvs.sub", show.rates = TRUE)
 
 
 # Example with dataset with different column names

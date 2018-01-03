@@ -1,4 +1,3 @@
-# Modified: 222 JUNE 2015 SDH
 # NTS: would be good to switch to Pa and K for base units
 
 unitConvert <- function(x, unit, to) {
@@ -8,25 +7,27 @@ unitConvert <- function(x, unit, to) {
   # Pressure, first convert to atm
   # Temperature, first convert to C
   if(unit=="kPa") {
-  x <- x/101.325 
+    x <- x/101.325 
   } else if(unit=="hPa") {
-  x <- x/1013.25
+    x <- x/1013.25
   } else if(unit=="Pa") {
-  x <- x/1.01325E5
+    x <- x/1.01325E5
   } else if(unit=="bar") {
-  x <- x/1.01325
+    x <- x/1.01325
+  } else if(unit=="mbar") {
+    x <- x/1.01325E3
   } else if(unit=="psi") {
-  x <- x/14.69595  
+    x <- x/14.69595  
   } else if(unit=="atm") {
-  x <- x
+    x <- x
   } else if(unit=="F") {
-  x <- (x - 32)*5/9 
+    x <- (x - 32)*5/9 
   } else if(unit=="K") {
-  x <- x - 273.15  
+    x <- x - 273.15  
   } else if(unit=="C") {
-  x <- x
+    x <- x
   } else {
-    stop('\"unit\" argument not recognized. \nOptions are \"atm\", \"kPa\", \"hPa\", \"Pa\", \"bar\", \"psi\" for pressure and \n\"C\", \"F\", or \"K\" for temperature')
+    stop('\"unit\" argument not recognized. \nOptions are \"atm\", \"kPa\", \"hPa\", \"Pa\", \"bar\", \"mbar\", \"psi\" for pressure and \n\"C\", \"F\", or \"K\" for temperature')
   }
 
   # Then convert to "to" units
@@ -38,6 +39,8 @@ unitConvert <- function(x, unit, to) {
     x <- x*1.01325E5
   } else if(to=="bar") {
     x <- x*1.01325
+  } else if(to=="mbar") {
+    x <- x*1.01325E3
   } else if(to=="psi") {
     x <- x*14.69595  
   } else if(to=="atm") {
@@ -49,11 +52,11 @@ unitConvert <- function(x, unit, to) {
   } else if(to=="C") {
   x <- x
   } else {
-    stop('\"to\" argument not recognized. \nOptions are \"atm\", \"kPa\", \"hPa\", \"Pa\", \"bar\", \"psi\" for pressure and \n\"C\", \"F\", or \"K\" for temperature')
+    stop('\"unit\" argument not recognized. \nOptions are \"atm\", \"kPa\", \"hPa\", \"Pa\", \"bar\", \"mbar\", \"psi\" for pressure and \n\"C\", \"F\", or \"K\" for temperature')
   }
 
   # Check coherence of conversion (at the end so that an unidentified unit will return the correct error above). 
-  p.units = c('kPa', 'hPa', 'Pa', 'bar', 'psi', 'atm')
+  p.units = c('kPa', 'hPa', 'Pa', 'bar', 'psi', 'atm', 'mbar')
   t.units = c('F', 'K', 'C')
   if(!(unit %in% p.units & to %in% p.units) & !(unit %in% t.units & to %in% t.units)) stop('Conversion mixes temperature and pressure units.')
 
