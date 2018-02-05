@@ -9,7 +9,7 @@ summBg <- function(
   inoc.name = NULL,
   inoc.m.name = NULL,
   norm.name = NULL,
-  norm.sd.name = NULL,
+  norm.se.name = NULL,
   vol.name = 'cvCH4',
   imethod = 'linear',
   extrap = FALSE,
@@ -40,8 +40,8 @@ summBg <- function(
 
   # Check for pd when argument
   # First for backward compatability
-  if(when == '1p') when <- '1p3d'
-  if(when == '0.5p') when <- '0.5p3d'
+  if(length(when) == 1 && when == '1p') when <- '1p3d'
+  if(length(when) == 1 && when == '0.5p') when <- '0.5p3d'
   pdwhen <- gsub('[0-9.]', '', when) == 'pd'
 
   # Warning on show.rates
@@ -117,17 +117,17 @@ summBg <- function(
 
   # Check for duplicates in setup and vol~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   if(any(duplicated(setup[, id.name]))) {
-    stop('Duplicated reactor IDs (', id.name, ' column) in setup dataframe! This must be an error.')
+    stop('Duplicated reactor IDs (', id.name, ' column) in setup data frame! This must be an error.')
   }
 
   if(any(duplicated(vol[, c(id.name, time.name)]))) {
-    stop('Duplicated ID (', id.name, ' column) x time (', time.name, ' column) in vol dataframe! This must be an error.')
+    stop('Duplicated ID (', id.name, ' column) x time (', time.name, ' column) in vol data frame! This must be an error.')
   }
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   # Drop missing values from vol with a warning
   if(any(is.na(vol[, vol.name]))) {
-    warning('Missing volume data in vol dataframe will be dropped.')
+    warning('Missing volume data in vol data frame will be dropped.')
     vol <- vol[!is.na(vol[, vol.name]), ]
   }
 
@@ -231,24 +231,24 @@ summBg <- function(
     # Volume contribution per unit inoculum mass
     summ.inoc$vol.mi <- summ.inoc[, vol.name]/summ.inoc[, inoc.m.name]
 
-    # Mean and sd volume contribution per unit inoc mass
+    # Mean and se volume contribution per unit inoc mass
     inoc.vol <- data.frame()
 
     for(i in times.summ) {
       vol.mi <- summ.inoc[summ.inoc$time == i, 'vol.mi']
-      # Calculate sd only if there is more than one observation
+      # Calculate se only if there is more than one observation
       if(length(vol.mi) > 1) {
-        ss <- sd(vol.mi)
+        ss <- sd(vol.mi)/sqrt(length(vol.mi))
       } else {
         ss <- 0
         warning('Only one inoculum-only bottle is present, so reported sd does not include variation within inoculum-only bottles.')
       }
-      inoc.vol <- rbind(inoc.vol, c(time = i, mn = mean(vol.mi), s = ss))
+      inoc.vol <- rbind(inoc.vol, c(time = i, mn = mean(vol.mi), s = ss, n = length(vol.mi)))
     }
 
-    names(inoc.vol) <- c(time.name, 'vol.mi.mn', 'vol.mi.sd')
-    inoc.vol$vol.mi.rsd <- 100*inoc.vol$vol.mi.sd/inoc.vol$vol.mi.mn
-    # inoc.vol has mean and sd vol per unit mass inoc for all times
+    names(inoc.vol) <- c(time.name, 'vol.mi.mn', 'vol.mi.se', 'n')
+    inoc.vol$vol.mi.rsd <- 100*inoc.vol$vol.mi.se/inoc.vol$vol.mi.mn*sqrt(inoc.vol$n)
+    # inoc.vol has mean and se vol per unit mass inoc for all times
 
   }
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -271,13 +271,13 @@ summBg <- function(
     # Correct vol for inoculum
     summ1[, vol.name] <- summ1[, vol.name] - summ1$vol.mi.mn*summ1[, inoc.m.name]
 
-    # Add sd in volume produced by inoculum for use below in error propagation
-    summ1[, 'sd.inoc'] <- summ1$vol.mi.sd*summ1[, inoc.m.name]
+    # Add se in volume produced by inoculum for use below in error propagation
+    summ1[, 'se.inoc'] <- summ1$vol.mi.se*summ1[, inoc.m.name]
 
   } else {
 
     # NTS: How did I handle this before 10 Feb 2016?
-    summ1[, 'sd.inoc'] <- 0
+    summ1[, 'se.inoc'] <- 0
 
   }
 
@@ -373,21 +373,21 @@ summBg <- function(
   # Normalization
   if(!is.null(norm.name)) { 
 
-    # First calculate sd on normalized volume based on sd of VS
-    if(!is.null(norm.sd.name)) {
-      summ1[, paste0(vol.name,'.sd')] <- summ1[, vol.name]/summ1[, norm.name] * summ1[, norm.sd.name]/summ1[, norm.name]
+    # First calculate se on normalized volume based on se of VS
+    if(!is.null(norm.se.name)) {
+      summ1[, paste0(vol.name,'.se')] <- summ1[, vol.name]/summ1[, norm.name] * summ1[, norm.se.name]/summ1[, norm.name]
     # Original approach nearly equivalent to calculate relative error in norm.name and apply it directly (i.e., 10% for norm.name = 10% for vol.name)
       #summ1[, paste0(vol.name,'.sd')] <- (summ1[, vol.name]/(summ1[, norm.name] - summ1[, norm.sd.name]) - 
       #                                    summ1[, vol.name]/(summ1[, norm.name] + summ1[, norm.sd.name]))/2
     } else {
-      summ1[, paste0(vol.name,'.sd')] <- 0
+      summ1[, paste0(vol.name,'.se')] <- 0
     }
 
     # Normalize remaining vol by norm.name (typically by substrate VS)
     summ1[, vol.name] <- summ1[, vol.name]/summ1[, norm.name]
 
-    # Normalize sd contribution from inoc by the same value
-    summ1[, 'sd.inoc'] <- summ1[, 'sd.inoc']/summ1[, norm.name]
+    # Normalize se contribution from inoc by the same value
+    summ1[, 'se.inoc'] <- summ1[, 'se.inoc']/summ1[, norm.name]
 
     # Next two lines only for returning additional info when show.obs = TRUE
     # Only have the .tot and .inoc columns when inoc is subtracted out
@@ -396,10 +396,10 @@ summBg <- function(
       summ1[, paste0(vol.name, '.inoc')] <- summ1[, paste0(vol.name, '.inoc')]/summ1[, norm.name]
     }
   } else {
-      summ1[, paste0(vol.name,'.sd')] <- 0
+      summ1[, paste0(vol.name,'.se')] <- 0
   }
 
-  # Calculate means and sd for a summary
+  # Calculate means and se for a summary
   if(!show.obs) {
     # Summarize by description
     summ2 <- unique(summ1[, c(time.name, descrip.name)]) # NTS: may want to put time second
@@ -409,16 +409,21 @@ summBg <- function(
       for(j in unique(dd[, time.name])) {
         ddd <- dd[dd[, time.name]==j, ]
         summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'mean'] <- mean(na.omit(ddd[, vol.name]))
-        summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'sd'] <- sqrt(sd(na.omit(ddd[, vol.name]))^2 + 
-                                                                              mean(ddd[, 'sd.inoc'])^2 + 
-                                                                              mean(ddd[, paste0(vol.name,'.sd')])^2) 
+        summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'se'] <- sqrt((sd(na.omit(ddd[, vol.name]))/sqrt(nrow(ddd)))^2 + 
+                                                                              ##mean(ddd[, 'sd.inoc'])^2 + 
+                                                                              ##mean(ddd[, paste0(vol.name,'.sd')])^2) 
+                                                                              (sqrt(sum(ddd[, 'se.inoc']^2)/nrow(ddd)))^2 + 
+                                                                              (sqrt(sum(ddd[, paste0(vol.name,'.se')]^2)/nrow(ddd)))^2) 
+        summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'sd'] <- summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'se']*sqrt(nrow(ddd))
         summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'n'] <- sum(!is.na(ddd[, vol.name]))  
 	if(!is.null(inoc.name)) {
           summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'rsd.inoc'] <- ddd[1, 'vol.mi.rsd']
           summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'fv.inoc'] <- mean(na.omit(ddd[, 'fv.inoc']))
-          summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'sd1'] <- sd(na.omit(ddd[, vol.name]))
-          summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'sd2'] <- mean(ddd[, 'sd.inoc'])
-          summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'sd3'] <- mean(ddd[, paste0(vol.name,'.sd')])
+          summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'se1'] <- sd(na.omit(ddd[, vol.name]))/sqrt(nrow(ddd))
+	  ##summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'sd2'] <- mean(ddd[, 'sd.inoc'])
+          ##summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'sd2'] <- mean(ddd[, 'sd.inoc'])
+          summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'se2'] <- sqrt(sum(ddd[, 'se.inoc']^2)/nrow(ddd))
+          summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'se3'] <- sqrt(sum(ddd[, paste0(vol.name,'.se')]^2)/nrow(ddd))
 	}
       }
     }
@@ -449,9 +454,9 @@ summBg <- function(
   # Select columns
   if(!show.obs) {
     if(show.more) {
-      summ2 <- summ2[ , c(descrip.name, time.name, 'mean', 'sd', 'n', 'rsd.inoc', 'fv.inoc', 'sd1', 'sd2', 'sd3')]
+      summ2 <- summ2[ , c(descrip.name, time.name, 'mean', 'se', 'sd', 'n', 'rsd.inoc', 'fv.inoc', 'se1', 'se2', 'se3')]
     } else {
-      summ2 <- summ2[ , c(descrip.name, time.name, 'mean', 'sd', 'n')]
+      summ2 <- summ2[ , c(descrip.name, time.name, 'mean', 'se', 'sd', 'n')]
     }
   } 
 

@@ -12,7 +12,7 @@
 \usage{
 summBg(vol, setup, id.name = "id", time.name = "time", 
        descrip.name = "descrip", inoc.name = NULL, inoc.m.name = NULL,
-       norm.name = NULL, norm.sd.name = NULL,  vol.name = "cvCH4", 
+       norm.name = NULL, norm.se.name = NULL,  vol.name = "cvCH4", 
        imethod = "linear", extrap = FALSE, when = 30, 
        show.obs = FALSE, show.rates = FALSE, show.more = FALSE,
        sort = TRUE, quiet = FALSE)
@@ -43,8 +43,8 @@ summBg(vol, setup, id.name = "id", time.name = "time",
   \item{norm.name}{
     (optional) the name of the column in \code{setup} that has the mass to perform the normalisation (typically substrate VS mass). Length one character vector. Argument not used by default.
 }
-  \item{norm.sd.name}{
-    (optional) the name of the column in \code{setup} that has the standard deviation of the data in the column \code{norm.name}. Length one character vector. If provided, this error in substrate mass will be included in the standard deviation given in the output. Argument not used by default.
+  \item{norm.se.name}{
+    (optional) the name of the column in \code{setup} that has the standard error of the data in the column \code{norm.name}. Length one character vector. If provided, this error in substrate mass will be included in the standard error and standard deviation given in the output. Argument not used by default.
 }
   \item{inoc.m.name}{
     (optional) the name of the column in \code{setup} that has inoculum mass.
@@ -106,13 +106,14 @@ See \sQuote{Examples}.
   \item{descrip}{from the input data frames}
   \item{mean}{mean of the response variable \code{vol.name}}
   \item{sd}{standard deviation of the response variable \code{vol.name}}
+  \item{se}{standard error of the response variable \code{vol.name}}
   \item{n}{number of bottles}
 }
 \author{
   Sasha D. Hafner and Charlotte Rennuit
 }
 \note{
-  Reported standard deviation includes an estimate of variability from subtracting the inoculum contribution when this is done.
+  Reported standard deviation and standard error includes an estimate of variability from subtracting the inoculum contribution when this is done.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
@@ -145,7 +146,8 @@ summBg(vol = cum.prod, setup = setup, time.name = "days",
 
 # And normalise by mvs.sub column (mass of substrate VS here) (so the result is BMP)
 summBg(vol = cum.prod, setup = setup, time.name = "days", 
-       inoc.name = "inoc", inoc.m.name = "minoc", when = 30, norm.name = "mvs.sub")
+       inoc.name = "inoc", inoc.m.name = "minoc", when = 30, 
+       norm.name = "mvs.sub")
 
 # Same example, but return results for three times
 summBg(vol = cum.prod, setup = setup, time.name = "days", 

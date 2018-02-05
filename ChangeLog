@@ -3,6 +3,38 @@ biogas package
 ########################################
 ## DETAILED LOG ########################
 ########################################
+5 Feb 2018 Sasha D. Hafner
+Version 1.10.0
+
+planBMP.R, planBMP.Rd
+New function.
+
+
+25 Jan 2018 Sasha D. Hafner
+Version 1.9.3
+
+summBg.R
+Fixed some checks of when argument so comparison length > 1 warning is gone.
+Did this in response to message from Tomas K. Built and checked by going
+through biogas-Ex.Rout.
+
+10 Jan 2018 Sasha D. Hafner
+Version 1.9.2
+
+summBg.R
+Changes to error propagation so it is based on standard error and not standard
+deviation now. Input VS mass variability now must be standard error. Function
+now works for variable replication.
+
+8 Jan 2018 Sasha D. Hafner
+Version 1.9.1
+
+summBg.R
+Changed error propagation for sd1 and sd2 slightly--using correct approach to
+calculate mean of multiple replicates now instead of simple mean. Effect in
+most cases will be in perhaps 4th digit.
+
+
 3 Jan 2018 Sasha D. Hafner
 Version 1.9.0
 

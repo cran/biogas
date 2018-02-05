@@ -1,7 +1,7 @@
-809d1ec54d442640e76239e2656a1af7 *ChangeLog
-53dcdab04b856dcc67b1281fb15236ef *DESCRIPTION
-01080ced21679503dbb56ae4f0b9f1ff *NAMESPACE
-c2a417d74baf100ee8db5b07480b6307 *NEWS
+ad91608915c0bff7f8e8ec65d7c1cb7b *ChangeLog
+eaf06e7f18c3409ed7b1c2af319e1573 *DESCRIPTION
+e798bf8b58be78e03fac055d3b46dcee *NAMESPACE
+61b124b4e3e6bb1cd94cf995ff122926 *NEWS
 c246514d96ce97cb9d2a8cc4b0ffa04c *R/calcCOD.R
 13dc4f57d2ad14e8fa9f452cda6ff38a *R/checkArgClassValue.R
 e71600fe5644ed25be94a85a0b594cab *R/constants.R
@@ -10,12 +10,13 @@ cfc18295c4c72bfb8b2268968faaebac *R/interp.R
 70279e66d6ede165115386cd1006b14a *R/mass2vol.R
 ca1efc86fd36bd82d0b08456993040e5 *R/molMass.R
 31dc5938b3035fe475a25e2bf174c9f5 *R/partCO2.R
+be2f8a165ac5c6b8d6f86959125f460b *R/planBMP.R
 6a7ba083438aff34dd81a7b6fc4c3332 *R/predBg.R
 a2f41818863beaa768891ec99bb0d1a2 *R/rbindf.R
 ee5b62d40a465be5b6fe7d4de609db99 *R/readFormula.R
-b45093d5efae95c6ce0e2476b45889f0 *R/startup.R
+c081bbbd527f857d24fb4d2d5aecc26a *R/startup.R
 1db3d8c56b5a50e9577409eafdf1a977 *R/stdVol.R
-7179eba619a2dc9df4e3d5cf91326424 *R/summBg.R
+640f1ea1f89ec43ccdbc737fa012fd0d *R/summBg.R
 4a4edd21004af0774d493cf4a8c73a16 *R/unitConvert.R
 ca38512e0fdfcbf2dcab835c386bb6c5 *R/vol2mass.R
 34621d6a3381b2e9682649d57fc6f4bf *R/vol2mol.R
@@ -40,10 +41,10 @@ dd0e2e89e232ee1562ca1377e4afb8d0 *data/strawSetup.rda
 3e45c861f0d050f3792a05f800086560 *data/vol2.rda
 74e14139136ac60009f0dfcbd53051d3 *inst/doc/biogas_quick_start.R
 9f1f0b7d6c65e7d6fab1b13322baf6eb *inst/doc/biogas_quick_start.Rnw
-97a9b4f4cbdd6f46cf6bbee884723064 *inst/doc/biogas_quick_start.pdf
+96bdd96cb56ec09773240aff250de84a *inst/doc/biogas_quick_start.pdf
 8f2c3b94027f15edb1a38ce770551a2c *inst/doc/predBg_function.R
 f4fbc68df0e1d55affb0a0f7be90f4b8 *inst/doc/predBg_function.Rnw
-c9cd755836719b2e0fb36b9f78a32ad8 *inst/doc/predBg_function.pdf
+83b0f7e147886b34229c685dc283b2d3 *inst/doc/predBg_function.pdf
 ab4aed352abea71c1a991ea2fc456e89 *man/biogas-package.Rd
 8c8a82de056e5f14c7f02563c785845e *man/calcCOD.Rd
 e6387b315c5713188d17250bfd494167 *man/comp.Rd
@@ -54,6 +55,7 @@ d61c8af7070a13dbccc076eb1bb134ad *man/mass.Rd
 e22f7942c6e12551137e5839949f433d *man/mass2vol.Rd
 3e0000fcba5b492e09206be9719f8663 *man/massw.Rd
 c2acd8bf0aebec3a1a7a16ce0cdf0bd7 *man/molMass.Rd
+10edda170b8883c49ba2a30b73796714 *man/planBMP.Rd
 cb832534ab5ccb80ec549cfbb6caf903 *man/predBg.Rd
 2ca5908268fc215d93bc42d85dcb54ca *man/s3compl.Rd
 402ed6d4098a94e68fbeb67466995ba5 *man/s3compw.Rd
@@ -67,7 +69,7 @@ c79684e7ef898beaa43ec0b573ae9637 *man/stdVol.Rd
 0d81c98483bfd5df94d0bbaf3073cbf2 *man/strawMass.Rd
 79abf496aeb815be1ac83854486a13cd *man/strawPressure.Rd
 5e2ac614be8721d096482685f21f2ab3 *man/strawSetup.Rd
-d1a46424b503afdfa44e4ee7a683d677 *man/summBg.Rd
+3190221ca5357f46f78dbff876fd8c2b *man/summBg.Rd
 d03db0559c7aa212fb890843064a1a62 *man/vol.Rd
 6d2a0c8d536dbe245e5d9f1fb95f0b13 *man/vol2.Rd
 07af71f96b50afadf85e481b7de832ad *man/vol2mass.Rd
@@ -75,6 +77,6 @@ d03db0559c7aa212fb890843064a1a62 *man/vol.Rd
 702d5de276854e1822ea2a0dcc109fbd *tests/testthat.R
 4a162bd9855e7c19006d09b79524d49c *tests/testthat/test.mass.csv
 b85c09d5b83186986dd6115d5c222e9c *tests/testthat/test_HighLevelFunctions.R
-3149163c9afd826e61d69af46fc35a37 *tests/testthat/test_LowLevelFunctions.R
+d1c4c234ac85f1465f7316c38d02663c *tests/testthat/test_LowLevelFunctions.R
 9f1f0b7d6c65e7d6fab1b13322baf6eb *vignettes/biogas_quick_start.Rnw
 f4fbc68df0e1d55affb0a0f7be90f4b8 *vignettes/predBg_function.Rnw

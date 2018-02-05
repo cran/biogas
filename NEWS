@@ -1,3 +1,22 @@
+biogas 1.10.0
+2018 February 5
+---------------------------------------------------------------------
+BUG FIXES
+
+*summBg()
+Corrected problem with if() check with length > 1.
+
+NEW FEATURES
+
+*summBg()
+Changes to error propagation so it is now based on standard error instead of 
+standard deviation. Now results are correct even when number is replicates is
+unequal for inoculum bottles, substrate bottles, or VS determination.
+
+*planBMP()
+New function for planning BMP experiments.
+
+
 biogas 1.9.0
 2018 January 3
 ---------------------------------------------------------------------
