@@ -1,5 +1,3 @@
-# Modified: 
-
 summBg <- function(
   vol,
   setup,
@@ -42,7 +40,8 @@ summBg <- function(
   # First for backward compatability
   if(length(when) == 1 && when == '1p') when <- '1p3d'
   if(length(when) == 1 && when == '0.5p') when <- '0.5p3d'
-  pdwhen <- gsub('[0-9.]', '', when) == 'pd'
+  pdwhen <- length(when) == 1 && gsub('[0-9.]', '', when) == 'pd'
+  pdnotyet <- NULL
 
   # Warning on show.rates
   if(!pdwhen & show.rates) {
@@ -341,14 +340,23 @@ summBg <- function(
 
       if(!is.na(i3)) {
         ss <- dd[i3, ]
-        s1times <- rbind(s1times, ss)
       } else {
-        stop('You selected ', when, ' option for \"when\" argument but there are no observations that meet the criterion for id ', i, ' (and possibly others). Either use a fixed time for \"when\" or remove this id. Leave when = ', when, ' and set show.rates = TRUE to check rates for all bottles.')
+        #stop('You selected ', when, ' option for \"when\" argument but there are no observations that meet the criterion for id ', i, ' (and possibly others). Either use a fixed time for \"when\" or remove this id. Leave when = ', when, ' and set show.rates = TRUE to check rates for all bottles.')
         ##ss <- dd[nrow(dd), ]
         ##s1times <- rbind(s1times, ss)
+        # Set to latest time, but keep track of this
+        ss <- dd[nrow(dd), ]
+        pdnotyet <- c(pdnotyet, i, ', ')
       }
+      s1times <- rbind(s1times, ss)
 
     }
+
+    ## Check to see if all bottles met specified criterion
+    #if(any(s1times[, time.name] == -Inf)) {
+    #    message('You selected ', when, ' option for \"when\" argument but there are no observations that meet the criterion for these bottles: ', paste0(s1times[s1times[, time.name] == -Inf, id.name], collapse = ', '), '. Either change \"when\" argument or remove this (these) bottles. Set show.rates = TRUE to check rates for all bottles.')
+    #    return(invisible('Rate criterion not met'))
+    #}
 
     # Check for different times for bottles with same descrip
     summ1temp <- data.frame()
@@ -357,8 +365,15 @@ summBg <- function(
       tt <- max(s1times[s1times[, descrip.name] == i, time.name])
 
       for(j in unique(summ1[summ1[, descrip.name] == i, id.name])) {
+
+        # Check to make sure time extends far enough, if not, set to max for this rep
+        if(max(summ1[summ1[, id.name] == j, time.name]) < tt) {
+          tt <- max(summ1[summ1[, id.name] == j, time.name])
+          pdnotyet <- c(pdnotyet, j, ', ')
+        }
+
         # Select times >= max time for this decrip.name level
-        ss <- summ1[summ1[, id.name] == j & summ1[, time.name] >= tt, ]
+        ss <- summ1[summ1[, id.name] == j & summ1[, time.name] >= tt, ] # NTS is this missing [1] to select only the first time that >= tt?
         if(length(ss) == 0) stop('when = "xpyd" problem. Re-run function with show.rates = TRUE')
         ss <- ss[1, ]
         summ1temp <- rbind(summ1temp, ss)
@@ -479,6 +494,13 @@ summBg <- function(
   # Row names
   rownames(summ2) <- 1:nrow(summ2)
 
+  if(is.null(pdnotyet)) {
+      pdnotyet <- ''
+  } else {
+      warning('You selected ', when, ' option for \"when\" argument but there are no observations that meet the criterion for the following bottles. Instead, the latest time was selected. ', pdnotyet)
+  }
+
+  attr(summ2, 'rate.not.met') <- pdnotyet
   return(summ2)
 
 }

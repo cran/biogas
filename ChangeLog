@@ -3,6 +3,29 @@ biogas package
 ########################################
 ## DETAILED LOG ########################
 ########################################
+
+2 May 2018 Sasha D. hafner
+Version 1.10.2
+
+summBg.R
+Fixed pdwhen if statement so comparison length > 1 warning (soon error) is
+gone. Response to email form Kurt Hornik.
+
+20 April 2018 Sasha D. hafner
+Version 1.10.1
+
+summBg.R
+Fixed bug that threw error after selecting latest pd time for replicates if a
+single replicate didn't extend far enough. 
+
+2 March 2018 Sasha D. Hafner
+Version 1.10.1
+
+summBg.R
+When pd criteria are not met, latest times are selected and returned with no
+error. Instead, warning is given and new attribute rate.not.met is set to bottle
+id values that do not meet criteria.
+
 5 Feb 2018 Sasha D. Hafner
 Version 1.10.0
 
