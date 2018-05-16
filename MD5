@@ -1,7 +1,7 @@
-1cee239e0c4fe8e0ddcfdde31e5337ef *ChangeLog
-6b85acbabf05db2ca58ad84094600fe6 *DESCRIPTION
+2cb6301d904baa73dfd063ab95d8b7f0 *ChangeLog
+ad1083fbb55e11ae1bd75d627fe152d9 *DESCRIPTION
 e798bf8b58be78e03fac055d3b46dcee *NAMESPACE
-241ddc7f71cfaf4eff6a4e1302ca790b *NEWS
+cdad43a9dd3c2aae119594cc6aaaef5f *NEWS
 c246514d96ce97cb9d2a8cc4b0ffa04c *R/calcCOD.R
 13dc4f57d2ad14e8fa9f452cda6ff38a *R/checkArgClassValue.R
 e71600fe5644ed25be94a85a0b594cab *R/constants.R
@@ -14,7 +14,6 @@ be2f8a165ac5c6b8d6f86959125f460b *R/planBMP.R
 6a7ba083438aff34dd81a7b6fc4c3332 *R/predBg.R
 a2f41818863beaa768891ec99bb0d1a2 *R/rbindf.R
 ee5b62d40a465be5b6fe7d4de609db99 *R/readFormula.R
-c081bbbd527f857d24fb4d2d5aecc26a *R/startup.R
 1db3d8c56b5a50e9577409eafdf1a977 *R/stdVol.R
 faf115a0e9b339d896bd0cb0e1548daa *R/summBg.R
 4a4edd21004af0774d493cf4a8c73a16 *R/unitConvert.R
@@ -42,11 +41,10 @@ ac87ecf41e857c65e0cc697376b4b0f0 *data/strawSetup.rda
 346b074d8f985d305ec81e7e49b87bb0 *data/vol2.rda
 74e14139136ac60009f0dfcbd53051d3 *inst/doc/biogas_quick_start.R
 9f1f0b7d6c65e7d6fab1b13322baf6eb *inst/doc/biogas_quick_start.Rnw
-bb37742fd1fe230bcba9f2bdae2401b7 *inst/doc/biogas_quick_start.pdf
+860e0c9aae512266b599e7f14c9171b4 *inst/doc/biogas_quick_start.pdf
 8f2c3b94027f15edb1a38ce770551a2c *inst/doc/predBg_function.R
 f4fbc68df0e1d55affb0a0f7be90f4b8 *inst/doc/predBg_function.Rnw
-6ac05e01faab95c417bd7a71f66c8934 *inst/doc/predBg_function.pdf
-ab4aed352abea71c1a991ea2fc456e89 *man/biogas-package.Rd
+b293b81302393a881933bf0b1fb20a7f *inst/doc/predBg_function.pdf
 8c8a82de056e5f14c7f02563c785845e *man/calcCOD.Rd
 e6387b315c5713188d17250bfd494167 *man/comp.Rd
 7afd218a8297cfaaeffd104a0d1405c6 *man/comp2.Rd
