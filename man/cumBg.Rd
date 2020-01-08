@@ -18,6 +18,7 @@ cumBg(
   comp.name = 'xCH4', 
   # Additional arguments for manometric and gravimetric methods
   pres.resid = NULL, temp.init = NULL, pres.init = NULL,
+  rh.resid = NULL,
   rh.resid.init = 1, headspace = NULL, 
   vol.hs.name = 'vol.hs', headcomp = 'N2',
   absolute = TRUE, pres.amb = NULL,
@@ -27,13 +28,16 @@ cumBg(
   cmethod = 'removed', imethod = 'linear', extrap = FALSE,
   addt0 = TRUE, showt0 = TRUE, 
   dry = FALSE,
+  empty.name = NULL,
   # Warnings and messages
-  std.message = TRUE, check = TRUE,
+  std.message = !quiet, 
+  check = TRUE,
   # Units and standard conditions
   temp.std = getOption('temp.std', as.numeric(NA)), 
   pres.std = getOption('pres.std', as.numeric(NA)),
   unit.temp = getOption('unit.temp', 'C'),
-  unit.pres = getOption('unit.pres', 'atm')
+  unit.pres = getOption('unit.pres', 'atm'),
+  quiet = FALSE
   ) 
 }
 %- maybe also "usage" for other objects documented here.
@@ -74,6 +78,7 @@ cumBg(
     \code{interval = FALSE} means measured gas volume or pressure is cumulative.
     Applies to volumetric (\code{dat.type = "vol"}) and manometric methods (\code{dat.type = "pres"}). 
     The gravimetric method (\code{dat.type = "mass"}) is cumulative by nature and the \code{interval} argument is not used.
+    For mixed manometric measurements (some observations vented, some not), use \code{interval = TRUE}, include a column for \code{pres.resid}, and, if composition was only measured for vented observations, use \code{imethod = "f1"}.
     Default is \code{TRUE}.
   }
 
@@ -123,6 +128,14 @@ cumBg(
     Used in manometric method only (\code{dat.type = "pres"}).
     Can be absolute (default) or gauge depending on the value of \code{absolute}.
     Length one numeric vector.
+}
+
+ \item{rh.resid}{
+    relative humidity of the gas in the headspace after venting.
+    If NULL (default), it is calculated for each interval as the ratio of post- to pre-venting pressure (equivalent to assuming relative water vapor concentration (mixing ratio) is the same before and after venting.
+    If entered, typically should be 1.0.
+    Length one numeric vector.
+    Used in manometric method only (\code{dat.type = "pres"}).
 }
 
  \item{rh.resid.init}{
@@ -222,6 +235,13 @@ cumBg(
     The default (\code{FALSE}) means biogas is assumed to be saturated with water vapor.
   }
 
+  \item{empty.name}{
+    column containing a binary (logical, or integer or numeric (1 or 0)) variable indicating when accumulated biogas was emptied. 
+    Use for mix of cumulative/interval data.
+    Only applies to volumetric data (dat.type = 'vol').
+    If used, \code{interval} is ignored.
+  }
+
   \item{std.message}{
     should a message with the standard conditions be displayed? 
     Default is \code{TRUE}. 
@@ -258,11 +278,16 @@ cumBg(
     Default is \code{"atm"}.
     Argument is passed to \code{\link{stdVol}}.
 }
+  \item{quiet}{
+    use to suppress messages. Default is \code{FALSE}.
+}
 
 }
 \details{
   Using volume, mass, pressure, or molar quantity data from \code{dat} and gas composition from \code{comp}, this function will calculate standardised biogas and methane production (if \code{comp} is provided) for each observation,  interpolating \code{comp.name} (from \code{comp} argument) to each \code{time.name} in \code{dat} if needed, and summing these for cumulative values.
   Use of volumetric measurements is the default case. 
+  However, this function is essentially deprecated for both volumetric and manometric methods, and the new \code{\link{calcBgMan}} and \code{\link{calcBgVol}} functions are recommended instead.
+
   Alternatively, if reactor mass is given in \code{dat}, a gravimetric approach (Hafner et al. 2015) can be applied by setting \code{dat.type} to \code{"mass"}.
   In this case, to determine total cumulative biogas production for batch reactors, an initial mass should be included for each reactor.
   If pressure is measured in \code{dat}, a manometric method can be applied by setting \code{dat.type} to \code{"pres"}.  
@@ -280,7 +305,6 @@ cumBg(
 
   If \code{check = TRUE}, the input values of mole fraction of methane in biogas are checked, and a warning is returned if the are outside 0, 1.
 
-  
 }
 
 \value{
@@ -306,6 +330,9 @@ cumBg(
 }
 
 \seealso{
+  \code{\link{calcBgMan}},
+  \code{\link{calcBgVol}},
+  \code{\link{calcBgGD}},
   \code{\link{summBg}},
   \code{\link{interp}},
   \code{\link{stdVol}},

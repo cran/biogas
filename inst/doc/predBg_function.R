@@ -1,4 +1,4 @@
-## ----include=FALSE, cache=FALSE------------------------------------------
+## ----include=FALSE, cache=FALSE--------------------------------
 library(knitr)
 #opts_chunk$set(cache=FALSE,tidy=FALSE,highlight=FALSE)
 opts_chunk$set(cache = FALSE, tidy = FALSE, out.height = "4.0in", out.width = "4.0in", fig.height = 5.2, fig.width = 5.2, fig.align = "center")

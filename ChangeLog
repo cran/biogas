@@ -4,6 +4,138 @@ biogas package
 ## DETAILED LOG ########################
 ########################################
 
+13 November 2019 and earlier SDH and NL
+Version 1.22
+
+calcBgVol.R, calcBgMan.R
+Additional development and name changes from cumBg.
+
+calcBgGD.R
+Additional improvement of function and name change from cumBgGD.
+
+18 August 2019 and earlier NL and SDH
+Version 1.17
+
+cumBgVol.R
+New function for volumetric data only.
+
+cumBgDataPrep.R
+New function for preparing cumBg* data.
+
+13 June 2019 SDH
+Version 1.16.5
+
+summBg.R
+Pass when.min to subset call. Was omitted. 
+
+12 June 2019 SDH
+Vresion 1.16.3
+
+cumBgGD.R
+Add code for vol.hs and temp.init to be used for headspace correction.
+
+5 June 2019 SDH
+Version 1.16.2
+
+summBg.R
+Fix bugs in when = 'total', remove 'VDI2016' option and automatic 25 d minimum
+(now must be set through when.min).
+
+summBg.R
+Correct when.min so it actually returns BMP from minimum time, not just
+changes time.
+
+29 May 2019 SDH
+Version 1.16
+
+gasDens.R, GDComp.R, cumBgGD.R
+New functions
+
+29 April 2019 SDH
+Version 1.15
+
+cumBg.R
+Switch to new manometric calculations based on discussion with Pierre B
+(INSA).
+
+10 April 2019 SDH
+Version 1.14.1
+
+cumBg.R
+Add [1] for dealing with legnth 2 logical results in && comparisons.
+
+28 March 2019 SDH
+Version 1.14.0
+
+summBg.R
+Add recursive loop for multiple-element when argument.
+Add when.min argument.
+
+28 March 2019 SDH
+Version 1.13.0
+
+cumBg.R
+Add quiet argument to suppress messages.
+
+20 March 2019 SDH
+Version 1.12.0
+
+summBg.R
+Can handle vol.name with length > 1, i.e., multiple response variables in the
+same call.
+
+More flexible handling of multiple when elements, e.g., 
+when = list(20, "1p3d").
+
+New when.min argument for use in combination with relative durations.
+
+1 March 2019 SDH
+Version 1.11.5
+
+cumBg.R
+Add rh.resid argument to override the calculation of residual relative
+humidity if desired (e.g., for comparison).
+
+14 Feb 2019 SDH
+Version 1.11.4
+
+summBg.R summBg.Rd
+Add option for multiple sets/experiments/methods, etc. by using a list of data
+frames for vol argument.
+
+12 Jan 2019 SDH
+Version 1.11.3
+
+cumBg.R
+Fixes. Handles NAs in empty.name column now. Switch to interval data for
+calculations with empty.name (mixed cum/interval) because composition is interval.
+
+
+08 Jan 2019 SDH
+Version 1.11.2
+
+cumBg.R, cumBg.Rd
+Add empty.name argument for mixed cumulative/interval volumetric data.
+
+24 Nov 2018 SDH
+Version 1.11.1
+
+summBg.Rd
+Add description of optional output.
+
+summBg.R
+Change name of vol.mi.rsd to rsd.inoc for output with show.obs.
+
+cumBg.R
+Fix need for comp with data.struct = longcombo even though it wasn't used. Fix
+related error with use of vol instead of mass object in grav code.
+
+21 and 22 June 2018 Sasha D. Hafner
+Version 1.11.0
+
+summBg.R
+Added rate.crit argument for VDI 2016 gross 1% etc. criteria.
+
 16 May 2018 Sasha D. Hafner
 version 1.10.3
 

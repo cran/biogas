@@ -14,8 +14,9 @@ summBg(vol, setup, id.name = "id", time.name = "time",
        descrip.name = "descrip", inoc.name = NULL, inoc.m.name = NULL,
        norm.name = NULL, norm.se.name = NULL,  vol.name = "cvCH4", 
        imethod = "linear", extrap = FALSE, when = 30, 
+       when.min = 0, rate.crit = 'net', 
        show.obs = FALSE, show.rates = FALSE, show.more = FALSE,
-       sort = TRUE, quiet = FALSE)
+       sort = TRUE, set.name = 'set', quiet = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -23,8 +24,10 @@ summBg(vol, setup, id.name = "id", time.name = "time",
     a data frame with the columns bottle identification code; time of measurement (as \code{numeric}, or \code{POSIX}); and the response variable biogas volume or cumulative volume.
     The names of these columns can be specified with \code{id.name}, \code{time.name}, and \code{vol.name}. Or, the default names can be used. 
     Additional columns can be present-- these will be returned in the output data frame.
+    Optional: as of version 1.11.5, \code{vol} can be a list of suitable data frames.
+    This is convenient for comparing different approaches for calculating methane production, for example.
 }
-  \item{setup}{ %maybe could be shorned by just giving the column names (descriptions) of the columns are afterwards
+  \item{setup}{ 
     a data frame containing information to summarise, substract inoculum effect or normalise the data. Should contain at least the column \code{id.name} (bottle identification code), and the additional columns depending on the operations desired. See \sQuote{Details} for more information.
 }
   
@@ -52,8 +55,11 @@ summBg(vol, setup, id.name = "id", time.name = "time",
     Length one character vector. Default is \code{"minoc"}. 
 }
   \item{vol.name}{
-    the name of the column in \code{vol} that contains the response variable used for the summary--typically cumulative methane volume. 
+    the name of the column(s) in \code{vol} that contains the response variable used for the summary--typically cumulative methane volume. 
     The default is \code{"cvCH4"} for \emph{c}umulative \emph{v}olume of methane (CH4).
+    Optional: as of version 1.12.0, \code{vol.name} may be a vector with length > 1.
+    In this case each response variable will be used and results will be returned for all, together in a single data frame.
+    Character vector.
 }
   \item{imethod}{
     the interpolation method to be used. 
@@ -70,7 +76,13 @@ summBg(vol, setup, id.name = "id", time.name = "time",
     To select a time for each bottle based on the methane production rate, use, e.g., \code{"1p3d"} for 1\% per day for at least 3 d (any values can be used, even something impractical like \code{"0.1p10d"}).
     In this case, the earliest time where production rate drops below 1\% of cumulative production per day for at least 3 days will be used.
     Where this time differs for multiple bottles with the same \code{descrip.name}, the latest one will be used.
-    Numeric or character vector.
+    Numeric or character vector or list (use a list for, e.g., \code{list("1p3d", "end", 30)}).
+}
+  \item{when.min}{
+    minimum duration (value of \code{when}) to be used with a relative duration criterion, e.g., if you want \code{"1p3d"} but no less than 15 days set \code{when.min = 15}. Ignored if \code{when} is numeric. Default is \code{Inf} (no limit).
+}
+  \item{rate.crit}{
+    type of rate criterion to be applied for relative \code{when}, e.g., \code{when = "1p3d"} and \code{rate.crit = "net"} is based on net gas production (after subtracting incoulum contribution). Options are \code{"net"} or \code{"gross"}.
 }
   \item{show.obs}{
     set to \code{TRUE} to return all observations, otherwise means and standard deviations are returned. Default is \code{FALSE}. 
@@ -83,6 +95,9 @@ summBg(vol, setup, id.name = "id", time.name = "time",
 }
   \item{sort}{
     controls sorting of results, which is by \code{descrip.name} and then \code{time.name} by default. Set to \code{FALSE} to use order of \code{descrip.name} from the \code{setup} data frame. Default is \code{TRUE}.
+}
+  \item{set.name}{
+    column name in result for set of observations, corresponding to elements in \code{vol} when it is a list.
 }
   \item{quiet}{
     use to suppress messages. Default is \code{FALSE}.
@@ -103,11 +118,23 @@ See \sQuote{Examples}.
 }
 \value{
   a data frame, with the colums:
-  \item{descrip}{from the input data frames}
-  \item{mean}{mean of the response variable \code{vol.name}}
+  \item{descrip}{from the input data frame setup}
+  \item{mean}{mean of the response variable \code{vol.name}, typically after subtraction of inoculum contribution and normalization by substrate mass}
   \item{sd}{standard deviation of the response variable \code{vol.name}}
   \item{se}{standard error of the response variable \code{vol.name}}
   \item{n}{number of bottles}
+  If \code{show.more = TRUE} additional columns are returned:
+      summ2 <- summ2[ , c(descrip.name, time.name, 'mean', 'se', 'sd', 'n', 'rsd.inoc', 'fv.inoc', 'se1', 'se2', 'se3')]
+  \item{rsd.inoc}{relative standard deviation in specific \code{vol.name} (methane) production by inouclum among replicates} 
+  \item{fv.inoc}{(mean) fraction of bottle \code{vol.name} (methane) estimated to have come from inoculum} 
+  \item{se1}{standard error contribution from variation among replicate substrate bottles} 
+  \item{se2}{standard error contribution from variation among inoculum-only bottles} 
+  \item{se2}{standard error contribution from uncertainty in substrate mass addition} 
+  If \code{show.obs = TRUE} even more columns are returned:
+  \item{cvCH4.tot}{name based on \code{vol.name}, total \code{vol.name} produced by bottle, normalization applied as for \code{vol.name} (and may be nonsensical)} 
+  \item{cvCH4.inoc}{name based on \code{vol.name}, \code{vol.name} produced by bottle estimated as coming from inoculum, normalization applied as for \code{vol.name} (and may be nonsensical)} 
+  \item{se.inoc}{standard error from inoculum used to calculate \code{se2}} 
+  \item{cvCH4.se}{name based on \code{vol.name}, standard error from substrate mass used to calculate \code{se3}} 
 }
 \author{
   Sasha D. Hafner and Charlotte Rennuit
@@ -176,6 +203,13 @@ summBg(vol = cum.prod, setup = setup, time.name = "days",
 
 summBg(vol = cum.prod, setup = setup, time.name = "days", 
        inoc.name = "inoc", inoc.m.name = "minoc", when = "1p3d", 
+       norm.name = "mvs.sub")
+
+# Or combine multiple values of when in a list
+
+summBg(vol = cum.prod, setup = setup, time.name = "days", 
+       inoc.name = "inoc", inoc.m.name = "minoc", 
+       when = list(30, "1p3d", "end"), 
        norm.name = "mvs.sub")
 
 # If you want to apply the 1% criterion but also want a single fixed time for all bottles,

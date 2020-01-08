@@ -12,12 +12,156 @@ summBg <- function(
   imethod = 'linear',
   extrap = FALSE,
   when = 30,
+  when.min = 0,
+  rate.crit = 'net',
   show.obs = FALSE, 
   show.rates = FALSE, 
   show.more = FALSE,
   sort = TRUE,
-  quiet = FALSE) 
+  set.name = 'set', 
+  quiet = FALSE)
 {
+
+  # For "vectorized" calls, lapply-like behavior
+  if(class(vol)[1] == 'list') {
+
+    # Check reserved names
+    # NTS: need to add more reserved names to check
+    if (any(set.name == c(names(vol), names(setup), c('mean', 'sd', 'se', 'n')))) {
+      stop('Argument set.name matches another column name')
+    }
+
+    if(class(setup)[1] == 'data.frame') {
+
+      res <- data.frame()
+
+      for (i in 1:length(vol)) {
+
+        sb <- summBg(vol = vol[[i]],
+                     setup = setup,
+                     id.name = id.name,
+                     time.name = time.name,
+                     descrip.name = descrip.name,
+                     inoc.name = inoc.name,
+                     inoc.m.name = inoc.m.name,
+                     norm.name = norm.name,
+                     norm.se.name = norm.se.name,
+                     vol.name = vol.name,
+                     imethod = imethod,
+                     extrap = extrap,
+                     when = when,
+                     when.min = when.min,
+                     rate.crit = rate.crit,
+                     show.obs = show.obs,
+                     show.rates = show.rates,
+                     show.more = show.more,
+                     sort = sort,
+                     quiet = quiet)
+
+        # Add experiment as first column
+        sb[, set.name] <- names(vol)[i]
+        sb <- sb[, c(ncol(sb), 1:(ncol(sb) - 1))]
+        res <- rbind(res, sb)
+
+      }
+
+      return(res)
+
+    } else {
+
+      stop('Error  xueru187')
+
+    }
+
+  }
+
+  # When called with multiple response variables
+  if(length(vol.name) > 1) {
+
+    # Loop through all, but output structure depends on show.obs
+    res <- data.frame()
+    for (i in 1:length(vol.name)) {
+
+      sb <- summBg(vol = vol,
+                   setup = setup,
+                   id.name = id.name,
+                   time.name = time.name,
+                   descrip.name = descrip.name,
+                   inoc.name = inoc.name,
+                   inoc.m.name = inoc.m.name,
+                   norm.name = norm.name,
+                   norm.se.name = norm.se.name,
+                   vol.name = vol.name[i],
+                   imethod = imethod,
+                   extrap = extrap,
+                   when = when,
+                   rate.crit = rate.crit,
+                   show.obs = show.obs,
+                   show.rates = show.rates,
+                   show.more = show.more,
+                   sort = sort,
+                   quiet = quiet)
+
+
+      if (show.obs) {
+        # Drop columns that cannot be merged (same name, different values for each vol.name)
+        sb <- sb[, !names(sb) %in% c('vol.mi.mn', 'vol.mi.se', 'rsd.inoc', 'fv.inoc', 'se.inoc')]
+        if (i == 1) {
+          res <- sb
+        } else {
+          # Merge, excluding vol.name i (current) from left one (cumulative data frame) and all others from right one (new one)
+          res <- merge(res[, !names(res) %in% vol.name[i]], sb[, !names(sb) %in% vol.name[c(1:length(vol.name))[-i]]])
+          #res[, vol.name[i]] <- sb[, vol.name[i]]
+        }
+      } else {
+        sb[, 'vol.name'] <- vol.name[i]
+        sb <- sb[, c(ncol(sb), 1:(ncol(sb) - 1))]
+        res <- rbind(res, sb)
+      }
+
+    }
+
+    return(res)
+  }
+
+  # When called with list or vector for when
+  if(length(when) > 1) {
+
+    # Loop through all, but output structure depends on show.obs
+    res <- data.frame()
+
+    for (i in 1:length(when)) {
+
+      sb <- summBg(vol = vol,
+                   setup = setup,
+                   id.name = id.name,
+                   time.name = time.name,
+                   descrip.name = descrip.name,
+                   inoc.name = inoc.name,
+                   inoc.m.name = inoc.m.name,
+                   norm.name = norm.name,
+                   norm.se.name = norm.se.name,
+                   vol.name = vol.name,
+                   imethod = imethod,
+                   extrap = extrap,
+                   when = when[[i]],
+                   rate.crit = rate.crit,
+                   show.obs = show.obs,
+                   show.rates = show.rates,
+                   show.more = show.more,
+                   sort = sort,
+                   quiet = quiet)
+
+      sb[, 'when'] <- when[[i]]
+      sb <- sb[, c(ncol(sb), 1:(ncol(sb) - 1))]
+      res <- rbindf(res, sb)
+
+    }
+    return(res)
+  }
+
+
+  # Main function
 
   # Argument checks~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   checkArgClassValue(vol, 'data.frame')
@@ -32,6 +176,7 @@ summBg <- function(
   # Skip imethod, since it is checked in interp()
   checkArgClassValue(extrap, 'logical')
   checkArgClassValue(when, c('numeric', 'integer', 'character', 'NULL'))
+  checkArgClassValue(rate.crit, 'character', c('net', 'gross', 'total'))
   checkArgClassValue(show.obs, 'logical')
   checkArgClassValue(sort, 'logical')
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -110,6 +255,7 @@ summBg <- function(
 
   # Remove inoc ids
   if(!is.null(inoc.name)) {
+    ids.all <- ids
     ids <- setup[setup[, descrip.name]!=inoc.name, id.name]
     ids.inoc <- setup[setup[, descrip.name]==inoc.name, id.name]
   }
@@ -172,7 +318,12 @@ summBg <- function(
   #} else if(length(when) == 1 && when %in% c('meas', '1p', '0.5p')) { # Return values for all measurement times, which may differ among reactors
   } else if(length(when) == 1 && (when == 'meas' | pdwhen)) { 
 
-    summ1 <- vol[vol[, id.name] %in% ids, c(id.name, time.name, vol.name)]
+    # Only substrate ids for net, all (include inoculum) for gross
+    if(rate.crit == 'net') {
+      summ1 <- vol[vol[, id.name] %in% ids, c(id.name, time.name, vol.name)]
+    } else if(rate.crit %in% c('gross', 'total')) {
+      summ1 <- vol[vol[, id.name] %in% ids.all, c(id.name, time.name, vol.name)]
+    }
 
   } else  {
 
@@ -246,7 +397,7 @@ summBg <- function(
     }
 
     names(inoc.vol) <- c(time.name, 'vol.mi.mn', 'vol.mi.se', 'n')
-    inoc.vol$vol.mi.rsd <- 100*inoc.vol$vol.mi.se/inoc.vol$vol.mi.mn*sqrt(inoc.vol$n)
+    inoc.vol$rsd.inoc <- 100*inoc.vol$vol.mi.se/inoc.vol$vol.mi.mn*sqrt(inoc.vol$n)
     # inoc.vol has mean and se vol per unit mass inoc for all times
 
   }
@@ -262,7 +413,7 @@ summBg <- function(
     summ1 <- merge(summ1, inoc.vol, by = time.name)
 
     # Calculate and substract inoc contribution
-    # Next three lines only for returning additional info when show.rates = TRUE
+    # Next three for returning additional info when show.rates = TRUE and for rate.crit = gross (??)
     summ1[, paste0(vol.name, '.tot')] <- summ1[, vol.name]
     summ1[, paste0(vol.name, '.inoc')] <- summ1$vol.mi.mn*summ1[, inoc.m.name]
     summ1[, 'fv.inoc'] <- summ1[, paste0(vol.name, '.inoc')]/summ1[, paste0(vol.name, '.tot')]
@@ -296,10 +447,18 @@ summBg <- function(
     summ1$rrvCH4 <- NA
 
     # Calculate relative rates
-    for(i in ids) {
+    ii <- unique(summ1[, id.name]) # Because is ids.all for rate.crit %in% c('gross', 'total') otherwise ids (substrate only)
+
+    for(i in ii) {
       dd <- summ1[summ1[, id.name] == i, ]
       dd <- dd[order(dd[, time.name]), ]
-      rr <- c(NA, diff(dd[, vol.name])/diff(dd[, time.name]))/dd[, vol.name]
+
+      if(rate.crit == 'net') {
+        rr <- c(NA, diff(dd[, vol.name])/diff(dd[, time.name]))/dd[, vol.name]
+      } else if(rate.crit %in% c('gross', 'total')) {
+        rr <- c(NA, diff(dd[, paste0(vol.name, '.tot')])/diff(dd[, time.name]))/dd[, paste0(vol.name, '.tot')]
+      }
+
       # Add rates to summ1 only for exporting with show.rates = TRUE
       summ1[summ1[, id.name] == i, 'rrvCH4'] <- signif(100*rr, 4)
     }
@@ -311,7 +470,7 @@ summBg <- function(
     }
 
     # Back to working with rates (after show.rates option above)
-    for(i in ids) {
+    for(i in ii) {
       dd <- summ1[summ1[, id.name] == i, ]
 
       rr <- dd$rrvCH4/100
@@ -346,7 +505,7 @@ summBg <- function(
         ##s1times <- rbind(s1times, ss)
         # Set to latest time, but keep track of this
         ss <- dd[nrow(dd), ]
-        pdnotyet <- c(pdnotyet, i, ', ')
+        pdnotyet <- c(pdnotyet, i)
       }
       s1times <- rbind(s1times, ss)
 
@@ -361,15 +520,22 @@ summBg <- function(
     # Check for different times for bottles with same descrip
     summ1temp <- data.frame()
 
+    #if(rate.crit %in% c('gross', 'total')) {
+    #  tt <- max(25, max(s1times[, time.name]))
+    #}
+
     for(i in unique(s1times[, descrip.name])) {
-      tt <- max(s1times[s1times[, descrip.name] == i, time.name])
+
+      #if(rate.crit == 'net') {
+        tt <- max(s1times[s1times[, descrip.name] == i, time.name], when.min)
+      #} 
 
       for(j in unique(summ1[summ1[, descrip.name] == i, id.name])) {
 
-        # Check to make sure time extends far enough, if not, set to max for this rep
+        # Check to make sure measured time extends far enough (i.e., trial did not end too early), if not, set to max for this rep
         if(max(summ1[summ1[, id.name] == j, time.name]) < tt) {
           tt <- max(summ1[summ1[, id.name] == j, time.name])
-          pdnotyet <- c(pdnotyet, j, ', ')
+          pdnotyet <- c(pdnotyet, j)
         }
 
         # Select times >= max time for this decrip.name level
@@ -382,6 +548,11 @@ summBg <- function(
     }
 
     summ1 <- summ1temp
+
+    # Drop inoculum if present
+    if(rate.crit %in% c('gross', 'total')) {
+      summ1 <- summ1[summ1[, id.name] %in% ids, ]
+    }
 
   } 
 
@@ -431,15 +602,21 @@ summBg <- function(
                                                                               (sqrt(sum(ddd[, paste0(vol.name,'.se')]^2)/nrow(ddd)))^2) 
         summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'sd'] <- summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'se']*sqrt(nrow(ddd))
         summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'n'] <- sum(!is.na(ddd[, vol.name]))  
-	if(!is.null(inoc.name)) {
-          summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'rsd.inoc'] <- ddd[1, 'vol.mi.rsd']
+	      if(!is.null(inoc.name)) {
+          summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'rsd.inoc'] <- ddd[1, 'rsd.inoc']
           summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'fv.inoc'] <- mean(na.omit(ddd[, 'fv.inoc']))
           summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'se1'] <- sd(na.omit(ddd[, vol.name]))/sqrt(nrow(ddd))
-	  ##summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'sd2'] <- mean(ddd[, 'sd.inoc'])
+	        ##summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'sd2'] <- mean(ddd[, 'sd.inoc'])
           ##summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'sd2'] <- mean(ddd[, 'sd.inoc'])
           summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'se2'] <- sqrt(sum(ddd[, 'se.inoc']^2)/nrow(ddd))
           summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'se3'] <- sqrt(sum(ddd[, paste0(vol.name,'.se')]^2)/nrow(ddd))
-	}
+	      }
+
+        if(!is.null(pdnotyet)) {
+          summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'rate.crit.met'] <- !any(ddd[, id.name] %in% pdnotyet)
+        } else {
+          summ2[summ2[, descrip.name]==i & summ2[, time.name]==j, 'rate.crit.met'] <- TRUE
+        }
       }
     }
   } else { # If show.obs = TRUE, just return individual observations
@@ -467,13 +644,21 @@ summBg <- function(
   }
 
   # Select columns
+  s2cols <- c(descrip.name, time.name, 'mean', 'se', 'sd', 'n')
   if(!show.obs) {
+
     if(show.more) {
-      summ2 <- summ2[ , c(descrip.name, time.name, 'mean', 'se', 'sd', 'n', 'rsd.inoc', 'fv.inoc', 'se1', 'se2', 'se3')]
-    } else {
-      summ2 <- summ2[ , c(descrip.name, time.name, 'mean', 'se', 'sd', 'n')]
+      s2cols <- c(s2cols, 'rsd.inoc', 'fv.inoc', 'se1', 'se2', 'se3')
+    } 
+    
+    if(pdwhen) {
+      s2cols <- c(s2cols, 'rate.crit.met')
     }
+
+    summ2 <- summ2[ , s2cols]
+
   } 
+
 
   # Sort result
   if(sort) {
@@ -497,7 +682,7 @@ summBg <- function(
   if(is.null(pdnotyet)) {
       pdnotyet <- ''
   } else {
-      warning('You selected ', when, ' option for \"when\" argument but there are no observations that meet the criterion for the following bottles. Instead, the latest time was selected. ', pdnotyet)
+      warning('You selected ', when, ' option for \"when\" argument but there are no observations that meet the criterion for the following bottles. Instead, the latest time was selected. ', paste(pdnotyet, collapse = ', '))
   }
 
   attr(summ2, 'rate.not.met') <- pdnotyet

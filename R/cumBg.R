@@ -1,5 +1,3 @@
-# Modified: 
-
 cumBg <- function(
   # Main arguments
   dat,
@@ -7,7 +5,7 @@ cumBg <- function(
   comp = NULL, # Leave NULL for wide and both combos
   temp = NULL,
   pres = NULL,
-  interval = TRUE,
+  interval = TRUE, # When empty.name is used, there is a mix, and interval is ignored
   data.struct = 'long', # long, wide, longcombo, widecombo
   # Column names for volumetric method
   id.name = 'id',
@@ -18,6 +16,7 @@ cumBg <- function(
   pres.resid = NULL,
   temp.init = NULL,
   pres.init = NULL,
+  rh.resid = NULL,
   rh.resid.init = 1,
   headspace = NULL,
   vol.hs.name = 'vol.hs',
@@ -33,17 +32,19 @@ cumBg <- function(
   extrap = FALSE,
   addt0 = TRUE,
   showt0 = TRUE,
-  # Additional argument for volumetric data only (when data are already standardized to dry conditions)
+  # Additional argument for volumetric data only 
   dry = FALSE,
+  empty.name = NULL, # Column name for binary/logical column for when cum vol was reset to zero
   ##gas = 'CH4',
   # Warnings and messages
-  std.message = TRUE,
+  std.message = !quiet,
   check = TRUE,
   # Units and standard conditions
   temp.std = getOption('temp.std', as.numeric(NA)),
   pres.std = getOption('pres.std', as.numeric(NA)),
   unit.temp = getOption('unit.temp', 'C'),
-  unit.pres = getOption('unit.pres', 'atm')##,
+  unit.pres = getOption('unit.pres', 'atm'),
+  quiet = FALSE ##,
   ##unit.vol = getOption('unit.vol', 'ml'),
   ##unit.mass = getOption('unit.mass', 'g')
 ){
@@ -76,6 +77,7 @@ cumBg <- function(
   checkArgClassValue(addt0, 'logical')
   checkArgClassValue(showt0, 'logical')
   checkArgClassValue(dry, 'logical')
+  checkArgClassValue(empty.name, c('character', 'NULL'))
   checkArgClassValue(std.message, 'logical')
   checkArgClassValue(check, 'logical')
   checkArgClassValue(absolute, 'logical')
@@ -83,7 +85,7 @@ cumBg <- function(
   checkArgClassValue(vol.syr, c('integer', 'numeric', 'NULL'))
 
   # Hard-wire rh for now at least
-  if(!dry) {
+  if(!dry[1]) {
     rh <- 1
   } else {
     rh <- 0
@@ -91,7 +93,7 @@ cumBg <- function(
 
   # Check column names in argument data frames
   # comp needs id (time) xCH4, time optional
-  if(!is.null(comp) && class(comp)=='data.frame' && data.struct == 'long') {
+  if(!is.null(comp) && class(comp)[1] == 'data.frame' && data.struct[1] == 'long') {
     if(any(missing.col <- !c(id.name, comp.name) %in% names(comp))){
       stop('Specified column(s) in comp data frame (', deparse(substitute(comp)), ') not found: ', c(id.name, comp.name)[missing.col], '.')
     }
@@ -99,45 +101,73 @@ cumBg <- function(
 
   # dat (volume or mass)
   if(data.struct %in% c('long', 'longcombo')) {
-    if(any(missing.col <- !c(id.name, time.name, dat.name) %in% names(dat))){
+    if(any(!c(id.name, time.name, dat.name) %in% names(dat))){
+      missing.col <- !c(id.name, time.name, dat.name) %in% names(dat)
       stop('Specified columns in dat data frame (', deparse(substitute(dat)), ') not found: ', paste(c(id.name, time.name, dat.name)[missing.col], collapse = ', '), '.')
     } 
-  } else if(data.struct == 'wide') {
-    if(any(missing.col <- !c(time.name, dat.name) %in% names(dat))){
+  } else if(data.struct[1] == 'wide') {
+    if(any(!c(time.name, dat.name) %in% names(dat))){
+      missing.col <- !c(time.name, dat.name) %in% names(dat)
       stop('Specified columns in dat data frame (', deparse(substitute(dat)), ') not found: ', paste(c(time.name, dat.name)[missing.col], collapse = ', '), '.')
     } 
   }
 
   # Check for headspace argument if it is needed
-  if(is.null(headspace) & cmethod=='total') stop('cmethod is set to \"total\" but headspace argument is not provided.')
+  if(is.null(headspace)[1] && cmethod[1] == 'total') stop('cmethod is set to \"total\" but headspace argument is not provided.')
 
   # Check for necessary arguments
   if(dat.type %in% c('pres', 'pressure')) {
-    if(is.null(headspace)) stop('dat.type is set to \"pres\" but \"headspace\" is not provided.')
-    if(is.null(temp.init)) stop('dat.type is set to \"pres\" but \"temp.init\" is not provided.')
-    if(is.null(pres.resid)) stop('dat.type is set to \"pres\" but \"pres.resid\" is not provided.')
-    if(is.null(pres.init)) stop('dat.type is set to \"pres\" but \"pres.init\" is not provided.')
+    if(is.null(headspace[1])) stop('dat.type is set to \"pres\" but \"headspace\" is not provided.')
+    if(is.null(temp.init[1])) stop('dat.type is set to \"pres\" but \"temp.init\" is not provided.')
+    if(is.null(pres.resid[1])) stop('dat.type is set to \"pres\" but \"pres.resid\" is not provided.')
+    if(is.null(pres.init[1])) stop('dat.type is set to \"pres\" but \"pres.init\" is not provided.')
   }
 
-  # Check for input errors
-  if(!is.null(id.name) & id.name %in% names(dat)) {
+  # Check for other input errors
+  if(!is.null(id.name[1]) && id.name %in% names(dat)) {
     if(any(is.na(dat[, id.name]))) {
       w <- which(is.na(dat[, id.name]))
       stop('Missing values in id.name column! See rows ', paste(w, collapse = ', '), '.')
     }
   }
 
-  # For dat (vol, etc) missing values are OK if they are cumulative
+  # And more
+  if(!is.null(empty.name[1]) && !class(dat[, empty.name])[1] %in% c('logical', 'integer', 'numeric')) {
+    stop('The empty.name column must be integer, numeric, or logical.')
+  }
+
+  if(!is.null(empty.name[1]) && length(unique(dat[, empty.name])) > 2) {
+    stop('The empty.name column must be binary.')
+  }
+
+  if(!is.null(empty.name[1]) && !data.struct %in% c('long', 'longcombo')) {
+    stop('You can only use mixed interval/cumulative data (empty.name argument) with long or longcombo data structure')
+  }
+
+  # Convert date.type to lowercase so it is more flexible for users
+  dat.type <- tolower(dat.type)
+  if(dat.type[1] == 'volume') dat.type <- 'vol'
+
+  if(!is.null(empty.name[1]) && dat.type[1] != 'vol') {
+    stop('You can only use empty.name argument with volumetric data')
+  }
+
+  ### Set interval to TRUE (interval) if there is a mix of cumulative and interval volume data (intermittent emptying hanging water columns, eudiometer, etc.)
+  ##if(!is.null(empty.name)) {
+  ##  interval <- FALSE
+  ##}
+
+  # For dat (vol, etc) missing values are OK if they are cumulative (NTS: why OK if cumulative? Interpolated?)
   # Applies to wide data
   # But now wide data excepted totally
-  if(!is.null(dat.name)) {
-    if(any(is.na(dat[, dat.name])) & interval & data.struct != 'wide') {
+  if(!is.null(dat.name[1])) {
+    if(any(is.na(dat[, dat.name])) && interval[1] && data.struct[1] != 'wide') {
       w <- which(is.na(dat[, dat.name]))
       stop('Missing values in dat.name column! See rows ', paste(w, collapse = ', '), '.')
     }
   }
 
-  if(!is.null(time.name)) {
+  if(!is.null(time.name[1])) {
     if(any(is.na(dat[, time.name]))) {
       w <- which(is.na(dat[, time.name]))
       stop('Missing values in time.name column! See rows ', paste(w, collapse = ', '), '.')
@@ -164,11 +194,11 @@ cumBg <- function(
   ##  }
   ##}
 
-  # Convert date.type to lowercase so it is more flexible for users
-  dat.type <- tolower(dat.type)
+  # Create standardized binary variable that indicates when vBg has been standardized
+  standardized <- FALSE
 
-  # Rearrange wide data
-  if(data.struct == 'wide') {
+  # Rearrange wide data (NTS: what about widecombo?)
+  if(data.struct[1] == 'wide') {
 
     which.first.col <- which(names(dat) == dat.name)
     dat.name <- dat.type
@@ -202,7 +232,7 @@ cumBg <- function(
     names(dat)[names(dat) == 'idxyz'] <- id.name
 
     # Now for comp
-    if(!is.numeric(comp)) {
+    if(!is.numeric(comp) && class(comp)[1] == 'data.frame') {
       which.first.col <- which(names(comp) == comp.name)
       comp.name <- 'xCH4'
 
@@ -230,13 +260,13 @@ cumBg <- function(
   }
 
   # Remove missing values for cumulative data only
-  if(!interval) {
+  if(!interval[1]) {
     dat <- dat[!is.na(dat[, dat.name]), ]
   }
 
   # If there are missing values in a longcombo data frame, switch to long
   # NTS: this is not the most efficient approach, maybe revisit
-  if(data.struct == 'longcombo' && any(is.na(dat[, comp.name]))) {
+  if(tolower(data.struct)[1] == 'longcombo' && any(is.na(dat[, comp.name]))) {
     comp <- dat[, c(id.name, time.name, comp.name)]
     dat <- dat[, names(dat) != comp.name]
 
@@ -246,29 +276,29 @@ cumBg <- function(
   # Sort out composition data if using long data.struct
   # Skipped for longcombo with no NAs (xCH4 already included in dat)
   # GCA method has no biogas composition
-  if(tolower(data.struct) == 'long' & dat.type != 'gca') {
+  if(tolower(data.struct[1]) == 'long' && dat.type != 'gca') {
 
     mssg.no.time <- mssg.interp <- FALSE
     # First sort so can find first observation for mass data to ignore it
     dat <- dat[order(dat[, id.name], dat[, time.name]), ]
     dat[, comp.name] <- NA
 
-    if(!is.null(comp) && class(comp)=='data.frame'){
+    if(!is.null(comp)[1] && class(comp)[1] == 'data.frame'){
 
       # Drop NAs from comp--this applies to wide, long, and longcombo data.struct
       comp <- comp[!is.na(comp[, comp.name]), ]
 
       # Interpolate gas composition to times of volume measurements
       for(i in unique(dat[, id.name])) {
-        if(dat.type=='mass' & nrow(dat[dat[, id.name]==i, ])<2) stop('There are < 2 observations for reactor ', i,' but dat.type = \"mass\". 
+        if(dat.type[1] == 'mass' && nrow(dat[dat[, id.name]==i, ]) < 2) stop('There are < 2 observations for reactor ', i,' but dat.type = \"mass\". 
                                                                      You need at least 2 observations to apply the gravimetric method.')
         dc <- comp[comp[, id.name]==i, ]
         if(nrow(dc)==0) stop('No biogas composition data for reactor ', i,' so can\'t interpolate!') 
         if(nrow(dc)>1) {
           # If there is no time column
-          if(!time.name %in% names(comp)) stop('Problem with comp  (', deparse(substitute(comp)), 
+          if(!time.name[1] %in% names(comp)) stop('Problem with comp  (', deparse(substitute(comp)), 
                                                '): a time column was not found but there is > 1 observation at least for reactor ',i, '.')
-          if(dat.type %in% c('vol', 'volume', 'pres', 'pressure')) {
+          if(dat.type[1] %in% c('vol', 'volume', 'pres', 'pressure')) {
             mssg.interp <- TRUE
             dat[dat[, id.name]==i, comp.name] <- interp(dc[, time.name], dc[, comp.name], time.out = dat[dat[, id.name]==i, time.name], method = imethod, extrap = extrap)
             # Set first value to zero if there is no biogas production (fixes problem with cmethod = total when there is a t0 observation included)
@@ -279,19 +309,19 @@ cumBg <- function(
             dat[dat[, id.name]==i, comp.name][-1] <- interp(dc[, time.name], dc[, comp.name], time.out = dat[dat[, id.name]==i, time.name][-1], method = imethod, extrap = extrap)
           }
         } else { # If only one xCH4 value is available, use it for all dat obs if extrap = TRUE or times match, but warn if times don't match
-          if(!time.name %in% names(comp)) {
+          if(!time.name[1] %in% names(comp)) {
             # If there is no time column in comp
             mssg.no.time <- TRUE
             dat[dat[, id.name]==i, comp.name] <- dc[, comp.name]
           } else {
             # There is a time column in dc/comp
             for(j in 1:nrow(dat[dat[, id.name]==i, ])) {
-              if(j > 1 | dat.type!='mass') { # This just to avoid warning for first observation for mass data
-                if(dc[, time.name]==dat[dat[, id.name]==i, time.name][j]) { 
+              if(j > 1 || dat.type[1] != 'mass') { # This just to avoid warning for first observation for mass data
+                if(dc[, time.name] == dat[dat[, id.name]==i, time.name][j]) { 
                   # If times match
                   dat[dat[, id.name]==i, comp.name][j] <- dc[, comp.name]
                 } else {
-                  if(extrap) {
+                  if(extrap[1]) {
                     dat[dat[, id.name]==i, comp.name][j] <- dc[, comp.name]
                   } else {
                     dat[dat[, id.name]==i, comp.name][j] <- NA
@@ -303,26 +333,27 @@ cumBg <- function(
           }
         }
       }
-    } else if (!is.null(comp) && class(comp) %in% c('numeric', 'integer') && length(comp)==1) {
+    } else if (!is.null(comp)[1] && class(comp)[1] %in% c('numeric', 'integer') && length(comp)==1) {
       # Or if a single value is given, use it
-      message('Only a single value was provided for biogas composition (', comp, '), so applying it to all observations.')
+      if (!quiet[1]) message('Only a single value was provided for biogas composition (', comp, '), so applying it to all observations.')
       dat[, comp.name] <- comp
-    } else if (dat.type != 'gca') {
+    } else if (dat.type[1] != 'gca') {
       # If no composition data is given, just use NA
       dat[, comp.name] <- NA 
     }
-    if(mssg.no.time) message('A time column was not found in comp (', deparse(substitute(comp)), '), and a single value was used for each reactor.')
-    if(mssg.interp) message('Biogas composition is interpolated.')
+    if(!quiet[1] & mssg.no.time[1]) message('A time column was not found in comp (', deparse(substitute(comp)), '), and a single value was used for each reactor.')
+    if(!quiet[1] & mssg.interp[1]) message('Biogas composition is interpolated.')
 
   } 
 
   # Add headspace if provided
-  if(!is.null(headspace)) {
+  if(!is.null(headspace)[1]) {
     if(is.numeric(headspace)) {
      dat[, vol.hs.name] <- headspace
     } else if(is.data.frame(headspace)) {       
       # headspace needs id vol
-      if(any(missing.col <- !c(id.name, vol.hs.name) %in% names(headspace))){
+      if(any(!c(id.name, vol.hs.name) %in% names(headspace))){
+        missing.col <- !c(id.name, vol.hs.name) %in% names(headspace)
         stop('Columns with names matching id.name or vol.hs.name are not present in headspace data frame: ', c(id.name, vol.hs.name)[missing.col], '.')
       }
       dat <- merge(dat, headspace[ , c(id.name, vol.hs.name)], by = id.name, suffixes = c('', '.hs'))
@@ -330,14 +361,14 @@ cumBg <- function(
   }
 
   # Add temperature and pressure to dat if single numeric values were provided
-  if(!is.null(temp)) {
+  if(!is.null(temp)[1]) {
     if(is.numeric(temp)) {
       dat[, 'temperature'] <- temp
       temp <- 'temperature'
     } 
   }
 
-  if(!is.null(pres)) {
+  if(!is.null(pres)[1]) {
     if(is.numeric(pres)) {
       dat[, 'pressure'] <- pres
       pres <- 'pressure' 
@@ -345,7 +376,7 @@ cumBg <- function(
   }
 
   # Correct composition data if it seems to be a percentage
-  if (dat.type != 'gca') {
+  if (dat.type[1] != 'gca') {
     if (any(na.omit(dat[, comp.name] > 1))) {
       dat[, comp.name] <- dat[, comp.name]/100
       warning('Methane concentration was > 1.0 mol/mol for at least one observation, so is assumed to be a percentage, and was corrected by dividing by 100. ',
@@ -353,39 +384,71 @@ cumBg <- function(
     }
   }
 
+  # Now that all data are in long structure (NTS: also for widecombo?) sort out mixed interval/cumulative data
+  if(!is.null(empty.name[1])) {
+    # Sort by id and time
+    dat <- dat[order(dat[, id.name], dat[, time.name]), ]
+
+    # Make empty.name logical
+    dat[, empty.name] <- as.logical(dat[, empty.name])
+
+    # Set missing values to FALSE
+    dat[is.na(dat[, empty.name]), empty.name] <- FALSE
+
+    # Standardize biogas volume (needed in order to get interval production, and cannot use cum prod because composition wouldn't work)
+    dat[, paste0(dat.name, '.std')] <- stdVol(dat[, dat.name], temp = dat[, temp], pres = dat[, pres], rh = rh, pres.std = pres.std, 
+                      temp.std = temp.std, unit.temp = unit.temp, unit.pres = unit.pres, std.message = std.message)
+ 
+    # Sum final volumes to get cumulative volumes, then interval from them (must have interval data here, because that is what biogas composition is for)
+    for(i in unique(dat[, id.name])) {
+      emptyvols <- dat[dat[, id.name]==i, empty.name] * dat[dat[, id.name]==i, paste0(dat.name, '.std')]
+      ccvv <- c(0, cumsum(emptyvols)[- length(emptyvols)]) + dat[dat[, id.name]==i, paste0(dat.name, '.std')]
+      dat[dat[, id.name]==i, dnn <- paste0(dat.name, '.std.interval')] <- diff(c(0, ccvv))
+    }
+
+    dat.name <- dnn
+
+    # And continue below with interval data (interval = TRUE)
+    standardized <- TRUE
+    interval <- TRUE
+  }
 
   # Volumetric
   # Function will work with vol and add columns
-  if(dat.type %in% c('vol', 'volume', 'pres', 'pressure')) {
+  if(dat.type[1] %in% c('vol', 'volume', 'pres', 'pressure')) {
     # vol dat needs id time vol
 
     # Standardize total gas volumes
     # Note that temperature and pressure units are not converted at all in cumBg (but are in stdVol of course)
-    if(dat.type %in% c('vol', 'volume')) {
-      message('Working with volume data, applying volumetric method.')
-      if(!is.null(temp) & !is.null(pres)) {
-        dat$vBg <- stdVol(dat[, dat.name], temp = dat[, temp], pres = dat[, pres], rh = rh, pres.std = pres.std, 
-                          temp.std = temp.std, unit.temp = unit.temp, unit.pres = unit.pres, 
-                          std.message = std.message)
+    if(dat.type[1] %in% c('vol', 'volume')) {
+      if(!quiet[1]) message('Working with volume data, applying volumetric method.')
+      if(!standardized[1]) {
+        if(!is.null(temp)[1] && !is.null(pres)[1]) {
+          dat$vBg <- stdVol(dat[, dat.name], temp = dat[, temp], pres = dat[, pres], rh = rh, pres.std = pres.std, 
+                            temp.std = temp.std, unit.temp = unit.temp, unit.pres = unit.pres, 
+                            std.message = std.message)
+        } else {
+          dat$vBg <- dat[, dat.name]
+          message('Either temperature or presure is missing (temp and pres arguments) so volumes are NOT standardized.')
+        }
       } else {
-        dat$vBg <- dat[, dat.name]
-        message('Either temperature or presure is missing (temp and pres arguments) so volumes are NOT standardized.')
+          dat$vBg <- dat[, dat.name]
       }
     } 
 
-    if(dat.type %in% c('pres', 'pressure')) {
-       message('Working with pressure data, pressure measurements are', if (absolute) ' ABSOLUTE' else ' GAUGE', 
+    if(dat.type[1] %in% c('pres', 'pressure')) {
+       if(!quiet[1]) message('Working with pressure data, pressure measurements are', if (absolute) ' ABSOLUTE' else ' GAUGE', 
               ' If this is incorrect, change \'absolute\' argument to ', !absolute, '.')
 
       # Add pres.resid to dat if it isn't already present
-      if(is.numeric(pres.resid) | is.integer(pres.resid)) {
+      if(is.numeric(pres.resid)[1] || is.integer(pres.resid)[1]) {
         dat$pres.resid <- pres.resid
         pres.resid <- 'pres.resid'
       }
 
       # If absolute != TRUE, calculate absolute pressure and add to dat
-      if(!absolute) {
-        if(is.null(pres.amb)) stop('Pressure measurements are GAUGE but pres.amb argument was not provided.')
+      if(!absolute[1]) {
+        if(is.null(pres.amb)[1]) stop('Pressure measurements are GAUGE but pres.amb argument was not provided.')
 
         dat[, aa <- paste0(dat.name, '.abs')] <- dat[, dat.name] + pres.amb
         dat.name <- aa
@@ -397,103 +460,96 @@ cumBg <- function(
       }
 
       # Add residual rh (after pressure measurement and venting)
-      if(interval) {
-        dat$rh.resid <- dat[, pres.resid]/dat[, dat.name]
-        dat$rh.resid[dat$rh.resid > 1] <- 1
+      if(interval[1]) {
+        if(is.null(rh.resid)[1]) {
+          dat$rh.resid <- dat[, pres.resid]/dat[, dat.name]
+          dat$rh.resid[dat$rh.resid > 1] <- 1
+        } else {
+          dat$rh.resid <- rh.resid
+        }
       }
 
       # Sort to add *previous* residual pressure, rh, and temperature columns
       dat <- dat[order(dat[, id.name], dat[, time.name]), ]
 
-      # Finally, calculate volume of gas in bottle headspace
-      if(interval) {
+      # Standardized headspace volume before venting
+      vHS <- stdVol(dat[, vol.hs.name], temp = dat[, temp], pres = dat[, dat.name], rh = rh, 
+                    pres.std = pres.std, temp.std = temp.std, unit.temp = unit.temp, 
+                    unit.pres = unit.pres, std.message = FALSE, warn = FALSE) 
 
-        # Add previous residual pressure, residual rh, and previous temperature columns
+      # Finally, calculate volume of gas in bottle headspace
+      if(interval[1]) {
+
+        # Add previous residual pressure, residual rh, temperature, and residual xCH4 columns
         for(i in unique(dat[, id.name])) {
           pr <- dat[dat[, id.name]==i, pres.resid]
           tt <- dat[dat[, id.name]==i, temp]
           rhr <- dat[dat[, id.name]==i, 'rh.resid']
+          xr <- dat[dat[, id.name]==i, comp.name]
           dat[dat[, id.name]==i, 'pres.resid.prev'] <- c(pres.init, pr[-length(pr)])
           dat[dat[, id.name]==i, 'rh.resid.prev'] <- c(rh.resid.init, rhr[-length(rhr)])
           dat[dat[, id.name]==i, 'temp.prev'] <- c(temp.init, tt[-length(tt)])
+          dat[dat[, id.name]==i, paste0(comp.name, '.prev')] <- c(0, xr[-length(xr)])
         }
 
-        # Second call (subtracted bit) is standardized volume in bottle headspace at end of previous measurement (after venting)
-        # Result then may not be exactly volume vented in current measurement, but total new gas volume since last measurement (only differ if pres.resid differs)
-        dat$vBg <- stdVol(dat[, vol.hs.name], temp = dat[, temp], pres = dat[, dat.name], rh = rh, 
-                          pres.std = pres.std, temp.std = temp.std, unit.temp = unit.temp, 
-                          unit.pres = unit.pres, std.message = FALSE, warn = FALSE) - 
-                   stdVol(dat[, vol.hs.name], temp = dat[, 'temp.prev'], pres = dat$pres.resid.prev, rh = dat$rh.resid.prev,  
-                          pres.std = pres.std, temp.std = temp.std, unit.temp = unit.temp, 
-                          unit.pres = unit.pres, std.message = std.message)
+        # Residual headspace volume at end of previous interval
+        vHSr <- stdVol(dat[, vol.hs.name], temp = dat[, 'temp.prev'], pres = dat$pres.resid.prev, rh = dat$rh.resid.prev,  
+                       pres.std = pres.std, temp.std = temp.std, unit.temp = unit.temp, 
+                       unit.pres = unit.pres, std.message = std.message)
+
+        # vBg is biogas *production*
+        dat$vBg <- vHS - vHSr
+
+        if(cmethod[1] == 'total') {
+          dat$vCH4 <- vHS * dat[, comp.name] - vHSr * dat[, paste0(comp.name, '.prev')]
+        } else {
+          dat$vCH4 <- dat$vBg*dat[, comp.name]
+        }
+
       } else {
+        # Initial headspace volume
+        vHSi <- stdVol(dat[, vol.hs.name], temp = temp.init, pres = pres.init, rh = rh.resid.init,  
+                       pres.std = pres.std, temp.std = temp.std, unit.temp = unit.temp, 
+                       unit.pres = unit.pres, std.message = std.message, warn = FALSE)
+
+
         # Second call (subtracted bit) is original bottle headspace (standardized), assumed to start at first pres.resid 
-        dat$vBg <- stdVol(dat[, vol.hs.name], temp = dat[, temp], pres = dat[, dat.name], rh = rh, 
-                          pres.std = pres.std, temp.std = temp.std, unit.temp = unit.temp, 
-                          unit.pres = unit.pres, std.message = FALSE, warn = FALSE) - 
-                   stdVol(dat[, vol.hs.name], temp = temp.init, pres = pres.init, rh = rh.resid.init,  
-                          pres.std = pres.std, temp.std = temp.std, unit.temp = unit.temp, 
-                          unit.pres = unit.pres, std.message = std.message, warn = FALSE)
-# NTS: when did next block ever work? Changed 15 Dec 2016. Is above correct?
-#                   stdVol(dat[, vol.hs.name], temp = dat[, temp.init], pres = pres.init, rh = rh.resid.init,  
-#                          pres.std = pres.std, temp.std = temp.std, unit.temp = unit.temp, 
-#                          unit.pres = unit.pres, std.message = std.message, warn = FALSE)
+        # These are actually cv cumulative volumes, changed below (set to cv here once this is in a cumBgMan() function)
+        dat$vBg <- vHS - vHSi
+        dat$vCH4 <- dat$vBg * dat[, comp.name]
       }
     }
 
     # Calculate interval (or cum if interval = FALSE) gas production
-    dat$vCH4 <- dat$vBg*dat[, comp.name]*vol.mol['CH4'] / (dat[, comp.name]*vol.mol['CH4'] +(1 - dat[, comp.name])*vol.mol['CO2'])  # CH4 and CO2 molar volumes in ml/mol
-    ##if(gas == 'CH4') {
-    ##  dat$vCH4 <- dat$vBg*dat[, comp.name]*vol.mol['CH4'] / (dat[, comp.name]*vol.mol['CH4'] +(1 - dat[, comp.name])*vol.mol['CO2'])  # CH4 and CO2 molar volumes in ml/mol
-    ##} else {
-    ##  dat$vCH4 <- dat$vBg*dat[, comp.name]*vol.mol['H2'] / (dat[, comp.name]*vol.mol['H2'] +(1 - dat[, comp.name])*vol.mol['CO2'])  # H2 and CO2 molar volumes in ml/mol
-    ##}
-
-    ##if(addt0) dat[dat[, time.name]==0, 'vCH4'] <- 0 # Not clear why this was ever needed
-
     # For cmethod = 'total', calculate headspace CH4 to add for total below
-    if(cmethod=='total') {
-      if(dat.type %in% c('vol', 'volume')) {
+    if(dat.type[1] %in% c('vol', 'volume')) {
+
+      dat$vCH4 <- dat$vBg*dat[, comp.name]
+
+      if(cmethod[1] == 'total') {
         # NTS: message needs to be fixed due to change in temp to column in dat
-        message('For cmethod = \"total\", headspace temperature is taken as temp (', temp, unit.temp, '), pressure as \"pres\" (', pres, unit.pres, '), and relative humidity as 1.0 (100%).')
-        # NTS: small problem with rh assumption here. Will actually be < 1 after gas removal
+        #if(!quiet) message('For cmethod = \"total\", headspace temperature is taken as temp (', temp, unit.temp, '), pressure as \"pres\" (', pres, unit.pres, '), and relative humidity as 1.0 (100%).')
+        # NTS: problem with rh assumption here. Will actually be < 1 after gas removal
         # Also assume vol meas pressure pres = residual headspace pressure
         dat$vhsCH4 <- dat[, comp.name]*
                       stdVol(dat[, vol.hs.name], temp = dat[, temp], pres = dat[, pres], rh = 1, pres.std = pres.std, 
                             temp.std = temp.std, unit.temp = unit.temp, unit.pres = unit.pres, 
                             std.message = std.message)
       }
-
-      if(dat.type %in% c('pres', 'pressure')) {
-
-        if(interval) {
-          dat$vhsCH4 <- dat[, comp.name]*
-                        stdVol(dat[, vol.hs.name], temp = dat[, temp], pres = dat[ , pres.resid], rh = dat$rh.resid,  
-                               pres.std = pres.std, temp.std = temp.std, unit.temp = unit.temp, 
-                               unit.pres = unit.pres, std.message = std.message)
-        } else {
-          # For interval = FALSE, 
-          dat$vhsCH4 <- dat[, comp.name]*
-                        stdVol(dat[, vol.hs.name], temp = dat[, temp], pres = dat[ , pres.resid], rh = 1,
-                               pres.std = pres.std, temp.std = temp.std, unit.temp = unit.temp, 
-                               unit.pres = unit.pres, std.message = std.message)
-        }
-      }
-
       # vhsCH4 is added to cvCH4 below
       # Calculations are up here to avoid t0 issues
     } 
 
     # Add t0 row if requested
     # Not added if there are already zeroes present!
-    if(addt0 & !class(dat[, time.name])[1] %in% c('numeric', 'integer', 'difftime')) addt0 <- FALSE
-    if(addt0 & !any(dat[, time.name]==0)) {
+    if(addt0[1] && !class(dat[, time.name])[1] %in% c('numeric', 'integer', 'difftime')) addt0 <- FALSE
+    if(addt0[1] && !any(dat[, time.name]==0)) {
       t0 <- data.frame(id = unique(dat[, id.name]), tt = 0, check.names = FALSE)
       names(t0) <- c(id.name, time.name)
       t0[, 'vBg'] <- t0[, 'vCH4'] <- 0
 
       # This messy, but needed for calculating vCH4 by diff when this method is used and interval = FALSE
-      if(cmethod == 'total') {
+      if(cmethod[1] == 'total') {
         t0[, 'vhsCH4'] <- 0
       }
       dat <- rbindf(dat, t0)
@@ -513,14 +569,14 @@ cumBg <- function(
     dt[c(TRUE, dat[, id.name][-1] != dat[, id.name][-nrow(dat)])] <- NA 
 
     # May already have cumulative production, if so move it to cvCH4, and calculate vCH4 down below
-    if(!interval) {
+    if(!interval[1]) {
       dat$cvBg <- dat$vBg
       dat$cvCH4 <- dat$vCH4
     }
     
     # Calculate cumulative production or interval production (depending on interval argument)
     # And calculate rates
-    if(interval) {
+    if(interval[1]) {
       for(i in unique(dat[, id.name])) {
         dat[dat[, id.name]==i, 'cvBg'] <- cumsum(dat[dat[, id.name]==i, 'vBg' ])
         dat[dat[, id.name]==i, 'cvCH4'] <- cumsum(dat[dat[, id.name]==i, 'vCH4'])
@@ -528,13 +584,13 @@ cumBg <- function(
     }
 
     # For cmethod = 'total', add headspace CH4 to cvCH4
-    if(cmethod == 'total') {
+    if(dat.type[1] %in% c('vol', 'volume') && cmethod == 'total') {
       dat$cvCH4 <- dat$cvCH4 + dat$vhsCH4
     }
 
     # For cumulative results, calculate interval production from cvCH4 (down here because it may have headspace CH4 added if cmethod = total) so cannot be combined with cvCH4 calcs above
     # vBg could be moved up, but that means more code
-    if(!interval) {
+    if(!interval[1]) {
       for(i in unique(dat[, id.name])) {
         dat[dat[, id.name]==i, 'vBg'] <- diff(c(0, dat[dat[, id.name]==i, 'cvBg' ]))
         dat[dat[, id.name]==i, 'vCH4'] <- diff(c(0, dat[dat[, id.name]==i, 'cvCH4']))
@@ -543,7 +599,7 @@ cumBg <- function(
 
     # When cmethod = 'total', cvCH4 must be (re)calculated from cvCH4, because vhsCH4 is added to cvCH4 (correctly)
     # vBg is not affected by cmethod = 'total'
-    if(cmethod == 'total') {
+    if(dat.type[1] %in% c('vol', 'volume') && cmethod == 'total') {
       for(i in unique(dat[, id.name])) {
         dat[dat[, id.name]==i, 'vCH4'] <- diff(c(0, dat[dat[, id.name]==i, 'cvCH4']))
       }
@@ -556,14 +612,14 @@ cumBg <- function(
     }
 
     # Drop t0 if not requested (whether originally present or added)
-    if(!showt0) {
+    if(!showt0[1]) {
       dat <- dat[dat[, time.name] != 0, ]
     }
 
     # Sort and return results
     dat <- dat[order(dat[, id.name], dat[, time.name]), ]
 
-    if(is.null(comp) & data.struct != 'longcombo') { # NTS: revisit if data.struct is ever expanded
+    if(is.null(comp)[1] && data.struct != 'longcombo') { # NTS: revisit if data.struct is ever expanded
       warning('Biogas composition date (\'comp\' and \'name.comp\' arguments) not provided so CH4 results will not be returned.')
       dat <- dat[, ! names(dat) %in% c(comp.name, 'vCH4', 'cvCH4', 'rvCH4')]
     }
@@ -609,15 +665,20 @@ cumBg <- function(
 
     return(dat)
 
-  } else if(dat.type=='mass') {
+  } else if(dat.type[1] == 'mass') {
     # Gravimetric
     # Work with mass
-    message('Working with mass data (applying gravimetric approach).')
+    if(!quiet[1]) message('Working with mass data (applying gravimetric approach).')
 
     # Check for pressure and temperature--required, but default is NULL (for use of volumetric method without standardization) so must check here 
-    if(is.null(temp)) stop('temp argument missing but is required for gravimetric method.')
-    if(is.null(pres)) stop('pres argument missing but is required for gravimetric method.')
-    if(is.null(comp)) stop('comp argument missing but is required for gravimetric method.')
+    if(is.null(temp)[1]) stop('temp argument missing but is required for gravimetric method.')
+    if(is.null(pres)[1]) stop('pres argument missing but is required for gravimetric method.')
+    # With longcombo separate comp data frame is not needed, only comp.name is needed in main data frame
+    if(data.struct[1] == 'longcombo') {
+      if(is.null(comp.name)[1]) stop('comp.name argument missing but is required for gravimetric method.')
+    } else {
+      if(is.null(comp)[1]) stop('comp argument missing but is required for gravimetric method.')
+    }
 
     # In this section main data frame is saved to `dat`, and name of response (mass) to `mass.name`
     mass <- dat
@@ -641,7 +702,7 @@ cumBg <- function(
     }
 
     mass[, c('vBg', 'vCH4')] <- mass2vol(mass = mass[, 'massloss'], xCH4 = mass[, comp.name], temp = mass[, temp], pres = mass[, pres], temp.std = temp.std, pres.std = pres.std, unit.temp = unit.temp, unit.pres = unit.pres, value = 'all', std.message = std.message)[, c('vBg', 'vCH4')]
-    if(!is.null(headspace)) {
+    if(!is.null(headspace)[1]) {
       # Apply initial headspace correction only for times 1 and 2 (i.e., one mass loss measurement per reactor)
       which1and2 <- sort(c(which(starts$start), which(starts$start) + 1) )
       mass[which1and2, c('vBg', 'vCH4')] <- mass2vol(mass = mass$massloss[which1and2], xCH4 = mass[which1and2, comp.name], temp = mass[which1and2, temp], pres = mass[which1and2, pres], temp.std = temp.std, pres.std = pres.std, unit.temp = unit.temp, unit.pres = unit.pres, value = 'all', headspace = mass[which1and2, vol.hs.name], headcomp = 'N2', temp.init = temp.init, std.message = FALSE)[, c('vBg', 'vCH4')]
@@ -676,14 +737,16 @@ cumBg <- function(
 
     # Sort and return results
     mass <- mass[order(mass[, id.name], mass[, time.name]), ]
-    if(is.null(comp)) {
-      vol <- vol[, !names(vol) %in% c(comp.name, 'vCH4', 'cvCH4', 'rvCH4')]
+    # Drop comp-related columns if comp not provided
+    # With longcombo separate comp data frame is not needed, only comp.name is needed in main data frame
+    if((data.struct != 'longcombo' && is.null(comp)) || (data.struct == 'longcombo' & is.null(comp.name))) {
+      mass <- mass[, !names(mass) %in% c(comp.name, 'vCH4', 'cvCH4', 'rvCH4')]
     }
     rownames(mass) <- 1:nrow(mass)
     
     return(mass)
 
-  } else if (dat.type == 'gca') {
+  } else if (dat.type[1] == 'gca') {
     # WIP needs work
 
     mol.name <- dat.name
@@ -716,8 +779,8 @@ cumBg <- function(
     }
 
     # Add t0?
-    if(addt0 & !class(dat[, time.name])[1] %in% c('numeric', 'integer', 'difftime')) addt0 <- FALSE
-    if(addt0 & !any(dat[, time.name]==0)) {
+    if(addt0[1] && !class(dat[, time.name])[1] %in% c('numeric', 'integer', 'difftime')) addt0 <- FALSE
+    if(addt0[1] && !any(dat[, time.name]==0)) {
       t0 <- data.frame(id = unique(dat[, id.name]), tt = 0, check.names = FALSE)
       names(t0) <- c(id.name, time.name)
       t0[, 'vCH4.bot'] <- t0[, 'vCH4.resid'] <- t0[, 'vCH4.vent'] <- t0[, 'cvCH4'] <- t0[, 'vCH4'] <- 0
