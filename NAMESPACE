@@ -1,11 +1,14 @@
-importFrom("stats", "approx", "na.omit", "sd", "spline")
+importFrom("stats", "approx", "na.omit", "sd", "spline", "optim")
+importFrom("utils", "read.csv", "write.csv")
 
 export(
 calcCOD,
 calcBgVol,
 calcBgMan,
 calcBgGD,
+calcBgGrav,
 cumBg,
+fitFOM,
 interp,
 mass2vol,
 molMass,
